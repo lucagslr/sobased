@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Salut {{ name }},</p>
+<p>Confirme ton adresse e-mail pour pouvoir inviter des personnes et recevoir des invitations sur SOBASED.</p>
+{% include "emails/_button.html" with url=url label="Confirmer mon e-mail" %}
+<p>Ce lien est valable 3 jours.</p>
+{% endblock %}

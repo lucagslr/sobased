@@ -2,14 +2,16 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 21.09.2026 · Phase 0 terminée, EN ATTENTE DE VALIDATION de Luca. Ne pas commencer la phase 1 avant son accord.**
+**Dernière mise à jour : 21.09.2026 · Plan validé par Luca. Phase 1 terminée. Prochaine étape : phase 2 (espaces, projets, permissions, invitations).**
+
+Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
 ## Phases
 
 | # | Phase | État |
 |---|---|---|
-| 0 | Plan (arborescence, schéma ER, endpoints, pages et composants, risques) | ✅ terminé, à valider |
-| 1 | Socle : dépôt, Docker, Django, Vue, auth, profil, thèmes, layout responsive, CI | ⏳ à faire |
+| 0 | Plan (arborescence, schéma ER, endpoints, pages et composants, risques) | ✅ terminé, validé le 21.09.2026 |
+| 1 | Socle : dépôt, Docker, Django, Vue, auth, profil, thèmes, layout responsive, CI | ✅ terminé · [doc](docs/phases/phase-01-socle.md) |
 | 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ⏳ |
 | 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ⏳ |
 | 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ⏳ |
@@ -31,28 +33,26 @@ Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à c
 - `API_DOCUMENTATION.md` : tous les endpoints REST cibles avec le rôle minimal.
 - `SPECIFICATIONS.md` : règles de comportement (droits, coquilles, invitations, récurrences, partage, synchro, compta…).
 - `REQUIREMENTS_QUESTIONNAIRE.md`, `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `CLAUDE.md`.
-- Dépôt git local initialisé, premier commit. **Rien n'a été poussé sur GitHub** (`https://github.com/lucagslr/sobased`, vide au 21.09.2026) : attendre l'accord de Luca avant le premier `git push`.
-
-Rien n'a été exécuté ni testé en phase 0 : ce ne sont que des documents.
+- Dépôt poussé sur `https://github.com/lucagslr/sobased` (branche `main`) avec l'accord de Luca. Pousser à chaque fin de phase.
 
 ## Décisions prises
 
-Proposées en phase 0, **à confirmer par Luca** (détail dans `docs/PLAN.md` §5). Une fois confirmées, retirer la mention « proposé ».
+Proposées en phase 0 (détail dans `docs/PLAN.md` §5). **Validées en bloc par Luca le 21.09.2026** (« c'est bon tu peux y aller »), sans remarque.
 
 | # | Décision | État |
 |---|---|---|
-| D1 | Apps supplémentaires `core` (sans modèle) et `dashboard` (agrégations transverses) | proposé |
-| D2 | Dépendances front hors liste : `pdfjs-dist`, `markdown-it`, `lucide-vue-next`, `openapi-typescript` (dev) | proposé |
-| D3 | Widgets redimensionnables par tailles prédéfinies, sans bibliothèque de grille | proposé |
-| D4 | Vérification de l'e-mail à l'inscription + interrupteur `REGISTRATION_OPEN` | proposé |
-| D5 | Créateur d'un projet racine = propriétaire ; sous-projet supprimable par Éditeur du parent | proposé |
-| D6 | Un assigné (Commentateur+) peut changer le statut et la checklist de ses tâches | proposé |
-| D7 | Calendrier externe : seulement mes tâches assignées et mes événements | proposé |
-| D8 | Drive : opérations faites avec le compte du créateur du dossier racine | proposé |
-| D9 | Suppression de projet définitive avec saisie du nom, pas de corbeille | proposé |
-| D10 | Black + Flake8 + isort (demande de Luca) | proposé |
-| D11 | `SPEC.md` reste la source de vérité à la racine ; `SPECIFICATIONS.md` = règles détaillées | proposé |
-| D12 | Un compte Google et un compte Microsoft par utilisateur en v1 | proposé |
+| D1 | Apps supplémentaires `core` (sans modèle) et `dashboard` (agrégations transverses) | validé |
+| D2 | Dépendances front hors liste : `pdfjs-dist`, `markdown-it`, `lucide-vue-next`, `openapi-typescript` (dev) | validé |
+| D3 | Widgets redimensionnables par tailles prédéfinies, sans bibliothèque de grille | validé |
+| D4 | Vérification de l'e-mail à l'inscription + interrupteur `REGISTRATION_OPEN` | validé |
+| D5 | Créateur d'un projet racine = propriétaire ; sous-projet supprimable par Éditeur du parent | validé |
+| D6 | Un assigné (Commentateur+) peut changer le statut et la checklist de ses tâches | validé |
+| D7 | Calendrier externe : seulement mes tâches assignées et mes événements | validé |
+| D8 | Drive : opérations faites avec le compte du créateur du dossier racine | validé |
+| D9 | Suppression de projet définitive avec saisie du nom, pas de corbeille | validé |
+| D10 | Black + Flake8 + isort (demande de Luca) | validé |
+| D11 | `SPEC.md` reste la source de vérité à la racine ; `SPECIFICATIONS.md` = règles détaillées | validé |
+| D12 | Un compte Google et un compte Microsoft par utilisateur en v1 | validé |
 
 Décisions de conception déjà actées dans le schéma (pas d'alternative raisonnable) :
 
@@ -65,13 +65,41 @@ Décisions de conception déjà actées dans le schéma (pas d'alternative raiso
 - Limitation de débit par le throttling DRF (pas de dépendance ajoutée). En-têtes de sécurité posés par Caddy.
 - Sauvegardes avec restic (chiffrement, rétention 30 jours, compatible S3) : outil système du VPS, pas une dépendance du code.
 
+## Phase 1 : ce qui a été produit
+
+Détail dans `docs/phases/phase-01-socle.md`. En bref : pile Docker Compose complète (7 conteneurs) derrière Caddy sur `http://localhost:8080`, apps `core` et `accounts`, 46 tests backend + 10 tests front, CI GitHub Actions, front Vue avec layout responsive, thèmes, pages d'auth et paramètres.
+
+À retenir pour la suite :
+
+- **pytest doit tourner avec `--ds=config.settings.test`** (déjà dans `pyproject.toml`) : la variable `DJANGO_SETTINGS_MODULE` de Compose l'emporte sinon, et les tests partiraient sur Redis et le vrai broker.
+- Le worker Celery ne se recharge pas : `docker compose restart worker beat` après modification d'une tâche.
+- Après tout changement d'endpoint : régénérer `backend/openapi/schema.yml` puis `npm run gen:api` (la CI compare le schéma commité au code).
+- Les heredocs Bash contenant des apostrophes cassent : écrire les fichiers `.vue` et les scripts Python avec l'outil d'écriture, pas en heredoc.
+- Vérification UI : je n'entre pas de mot de passe dans le navigateur. Méthode utilisée : utilisateur + session créés par `manage.py shell`, cookie `sessionid` posé en JS, puis nettoyage. Les formulaires de connexion / inscription sont couverts par les tests API ; Luca doit les essayer à la main une fois.
+- Ouvrir le site dans le navigateur intégré : `preview_start` avec l'URL (un `navigate` direct vers `localhost:8080` est refusé).
+- Docker Hub a fait un timeout TLS une fois (`docker pull` relancé = OK).
+
 ## Dépendances ajoutées hors SPEC §3
 
-Aucune pour l'instant (voir D2, en attente).
+| Paquet | Où | Raison |
+|---|---|---|
+| `lucide-vue-next` | front | Icônes (D2) |
+| `openapi-typescript` | front, dev | Types générés depuis OpenAPI (D2) |
+| `@fontsource-variable/inter` | front | Police Inter auto-hébergée, sans binaire à commiter |
+| `psycopg[binary]`, `redis`, `gunicorn` | back | Pilotes PostgreSQL / Redis et serveur WSGI, implicites dans la stack |
+| `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
+
+`pdfjs-dist` et `markdown-it` (D2) seront ajoutés quand ils serviront (phases 8 et 3). **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
-Aucune constatée (rien n'est codé). Limites **anticipées**, à confirmer par test le moment venu :
+Constatées :
+
+- Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
+- Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
+- Adresse de contact de la page Confidentialité à préciser par Luca.
+
+Limites **anticipées**, à confirmer par test le moment venu :
 
 - Le streaming « sans téléchargement » décourage la copie sans pouvoir l'empêcher.
 - Pas de filigrane sur PDF et vidéo en v1.

@@ -1,0 +1,15 @@
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+extend-exclude = "migrations"
+
+[tool.isort]
+profile = "black"
+known_first_party = ["apps", "config"]
+skip_glob = ["*/migrations/*"]
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
+# --ds wins over the DJANGO_SETTINGS_MODULE variable set by Docker Compose:
+# tests must never run against the dev settings (Redis, real Celery broker).
+addopts = "-q --strict-markers --ds=config.settings.test"

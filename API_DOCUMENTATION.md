@@ -1,9 +1,10 @@
 # SOBASED : référence de l'API
 
-API REST Django REST Framework, servie sous `/api/` sur le même domaine que le front. Ce document liste les endpoints **cibles** (phases 1 à 14). La référence exacte et toujours à jour est le schéma OpenAPI généré par drf-spectacular : `GET /api/schema/` (et Swagger sur `/api/docs/` en développement).
+API REST Django REST Framework, servie sous `/api/` sur le même domaine que le front. Ce document liste les endpoints **cibles** (phases 1 à 14). La référence exacte et toujours à jour est le schéma OpenAPI généré par drf-spectacular : `GET /api/schema/` (pas de Swagger UI : ses scripts viennent d'un CDN, ce que la CSP interdit).
 
 ## Conventions
 
+- **Codes d'accès** : `401` = personne n'est connecté (le front renvoie vers la connexion), `403` = connecté mais action interdite, `404` = objet invisible pour moi.
 - **Authentification** : session Django (cookie `sessionid` HttpOnly, Secure, SameSite=Lax). Pas de JWT. Toute requête non `GET` envoie l'en-tête `X-CSRFToken` (valeur du cookie `csrftoken`, obtenu via `GET /api/auth/csrf/`).
 - **Format** : JSON, sauf upload de fichiers (`multipart/form-data`) et téléchargements.
 - **Droits** : chaque ressource rattachée à un projet passe par le mixin `ProjectScopedViewSet` (queryset filtré par `for_user()`, contrôle d'objet par `effective_access()`). La colonne « Rôle min. » indique le rôle effectif requis sur le projet concerné. `finance:voir` / `finance:éditer` = options `can_view_finance` / `can_edit_finance`.
@@ -18,10 +19,11 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
+| GET | `/api/auth/session/` | public | Premier appel du front : `{user: {...}}` ou `{user: null}`, toujours 200, pose aussi le cookie CSRF |
 | GET | `/api/auth/csrf/` | public | Pose le cookie CSRF |
 | POST | `/api/auth/register/` | public, limité | Inscription (username, e-mail, mot de passe, acceptation confidentialité, jeton d'invitation optionnel). Désactivable par `REGISTRATION_OPEN=false` (inscription sur invitation uniquement) |
 | POST | `/api/auth/verify-email/` | public | Valide l'e-mail avec le jeton reçu |
-| POST | `/api/auth/verify-email/resend/` | public, limité | Renvoie l'e-mail de vérification |
+| POST | `/api/auth/verify-email/resend/` | connecté, limité | Renvoie l'e-mail de vérification à mon adresse |
 | POST | `/api/auth/login/` | public, limité (IP + username) | Connexion username + mot de passe |
 | POST | `/api/auth/logout/` | connecté | Déconnexion |
 | POST | `/api/auth/password/reset/` | public, limité | Envoie le lien de réinitialisation (réponse identique que le compte existe ou non) |
@@ -33,7 +35,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | GET | `/api/me/exports/{id}/download/` | connecté | Téléchargement du ZIP (7 jours) |
 | POST | `/api/me/delete/` | connecté + mot de passe | Suppression du compte (anonymisation). Refusé tant que l'utilisateur est propriétaire d'un espace ou d'un projet partagé non transféré |
 | GET | `/api/users/search/?q=` | connecté, limité | Autocomplétion par username (2 caractères min.). Renvoie **uniquement** `username`, `display_name`, `avatar_url` |
-| GET | `/api/users/{id}/avatar/` | connecté | Image de l'avatar |
+| GET | `/api/users/{username}/avatar/` | connecté | Image de l'avatar (par nom d'utilisateur : aucun identifiant numérique exposé) |
 
 ## 2. Espaces (`workspaces`)
 
@@ -210,5 +212,4 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 |---|---|---|---|
 | GET | `/api/health/` | public | Base + Redis joignables (supervision, déploiement) |
 | GET | `/api/schema/` | connecté | OpenAPI 3 |
-| GET | `/api/docs/` | `DEBUG` uniquement | Swagger UI |
 | — | `/admin/` | superutilisateur | Admin Django, support uniquement |

@@ -14,7 +14,9 @@ La machine de dev est sous Windows sans `make` : utiliser les commandes `docker 
 | `make test` | `docker compose exec backend pytest` puis `docker compose exec frontend npm run test` |
 | `make seed` | `docker compose exec backend python manage.py seed_demo` |
 | lint | `docker compose exec backend sh -c "black --check . && isort --check . && flake8"` · `docker compose exec frontend npm run lint` |
-| types API | `docker compose exec frontend npm run gen:api` |
+| `make schema` | `docker compose exec backend python manage.py spectacular --file openapi/schema.yml` puis `docker compose exec frontend npm run gen:api` (après tout changement d'endpoint ; la CI compare) |
+| tâches Celery | `docker compose restart worker beat` après modification (pas de rechargement auto) |
+| e-mails en dev | `docker compose logs worker` (affichés, pas envoyés) |
 
 Site de dev : `http://localhost:8080` (Caddy → Vite + Django).
 
@@ -26,5 +28,7 @@ Site de dev : `http://localhost:8080` (Caddy → Vite + Django).
 - Agrégats calculés, pas stockés (retard, temporalité, « À justifier », cumuls).
 - Secrets dans `.env` uniquement ; nouvelle variable → `.env.example` + README.
 - Pas de dépendance sans raison notée dans `PROGRESS.md`.
+- Une doc par phase dans `docs/phases/phase-NN-*.md` (en français) ; code commenté en anglais (docstring de module + le pourquoi).
+- Fichiers `.vue` et scripts : les écrire avec l'outil d'écriture, pas en heredoc Bash (les apostrophes cassent).
 - Fin de phase : migrations propres, tests verts, vérification 375 px et 1440 px (clair + sombre), console propre, docs à jour, commit.
 - Ne jamais affirmer qu'une chose fonctionne sans l'avoir testée ; noter les limites réelles dans `PROGRESS.md`.

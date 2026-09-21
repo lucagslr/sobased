@@ -1,0 +1,43 @@
+# Development reverse proxy: same routing as production, without HTTPS.
+{
+	auto_https off
+	admin off
+}
+
+:8080 {
+	encode zstd gzip
+
+	# Same security headers as production (minus HSTS) so that a CSP violation
+	# shows up during development, not after deployment.
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws://localhost:8080; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		-Server
+	}
+
+	@backend path /api/* /admin/* /static/*
+	handle @backend {
+		reverse_proxy backend:8000 {
+			# Protected files: Django checks the permissions, answers with an
+			# X-Accel-Redirect header, and Caddy streams the file itself
+			# (Range requests included). /srv/media is never exposed directly.
+			@accel header X-Accel-Redirect *
+			handle_response @accel {
+				root * /srv/media
+				rewrite * {rp.header.X-Accel-Redirect}
+				method * GET
+				header Content-Type {rp.header.Content-Type}
+				header Content-Disposition {rp.header.Content-Disposition}
+				header Cache-Control {rp.header.Cache-Control}
+				file_server
+			}
+		}
+	}
+
+	# Everything else is the Vue app (Vite dev server, WebSocket HMR included).
+	handle {
+		reverse_proxy frontend:5173
+	}
+}

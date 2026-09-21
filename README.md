@@ -2,7 +2,7 @@
 
 Gestion de projets multi-utilisateurs, conçue d'abord pour l'association culturelle 100SATIONS (Genève) : management d'artistes, administration de l'association, et usage personnel (cours, rendus, mandats). Chacun crée ses espaces et ses projets (arbre à 4 niveaux) et invite d'autres personnes avec des droits précis, comme sur Google Drive.
 
-> **État : phase 0 (plan) terminée, en attente de validation.** Le code arrive à partir de la phase 1. L'avancement réel est dans [PROGRESS.md](PROGRESS.md).
+> **État : phase 1 sur 14 terminée** (socle : comptes, profil, thèmes, layout). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
 
 ## Fonctionnalités prévues
 
@@ -31,7 +31,7 @@ Espaces et projets en arbre · droits hérités avec « coquilles » · tâches 
 
 ## Démarrage rapide
 
-*Disponible à la fin de la phase 1.* Seul Docker est nécessaire sur la machine.
+Seul Docker est nécessaire sur la machine.
 
 ```bash
 cp .env.example .env
@@ -41,15 +41,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-```bash
-docker compose exec backend python manage.py migrate
-```
-
-```bash
-docker compose exec backend python manage.py seed_demo
-```
-
-Le site sera servi sur `http://localhost:8080`. Sous Linux ou macOS, `make up`, `make migrate`, `make seed` et `make test` font la même chose.
+Le site est servi sur `http://localhost:8080` (les migrations s'appliquent toutes seules en développement). Sans SMTP configuré, les e-mails s'affichent dans `docker compose logs worker`. Sous Linux ou macOS, `make up`, `make test`, `make lint` font la même chose. Les données de démonstration (`seed_demo`) arrivent en phase 14.
 
 ## Variables d'environnement
 

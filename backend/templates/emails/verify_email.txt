@@ -1,0 +1,7 @@
+Salut {{ name }},
+
+Confirme ton adresse e-mail pour pouvoir inviter des personnes et recevoir des invitations sur SOBASED :
+
+{{ url }}
+
+Ce lien est valable 3 jours. Si tu n'es pas à l'origine de cette demande, ignore cet e-mail.

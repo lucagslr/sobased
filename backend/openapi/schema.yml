@@ -1,0 +1,562 @@
+openapi: 3.0.3
+info:
+  title: SOBASED API
+  version: 1.0.0
+paths:
+  /api/auth/csrf/:
+    get:
+      operationId: auth_csrf_retrieve
+      description: 'First call made by the front: sets the csrftoken cookie.'
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Username + password login with two rate limits.
+
+        - per IP: DRF scoped throttle "login" (5/min);
+        - per username: only FAILED attempts are counted (10/hour), so an attacker
+          cannot lock a victim out just by spamming the endpoint with successes,
+          and a legitimate user is never blocked by their own logins.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password/change/:
+    post:
+      operationId: auth_password_change_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password/reset/:
+    post:
+      operationId: auth_password_reset_create
+      description: 'Base for endpoints reachable without a session: CSRF + scoped
+        throttle.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/password/reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      description: 'Base for endpoints reachable without a session: CSRF + scoped
+        throttle.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: 'Base for endpoints reachable without a session: CSRF + scoped
+        throttle.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/auth/session/:
+    get:
+      operationId: auth_session_retrieve
+      description: |-
+        Who am I? Always 200, so that a signed-out visitor does not produce a
+        401 error in the browser console. Also sets the CSRF cookie: it is the
+        first call the front makes.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/auth/verify-email/:
+    post:
+      operationId: auth_verify_email_create
+      description: 'Base for endpoints reachable without a session: CSRF + scoped
+        throttle.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/verify-email/resend/:
+    post:
+      operationId: auth_verify_email_resend_create
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: 'Used by monitoring and by the deploy script: are Postgres and
+        Redis up?'
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/me/:
+    get:
+      operationId: me_retrieve
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+    patch:
+      operationId: me_partial_update
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/me/avatar/:
+    put:
+      operationId: me_avatar_update
+      tags:
+      - me
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+    delete:
+      operationId: me_avatar_destroy
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/users/{username}/avatar/:
+    get:
+      operationId: users_avatar_retrieve
+      description: Avatar image of any user, for signed-in users only.
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            image/webp:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/users/search/:
+    get:
+      operationId: users_search_list
+      description: |-
+        Username autocompletion used to invite people.
+
+        Returns username, display name and avatar only, never e-mail or id.
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicUser'
+          description: ''
+components:
+  schemas:
+    EmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    Me:
+      type: object
+      description: The signed-in user's own profile and preferences.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Nom d'utilisateur
+        email:
+          type: string
+          format: email
+          title: E-mail
+          maxLength: 254
+        email_verified:
+          type: boolean
+          readOnly: true
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        display_name:
+          type: string
+          readOnly: true
+        avatar_url:
+          type: string
+          nullable: true
+          readOnly: true
+        phone:
+          type: string
+          maxLength: 30
+        timezone:
+          type: string
+          maxLength: 64
+        theme:
+          $ref: '#/components/schemas/ThemeEnum'
+        daily_digest_enabled:
+          type: boolean
+        daily_digest_time:
+          type: string
+          format: time
+        email_on_mention:
+          type: boolean
+        email_on_assignment:
+          type: boolean
+      required:
+      - avatar_url
+      - display_name
+      - email
+      - email_verified
+      - id
+      - username
+    PasswordChangeRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - current_password
+      - new_password
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - new_password
+      - token
+      - uid
+    PatchedMeRequest:
+      type: object
+      description: The signed-in user's own profile and preferences.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: E-mail
+          maxLength: 254
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone:
+          type: string
+          maxLength: 30
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        theme:
+          $ref: '#/components/schemas/ThemeEnum'
+        daily_digest_enabled:
+          type: boolean
+        daily_digest_time:
+          type: string
+          format: time
+        email_on_mention:
+          type: boolean
+        email_on_assignment:
+          type: boolean
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+    PublicUser:
+      type: object
+      description: |-
+        The ONLY shape in which a user is exposed to other users (SPEC §4).
+
+        Never add e-mail, phone or id here: the search endpoint is open to every
+        signed-in user.
+      properties:
+        username:
+          type: string
+          title: Nom d'utilisateur
+          pattern: ^[A-Za-z0-9_.-]{3,30}$
+          maxLength: 30
+        display_name:
+          type: string
+          readOnly: true
+        avatar_url:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - avatar_url
+      - display_name
+      - username
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          pattern: ^[A-Za-z0-9_.-]{3,30}$
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        accept_privacy:
+          type: boolean
+      required:
+      - accept_privacy
+      - email
+      - password
+      - username
+    Session:
+      type: object
+      description: 'Shape of GET /api/auth/session/: the profile, or null when signed
+        out.'
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/Me'
+          nullable: true
+      required:
+      - user
+    ThemeEnum:
+      enum:
+      - light
+      - dark
+      - system
+      type: string
+      description: |-
+        * `light` - Clair
+        * `dark` - Sombre
+        * `system` - Système
+    TokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
