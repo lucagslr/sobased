@@ -9,6 +9,7 @@ import { RouterView } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import MobileTabBar from '@/components/layout/MobileTabBar.vue'
+import OverdueProjectModal from '@/components/layout/OverdueProjectModal.vue'
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner.vue'
 import { useProjectsStore } from '@/stores/projects'
 import { useWorkspacesStore } from '@/stores/workspaces'
@@ -30,5 +31,7 @@ onMounted(() => {
       <RouterView />
     </main>
     <MobileTabBar class="fixed inset-x-0 bottom-0 z-40 lg:hidden" />
+    <!-- Asks, once per day, what to do with projects past their end date. -->
+    <OverdueProjectModal />
   </div>
 </template>

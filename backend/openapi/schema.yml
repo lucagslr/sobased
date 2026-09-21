@@ -2116,8 +2116,12 @@ components:
         name:
           type: string
           maxLength: 60
-        filters: {}
-        layout: {}
+        filters:
+          $ref: '#/components/schemas/ViewFilters'
+        layout:
+          type: array
+          items:
+            $ref: '#/components/schemas/WidgetLayout'
         is_default:
           type: boolean
         position:
@@ -2138,8 +2142,12 @@ components:
           type: string
           minLength: 1
           maxLength: 60
-        filters: {}
-        layout: {}
+        filters:
+          $ref: '#/components/schemas/ViewFiltersRequest'
+        layout:
+          type: array
+          items:
+            $ref: '#/components/schemas/WidgetLayoutRequest'
         is_default:
           type: boolean
         position:
@@ -2649,8 +2657,12 @@ components:
           type: string
           minLength: 1
           maxLength: 60
-        filters: {}
-        layout: {}
+        filters:
+          $ref: '#/components/schemas/ViewFiltersRequest'
+        layout:
+          type: array
+          items:
+            $ref: '#/components/schemas/WidgetLayoutRequest'
         is_default:
           type: boolean
         position:
@@ -3693,6 +3705,112 @@ components:
       - available
       - count
       - items
+    ViewFilters:
+      type: object
+      description: Shape of DashboardView.filters (documentation only).
+      properties:
+        workspaces:
+          type: array
+          items:
+            type: integer
+        projects:
+          type: array
+          items:
+            type: integer
+          description: Sub-projects are included
+        tags:
+          type: array
+          items:
+            type: integer
+        only_mine:
+          type: boolean
+      required:
+      - only_mine
+      - projects
+      - tags
+      - workspaces
+    ViewFiltersRequest:
+      type: object
+      description: Shape of DashboardView.filters (documentation only).
+      properties:
+        workspaces:
+          type: array
+          items:
+            type: integer
+        projects:
+          type: array
+          items:
+            type: integer
+          description: Sub-projects are included
+        tags:
+          type: array
+          items:
+            type: integer
+        only_mine:
+          type: boolean
+      required:
+      - only_mine
+      - projects
+      - tags
+      - workspaces
+    WidgetKeyEnum:
+      enum:
+      - overdue
+      - today
+      - pinned
+      - next7
+      - to_validate
+      - meetings
+      - expenses_to_pay
+      - missing_receipts
+      type: string
+      description: |-
+        * `overdue` - overdue
+        * `today` - today
+        * `pinned` - pinned
+        * `next7` - next7
+        * `to_validate` - to_validate
+        * `meetings` - meetings
+        * `expenses_to_pay` - expenses_to_pay
+        * `missing_receipts` - missing_receipts
+    WidgetLayout:
+      type: object
+      description: One entry of DashboardView.layout (documentation only).
+      properties:
+        key:
+          $ref: '#/components/schemas/WidgetKeyEnum'
+        size:
+          type: integer
+          maximum: 3
+          minimum: 1
+        tall:
+          type: boolean
+        hidden:
+          type: boolean
+      required:
+      - hidden
+      - key
+      - size
+      - tall
+    WidgetLayoutRequest:
+      type: object
+      description: One entry of DashboardView.layout (documentation only).
+      properties:
+        key:
+          $ref: '#/components/schemas/WidgetKeyEnum'
+        size:
+          type: integer
+          maximum: 3
+          minimum: 1
+        tall:
+          type: boolean
+        hidden:
+          type: boolean
+      required:
+      - hidden
+      - key
+      - size
+      - tall
     Workspace:
       type: object
       description: Full view of a workspace, for its members.

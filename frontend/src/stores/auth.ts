@@ -6,6 +6,7 @@ import { authApi, type Me, type RegisterPayload } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import { isThemeChoice } from '@/utils/theme'
 
+import { useDashboardStore } from './dashboard'
 import { useProjectsStore } from './projects'
 import { useUiStore } from './ui'
 import { useWorkspacesStore } from './workspaces'
@@ -21,6 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Signing out, or signing in as someone else: forget the cached tree.
       useWorkspacesStore().reset()
       useProjectsStore().reset()
+      useDashboardStore().reset()
     }
     user.value = me
     // The account's theme wins over the one remembered on this device.

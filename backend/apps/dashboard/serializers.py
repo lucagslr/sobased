@@ -1,11 +1,47 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
 
-from .models import DashboardView, normalise_filters, normalise_layout
+from .models import WIDGET_KEYS, DashboardView, normalise_filters, normalise_layout
+
+
+class ViewFiltersSerializer(serializers.Serializer):
+    """Shape of DashboardView.filters (documentation only)."""
+
+    workspaces = serializers.ListField(child=serializers.IntegerField())
+    projects = serializers.ListField(
+        child=serializers.IntegerField(), help_text="Sub-projects are included"
+    )
+    tags = serializers.ListField(child=serializers.IntegerField())
+    only_mine = serializers.BooleanField()
+
+
+class WidgetLayoutSerializer(serializers.Serializer):
+    """One entry of DashboardView.layout (documentation only)."""
+
+    key = serializers.ChoiceField(choices=WIDGET_KEYS)
+    size = serializers.IntegerField(min_value=1, max_value=3)
+    tall = serializers.BooleanField()
+    hidden = serializers.BooleanField()
+
+
+# The columns are JSON; these two fields only give them a type in the OpenAPI
+# schema, so that the front does not receive `unknown`.
+@extend_schema_field(ViewFiltersSerializer)
+class FiltersField(serializers.JSONField):
+    pass
+
+
+@extend_schema_field(WidgetLayoutSerializer(many=True))
+class LayoutField(serializers.JSONField):
+    pass
 
 
 class DashboardViewSerializer(serializers.ModelSerializer):
+    filters = FiltersField(required=False)
+    layout = LayoutField(required=False)
+
     class Meta:
         model = DashboardView
         fields = ["id", "name", "filters", "layout", "is_default", "position"]

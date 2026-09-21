@@ -118,3 +118,41 @@ project(heg, "TP 3", "TP", ecole, color="#BFDBFE")
 # Helder: guest of ONE sub-project only -> sees SHORTY7G and MARCHIOLY as shells.
 Membership.objects.create(user=helder, project=clip, role="editor", invited_by=demo)
 print("PROJECT_IDS", shorty.pk, album.pk, clip.pk)
+
+# --- Tasks (phase 3+): something in every dashboard widget --------------------
+from datetime import UTC, datetime  # noqa: E402
+
+from apps.tasks.models import ChecklistItem, Task  # noqa: E402
+
+
+def all_day(offset):
+    day = today + timedelta(days=offset)
+    return datetime(day.year, day.month, day.day, tzinfo=UTC)
+
+
+def task(project_, title, due=None, **fields):
+    created = Task.objects.create(
+        project=project_,
+        title=title,
+        due_at=all_day(due) if due is not None else None,
+        created_by=demo,
+        **fields,
+    )
+    created.assignees.add(demo)
+    return created
+
+
+late = task(clip, "Envoyer le brief au realisateur", due=-3, priority=5)
+late.assignees.add(helder)
+task(album, "Valider le mix du titre 3", due=-1, priority=4)
+task(clip, "Confirmer le lieu de tournage", due=0, priority=4)
+task(ecole, "Rendre le TP 3", due=0, priority=3)
+task(album, "Reserver le studio", due=2)
+task(admin, "Completer la demande de fonds", due=6, priority=5)
+task(album, "Pochette : choisir la typo", due=5, status="to_validate")
+montage = task(clip, "Monter le clip", due=10)
+montage.blocked_by.add(late)
+ChecklistItem.objects.create(task=montage, title="Recuperer les rushs", pinned=True)
+ChecklistItem.objects.create(task=montage, title="Valider la musique", pinned=True)
+ChecklistItem.objects.create(task=montage, title="Exporter en 9:16")
+print("TASKS", Task.objects.count())

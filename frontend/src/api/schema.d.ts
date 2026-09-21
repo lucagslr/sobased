@@ -1101,15 +1101,15 @@ export interface components {
         DashboardView: {
             readonly id: number;
             name: string;
-            filters: unknown;
-            layout: unknown;
+            filters: components["schemas"]["ViewFilters"];
+            layout: components["schemas"]["WidgetLayout"][];
             is_default: boolean;
             position: number;
         };
         DashboardViewRequest: {
             name: string;
-            filters?: unknown;
-            layout?: unknown;
+            filters?: components["schemas"]["ViewFiltersRequest"];
+            layout?: components["schemas"]["WidgetLayoutRequest"][];
             is_default?: boolean;
             position?: number;
         };
@@ -1307,8 +1307,8 @@ export interface components {
         };
         PatchedDashboardViewRequest: {
             name?: string;
-            filters?: unknown;
-            layout?: unknown;
+            filters?: components["schemas"]["ViewFiltersRequest"];
+            layout?: components["schemas"]["WidgetLayoutRequest"][];
             is_default?: boolean;
             position?: number;
         };
@@ -1702,6 +1702,48 @@ export interface components {
             available: boolean;
             count: number;
             items: components["schemas"]["ValidateItem"][];
+        };
+        /** @description Shape of DashboardView.filters (documentation only). */
+        ViewFilters: {
+            workspaces: number[];
+            /** @description Sub-projects are included */
+            projects: number[];
+            tags: number[];
+            only_mine: boolean;
+        };
+        /** @description Shape of DashboardView.filters (documentation only). */
+        ViewFiltersRequest: {
+            workspaces: number[];
+            /** @description Sub-projects are included */
+            projects: number[];
+            tags: number[];
+            only_mine: boolean;
+        };
+        /**
+         * @description * `overdue` - overdue
+         *     * `today` - today
+         *     * `pinned` - pinned
+         *     * `next7` - next7
+         *     * `to_validate` - to_validate
+         *     * `meetings` - meetings
+         *     * `expenses_to_pay` - expenses_to_pay
+         *     * `missing_receipts` - missing_receipts
+         * @enum {string}
+         */
+        WidgetKeyEnum: "overdue" | "today" | "pinned" | "next7" | "to_validate" | "meetings" | "expenses_to_pay" | "missing_receipts";
+        /** @description One entry of DashboardView.layout (documentation only). */
+        WidgetLayout: {
+            key: components["schemas"]["WidgetKeyEnum"];
+            size: number;
+            tall: boolean;
+            hidden: boolean;
+        };
+        /** @description One entry of DashboardView.layout (documentation only). */
+        WidgetLayoutRequest: {
+            key: components["schemas"]["WidgetKeyEnum"];
+            size: number;
+            tall: boolean;
+            hidden: boolean;
         };
         /** @description Full view of a workspace, for its members. */
         Workspace: {

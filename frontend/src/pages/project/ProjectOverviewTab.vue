@@ -1,20 +1,42 @@
 <script setup lang="ts">
 /**
- * Overview of a project. Today: description + sub-projects sorted into
- * Passé / En cours / À venir. The mini-dashboard (overdue, today, milestones,
- * budget) is added in phase 4.
+ * Overview of a project = its mini-dashboard (SPEC §15, page 3): what is late,
+ * what is for today, the next milestones, then the sub-projects sorted into
+ * Passé / En cours / À venir. Everything covers the project AND its
+ * sub-projects. The budget block joins in phase 7.
  */
-import { computed } from 'vue'
+import { CircleCheckBig, Flag, FlagOff } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { ApiError } from '@/api/client'
+import { dashboardApi, type Milestone, type ProjectOverview } from '@/api/dashboard'
 import type { Project, Temporal } from '@/api/projects'
+import { type Task, tasksApi } from '@/api/tasks'
 import StatusBadge from '@/components/projects/StatusBadge.vue'
+import TaskPanel from '@/components/tasks/TaskPanel.vue'
+import TaskRow from '@/components/tasks/TaskRow.vue'
 import ColorDot from '@/components/ui/ColorDot.vue'
+import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
+import { useTaskPanel } from '@/composables/useTaskPanel'
+import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
-import { formatDateRange, TEMPORAL_LABELS } from '@/utils/projects'
+import { useUiStore } from '@/stores/ui'
+import { formatDate, formatDateRange, TEMPORAL_LABELS } from '@/utils/projects'
+import { atLeast } from '@/utils/roles'
 
 const props = defineProps<{ project: Project }>()
 const projects = useProjectsStore()
+const auth = useAuthStore()
+const ui = useUiStore()
+const { taskId, openTask, closeTask } = useTaskPanel()
+
+const overview = ref<ProjectOverview | null>(null)
+
+async function load() {
+  overview.value = await dashboardApi.projectOverview(props.project.id)
+}
+watch(() => props.project.id, load, { immediate: true })
 
 const COLUMNS: Temporal[] = ['past', 'current', 'upcoming']
 const children = computed(() => projects.childrenOf(props.project.id))
@@ -23,6 +45,34 @@ const byTemporal = computed(() =>
     COLUMNS.map((key) => [key, children.value.filter((child) => child.temporal === key)]),
   ),
 )
+
+const MILESTONE_ICONS = { task: CircleCheckBig, project_start: Flag, project_end: FlagOff }
+const MILESTONE_LABELS = { task: 'Échéance', project_start: 'Début', project_end: 'Fin' }
+
+function openMilestone(milestone: Milestone) {
+  if (milestone.kind === 'task') openTask(milestone.id)
+}
+
+function canComplete(task: Task): boolean {
+  const role = projects.byId.get(task.project)?.my_role
+  if (atLeast(role, 'editor')) return true
+  const mine = task.assignees.some((user) => user.username === auth.user?.username)
+  return mine && atLeast(role, 'commenter')
+}
+
+async function toggleDone(task: Task) {
+  try {
+    await tasksApi.update(task.id, { status: task.status === 'done' ? 'todo' : 'done' })
+    await load()
+  } catch (error) {
+    ui.toast(error instanceof ApiError ? error.message : 'Le statut est resté inchangé.', 'error')
+  }
+}
+
+const panelOpen = computed({
+  get: () => taskId.value !== null,
+  set: (value) => !value && closeTask(),
+})
 </script>
 
 <template>
@@ -31,6 +81,85 @@ const byTemporal = computed(() =>
       <h2 class="mb-2 text-sm font-semibold text-muted">Description</h2>
       <p class="max-w-3xl whitespace-pre-line">{{ project.description }}</p>
     </section>
+
+    <div v-if="!overview" class="grid gap-4 lg:grid-cols-3">
+      <SkeletonBlock v-for="n in 3" :key="n" class="h-40" />
+    </div>
+
+    <div v-else class="grid gap-4 lg:grid-cols-3">
+      <section
+        class="rounded-2xl border p-4"
+        :class="overview.overdue.count ? 'border-danger' : 'border-line'"
+      >
+        <h2
+          class="mb-1 flex items-center justify-between text-sm font-semibold"
+          :class="overview.overdue.count ? 'text-danger' : ''"
+        >
+          En retard <span class="font-normal text-muted">{{ overview.overdue.count }}</span>
+        </h2>
+        <ul v-if="overview.overdue.count">
+          <TaskRow
+            v-for="task in overview.overdue.items"
+            :key="task.id"
+            :task="task"
+            :show-project="task.project !== project.id"
+            :can-complete="canComplete(task)"
+            @open="openTask(task.id)"
+            @toggle-done="toggleDone(task)"
+          />
+        </ul>
+        <p v-else class="py-4 text-sm text-muted">Rien en retard.</p>
+      </section>
+
+      <section class="rounded-2xl border border-line p-4">
+        <h2 class="mb-1 flex items-center justify-between text-sm font-semibold">
+          Aujourd'hui <span class="font-normal text-muted">{{ overview.today.count }}</span>
+        </h2>
+        <ul v-if="overview.today.count">
+          <TaskRow
+            v-for="task in overview.today.items"
+            :key="task.id"
+            :task="task"
+            :show-project="task.project !== project.id"
+            :can-complete="canComplete(task)"
+            @open="openTask(task.id)"
+            @toggle-done="toggleDone(task)"
+          />
+        </ul>
+        <p v-else class="py-4 text-sm text-muted">Rien de prévu aujourd'hui.</p>
+      </section>
+
+      <section class="rounded-2xl border border-line p-4">
+        <h2 class="mb-2 text-sm font-semibold">Prochains jalons</h2>
+        <ul v-if="overview.milestones.length" class="space-y-2.5">
+          <li v-for="milestone in overview.milestones" :key="`${milestone.kind}-${milestone.id}`">
+            <component
+              :is="milestone.kind === 'task' ? 'button' : RouterLink"
+              :type="milestone.kind === 'task' ? 'button' : undefined"
+              :to="milestone.kind === 'task' ? undefined : `/projets/${milestone.project}`"
+              class="flex w-full items-start gap-2.5 text-left"
+              @click="openMilestone(milestone)"
+            >
+              <component
+                :is="MILESTONE_ICONS[milestone.kind]"
+                class="mt-0.5 size-4 shrink-0 text-muted"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium hover:underline">
+                  {{ milestone.title }}
+                </span>
+                <span class="flex items-center gap-1.5 text-xs text-muted">
+                  <ColorDot :color="milestone.color" />
+                  {{ MILESTONE_LABELS[milestone.kind] }} · {{ formatDate(milestone.date) }}
+                </span>
+              </span>
+            </component>
+          </li>
+        </ul>
+        <p v-else class="py-2 text-sm text-muted">Aucune date à venir.</p>
+      </section>
+    </div>
 
     <section>
       <h2 class="mb-3 text-sm font-semibold text-muted">Sous-projets</h2>
@@ -66,4 +195,6 @@ const byTemporal = computed(() =>
       </div>
     </section>
   </div>
+
+  <TaskPanel v-model:open="panelOpen" :task-id="taskId" @changed="load" />
 </template>

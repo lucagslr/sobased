@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 21.09.2026 · Phases 0 à 3 terminées. Prochaine étape : phase 4 (dashboard global et dashboard projet, widgets, vues enregistrées, modale de fin dépassée).**
+**Dernière mise à jour : 22.09.2026 · Phases 0 à 4 terminées. Prochaine étape : phase 5 (vues Liste / Kanban / Calendrier / Gantt mémorisées par projet, navigation Arbre / Cartes, Passé / En cours / À venir, déplacement de projet).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -14,7 +14,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 1 | Socle : dépôt, Docker, Django, Vue, auth, profil, thèmes, layout responsive, CI | ✅ terminé · [doc](docs/phases/phase-01-socle.md) |
 | 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ✅ terminé · [doc](docs/phases/phase-02-espaces-projets-droits.md) |
 | 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ✅ terminé · [doc](docs/phases/phase-03-taches.md) |
-| 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ⏳ |
+| 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ✅ terminé · [doc](docs/phases/phase-04-dashboards.md) |
 | 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ⏳ |
 | 6 | Événements et RDV, contacts | ⏳ |
 | 7 | Compta complète et exports | ⏳ |
@@ -111,6 +111,22 @@ Détail dans `docs/phases/phase-03-taches.md`. App `tasks`, moteur de récurrenc
 - CSP de dev : `worker-src 'self' blob:` pour Vite uniquement ; ne pas le reporter dans le Caddyfile de prod.
 - Écart au schéma de la phase 0 : `Task.occurrence_at` (date-heure) remplace `occurrence_date`, `TaskSeries.all_day` ajouté, la fin de série vit dans le RRULE (`UNTIL`) et non dans une colonne.
 
+## Phase 4 : ce qui a été produit
+
+Détail dans `docs/phases/phase-04-dashboards.md`. App `dashboard` (vues enregistrées, agrégations en lecture seule), `apps/core/localtime.py`, `ProjectUserState`, file de la modale « fin dépassée » ; front : dashboard en widgets déplaçables / redimensionnables / masquables, vues enregistrées, aperçu de projet, modale. 965 tests backend (+ 48 cas volontairement ignorés : doublons des matrices paramétrées de la phase 2), 46 tests front.
+
+À retenir pour la suite :
+
+- **« Aujourd'hui » = `apps/core/localtime.py`** (`local_today`, `local_day_bounds`, `all_day_moment`). Ne jamais utiliser `timezone.localdate()` ni `date.today()` pour une règle métier : le fuseau est celui du profil.
+- **Allumer un widget d'une phase suivante** (`meetings` en phase 6, `expenses_to_pay` et `missing_receipts` en phase 7) : remplacer `pending` dans `DashboardSummaryView` par `{available: True, count, items}`, ajouter le composant dans `DashboardPage.vue`, typer `items` dans `apps/dashboard/serializers.py`. Aucune migration : les dispositions enregistrées ont déjà la case. Les montants exigent `can_view_finance` projet par projet.
+- Vue transverse (plusieurs projets) : pas de `ProjectScopedViewSet`, donc inscription **avec justification** dans `test_route_audit.py`, et données tirées uniquement de querysets `for_user(request)`.
+- Colonne JSON exposée par l'API : sous-classe de `JSONField` + `@extend_schema_field(UnSerializer)`, sinon TypeScript reçoit `unknown`.
+- **Bundle tiers et CSP** : `vuedraggable` est aliasé vers sa source ESM dans `vite.config.ts` (son bundle webpack appelle `new Function`). Pour toute nouvelle bibliothèque front (FullCalendar, frappe-gantt, wavesurfer, pdf.js) : vérifier la console **et** chercher `new Function` / `eval(` dans `dist/`. Pour trouver le fautif : écouteur temporaire `securitypolicyviolation`. Ne jamais assouplir la CSP.
+- Glisser-déposer : `:force-fallback="true"` (événements pointeur, identique souris / tactile). Mes outils ne savent pas faire un vrai glisser : je vérifie avec des `PointerEvent` synthétiques (`pointerdown` sur la poignée, `pointermove` ×N, puis `pointerup` + `mouseup` sur `document`) et je le note comme limite.
+- `ProjectUserState.tasks_view` existe déjà en base : la phase 5 n'a plus qu'à exposer `PUT /api/projects/{id}/my-state/`.
+- Docker Desktop n'est pas toujours lancé à la reprise : `C:\Program Files\Docker\Docker\Docker Desktop.exe`, attendre le démon, puis `docker compose up -d`.
+- Les 48 tests « skipped » de pytest sont normaux (cas en double des matrices de droits).
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -122,7 +138,7 @@ Détail dans `docs/phases/phase-03-taches.md`. App `tasks`, moteur de récurrenc
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
 | `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -131,6 +147,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 4 : le glisser-déposer des widgets n'a été vérifié qu'avec des événements pointeur synthétiques (ordre changé, enregistré, « En retard » resté premier) : **à essayer une fois à la souris et au doigt par Luca** ; pas de réordonnancement des onglets de vues ; le dashboard ne se rafraîchit pas tout seul (rechargé à l'ouverture et après chaque action) ; trois widgets attendent les phases 6 et 7.
 - Phase 3 : heures saisies dans le fuseau du navigateur (pas celui du profil) ; checklist non réordonnable à la souris ; une règle avec `COUNT` repart de zéro après une scission ; une tâche quotidienne ignorée laisse une tâche en retard par jour (conséquence voulue de « jamais de report automatique »).
 - Phase 2 : pas de glisser-déposer pour déplacer un projet (API prête, interface en phase 5) ; transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
 

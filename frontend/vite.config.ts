@@ -8,7 +8,16 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // vuedraggable's published bundle is a webpack build whose `global` shim
+      // calls `new Function("return this")`: our CSP (no 'unsafe-eval') blocks
+      // it and logs a violation on every page load. Its ES-module source ships
+      // in the same package, has no such shim, and is smaller: use that.
+      vuedraggable: fileURLToPath(
+        new URL('./node_modules/vuedraggable/src/vuedraggable.js', import.meta.url),
+      ),
+    },
   },
   server: {
     // The dev server runs in Docker behind Caddy (http://localhost:8080).

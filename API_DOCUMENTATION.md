@@ -65,10 +65,10 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | DELETE | `/api/projects/{id}/` | sous-projet : Éditeur sur le parent · racine : Propriétaire | Suppression avec tout le contenu (confirmation par saisie du nom) |
 | POST | `/api/projects/{id}/move/` | Admin sur le projet + Éditeur sur la cible | Change de parent dans le même espace (contrôle profondeur et cycle) |
 | POST | `/api/projects/{id}/transfer-ownership/` | Propriétaire | Projets racine uniquement |
-| GET | `/api/projects/{id}/overview/` | Lecteur | Mini-dashboard du projet (retard, aujourd'hui, jalons, sous-projets par temporalité, budget si droit) |
-| GET | `/api/projects/overdue/` | — | File de la modale « fin dépassée » : projets où j'ai Éditeur+, `end_date` passée, statut ouvert, non reportés pour moi |
-| POST | `/api/projects/{id}/snooze-overdue/` | Éditeur | « Me rappeler demain » (par utilisateur) |
-| PUT | `/api/projects/{id}/my-state/` | Lecteur | Mémorise ma vue des tâches (liste / kanban / calendrier / gantt) |
+| GET | `/api/projects/{id}/overview/` | Lecteur (coquille : 404) | Mini-dashboard du projet et de ses sous-projets : `{date, overdue, today, milestones}`. `overdue` et `today` ont la forme d'un widget (`available, count, items`). `milestones` : les 8 prochains éléments datés (`kind` = `task`, `project_start` ou `project_end`). Le bloc budget arrive en phase 7 |
+| GET | `/api/projects/overdue/` | — | File de la modale « fin dépassée », du plus ancien au plus récent : projets où j'ai Éditeur+, `end_date` passée **dans mon fuseau**, statut ouvert, non reportés pour moi |
+| POST | `/api/projects/{id}/snooze-overdue/` | Éditeur | « Me rappeler demain » (par utilisateur, expire le lendemain). `204` |
+| PUT | `/api/projects/{id}/my-state/` | Lecteur | Mémorise ma vue des tâches (liste / kanban / calendrier / gantt) · *phase 5* |
 | GET | `/api/memberships/?workspace=` ou `?project=` | Lecteur | Membres **effectifs** : accès direct et hérité, avec `source` (espace, projet ancêtre) |
 | POST | `/api/memberships/` | Admin sur la portée | Invite par `username` (adhésion immédiate + notification, `201`) ou par `email` (si compte vérifié : adhésion ; sinon invitation en attente, `202`). Corps : portée, rôle, options finance |
 | PATCH | `/api/memberships/{id}/` | Admin sur la portée | Rôle et options finance. Jamais la ligne du propriétaire ; impossible d'attribuer `owner` |
@@ -202,9 +202,9 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 | GET | `/api/notifications/unread-count/` | connecté | Compteur de la cloche (interrogé toutes les 60 s, pas de WebSocket) |
 | POST | `/api/notifications/{id}/read/` · `/api/notifications/read-all/` | connecté | |
 | GET | `/api/activity/?project=` | Éditeur | Journal du projet, `include_descendants`, filtres `actor`, `verb` |
-| GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel : en retard, aujourd'hui, todo épinglées, 7 jours, à valider, RDV à venir, frais à payer ce mois, justificatifs manquants. Paramètres : `view` ou `workspace` / `project` / `tag` |
-| GET, POST | `/api/dashboard/views/` | connecté | Vues enregistrées (filtres + disposition) |
-| PATCH, DELETE | `/api/dashboard/views/{id}/` | connecté | |
+| GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel. Paramètres : `view` (filtres d'une de mes vues ; celle d'un autre = 404) **ou** `workspace`, `project` (sous-projets inclus), `tag` (répétables) et `only_mine`. Réponse : `{date, widgets}` où `widgets` a une entrée par clé : `overdue`, `today`, `pinned`, `next7`, `to_validate`, `meetings`, `expenses_to_pay`, `missing_receipts`. Chaque entrée : `{available, count, items}` (50 éléments au plus, `count` = total). `available: false` = fonctionnalité d'une phase à venir, le front masque le widget. « Aujourd'hui » est évalué dans le fuseau du profil |
+| GET, POST | `/api/dashboard/views/` | connecté | Mes vues enregistrées, jamais partagées. Le premier `GET` crée « Mon dashboard ». Champs : `name`, `filters` `{workspaces, projects, tags, only_mine}`, `layout` `[{key, size 1-3, tall, hidden}]`, `is_default`, `position` |
+| PATCH, DELETE | `/api/dashboard/views/{id}/` | connecté | La disposition est nettoyée par le serveur (« En retard » toujours premier et visible, tailles bornées, widgets manquants ajoutés). Une seule vue par défaut ; supprimer la vue par défaut en promeut une autre |
 
 ## 11. Technique
 
