@@ -17,6 +17,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.accounts.signals import email_verified
+from apps.core.localtime import local_today
 from apps.workspaces.models import Workspace
 
 from . import services, tree
@@ -27,7 +28,7 @@ from .access import (
     invalidate_access_map,
     workspace_access,
 )
-from .models import MAX_DEPTH, Invitation, Membership, Project
+from .models import MAX_DEPTH, Invitation, Membership, Project, ProjectUserState
 from .models import Role as StoredRole
 from .permissions import ProjectScopedViewSet
 from .serializers import (
@@ -38,6 +39,7 @@ from .serializers import (
     MembershipCreateSerializer,
     MembershipUpdateSerializer,
     MoveProjectSerializer,
+    OverdueProjectSerializer,
     ProjectNodeSerializer,
     ProjectSerializer,
     ShellProjectSerializer,
@@ -111,7 +113,11 @@ class ProjectViewSet(
     queryset = Project.objects.select_related("type", "parent").prefetch_related("tags")
     serializer_class = ProjectSerializer
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
-    action_roles = {"move": Role.ADMIN, "transfer_ownership": Role.OWNER}
+    action_roles = {
+        "move": Role.ADMIN,
+        "transfer_ownership": Role.OWNER,
+        "snooze_overdue": Role.EDITOR,
+    }
 
     def get_project(self, obj):
         return obj
@@ -120,6 +126,7 @@ class ProjectViewSet(
         return {
             **super().get_serializer_context(),
             "access_map": get_access_map(self.request),
+            "today": local_today(self.request.user),
         }
 
     # --- Read ---------------------------------------------------------------------
@@ -140,12 +147,47 @@ class ProjectViewSet(
             queryset = queryset.filter(workspace_id=workspace_id)
         if request.query_params.get("include_archived") not in ("true", "1"):
             queryset = queryset.exclude(status=Project.Status.ARCHIVED)
-        today = timezone.localdate()
+        today = local_today(request.user)
         nodes = [
             project_node(project, access_map.for_project(project.pk), today)
             for project in queryset.order_by("depth", "position", "name")
         ]
         return Response(ProjectNodeSerializer(nodes, many=True).data)
+
+    @extend_schema(responses={200: OverdueProjectSerializer(many=True)})
+    @action(detail=False, pagination_class=None)
+    def overdue(self, request):
+        """Queue of the "fin dépassée" modal (SPEC §5).
+
+        Projects whose end date has passed (in MY timezone) while still open,
+        where I may edit, and that I have not snoozed until tomorrow. Oldest
+        first. As soon as any editor answers "Terminé" or "Reprogrammer" the
+        project leaves everybody's queue, because the project itself changed.
+        """
+        today = local_today(request.user)
+        editable = get_access_map(request).project_ids(Role.EDITOR)
+        snoozed = ProjectUserState.objects.filter(
+            user=request.user, overdue_snoozed_until__gte=today
+        ).values("project_id")
+        projects = (
+            Project.objects.filter(pk__in=editable, end_date__lt=today)
+            .exclude(status__in=Project.CLOSED_STATUSES)
+            .exclude(pk__in=snoozed)
+            .order_by("end_date", "id")
+        )
+        return Response(OverdueProjectSerializer(projects, many=True).data)
+
+    @extend_schema(request=None, responses={204: None})
+    @action(detail=True, methods=["post"], url_path="snooze-overdue")
+    def snooze_overdue(self, request, pk=None):
+        """ "Me rappeler demain": hides the modal for ME until tomorrow."""
+        project = self.get_object()  # editor or more, see action_roles
+        ProjectUserState.objects.update_or_create(
+            user=request.user,
+            project=project,
+            defaults={"overdue_snoozed_until": local_today(request.user)},
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(responses={200: ProjectSerializer})
     def retrieve(self, request, *args, **kwargs):

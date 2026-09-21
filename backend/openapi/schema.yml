@@ -299,6 +299,182 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/dashboard/summary/:
+    get:
+      operationId: dashboard_summary_retrieve
+      description: Data of every widget in one call (one round trip, one consistent
+        "now").
+      parameters:
+      - in: query
+        name: only_mine
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Sous-projets inclus
+      - in: query
+        name: tag
+        schema:
+          type: array
+          items:
+            type: integer
+      - in: query
+        name: view
+        schema:
+          type: integer
+        description: Filtres d'une vue enregistrée
+      - in: query
+        name: workspace
+        schema:
+          type: array
+          items:
+            type: integer
+      tags:
+      - dashboard
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+          description: ''
+  /api/dashboard/views/:
+    get:
+      operationId: dashboard_views_list
+      description: |-
+        My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+
+        A user only ever sees and edits their own views. The first call creates
+        "Mon dashboard", so that the layout can be saved before any view is named.
+      tags:
+      - dashboard
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardView'
+          description: ''
+    post:
+      operationId: dashboard_views_create
+      description: |-
+        My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+
+        A user only ever sees and edits their own views. The first call creates
+        "Mon dashboard", so that the layout can be saved before any view is named.
+      tags:
+      - dashboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardViewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DashboardViewRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardView'
+          description: ''
+  /api/dashboard/views/{id}/:
+    get:
+      operationId: dashboard_views_retrieve
+      description: |-
+        My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+
+        A user only ever sees and edits their own views. The first call creates
+        "Mon dashboard", so that the layout can be saved before any view is named.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) dashboard
+          view.
+        required: true
+      tags:
+      - dashboard
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardView'
+          description: ''
+    patch:
+      operationId: dashboard_views_partial_update
+      description: |-
+        My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+
+        A user only ever sees and edits their own views. The first call creates
+        "Mon dashboard", so that the layout can be saved before any view is named.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) dashboard
+          view.
+        required: true
+      tags:
+      - dashboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDashboardViewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDashboardViewRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardView'
+          description: ''
+    delete:
+      operationId: dashboard_views_destroy
+      description: |-
+        My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+
+        A user only ever sees and edits their own views. The first call creates
+        "Mon dashboard", so that the layout can be saved before any view is named.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) dashboard
+          view.
+        required: true
+      tags:
+      - dashboard
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/health/:
     get:
       operationId: health_retrieve
@@ -849,6 +1025,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+  /api/projects/{id}/overview/:
+    get:
+      operationId: projects_overview_retrieve
+      description: Mini-dashboard of one project and its sub-projects (SPEC §15, page
+        3).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOverview'
+          description: ''
+  /api/projects/{id}/snooze-overdue/:
+    post:
+      operationId: projects_snooze_overdue_create
+      description: '"Me rappeler demain": hides the modal for ME until tomorrow.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project.
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/projects/{id}/transfer-ownership/:
     post:
       operationId: projects_transfer_ownership_create
@@ -879,6 +1095,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/overdue/:
+    get:
+      operationId: projects_overdue_list
+      description: |-
+        Queue of the "fin dépassée" modal (SPEC §5).
+
+        Projects whose end date has passed (in MY timezone) while still open,
+        where I may edit, and that I have not snoozed until tomorrow. Oldest
+        first. As soon as any editor answers "Terminé" or "Reprogrammer" the
+        project leaves everybody's queue, because the project itself changed.
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OverdueProject'
           description: ''
   /api/projects/tree/:
     get:
@@ -1856,6 +2095,87 @@ components:
           minimum: 0
       required:
       - title
+    DashboardSummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Today, on the user's clock
+        widgets:
+          $ref: '#/components/schemas/DashboardWidgets'
+      required:
+      - date
+      - widgets
+    DashboardView:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 60
+        filters: {}
+        layout: {}
+        is_default:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - filters
+      - id
+      - is_default
+      - layout
+      - name
+      - position
+    DashboardViewRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        filters: {}
+        layout: {}
+        is_default:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - name
+    DashboardWidgets:
+      type: object
+      properties:
+        overdue:
+          $ref: '#/components/schemas/TaskWidget'
+        today:
+          $ref: '#/components/schemas/TaskWidget'
+        pinned:
+          $ref: '#/components/schemas/PinnedWidget'
+        next7:
+          $ref: '#/components/schemas/TaskWidget'
+        to_validate:
+          $ref: '#/components/schemas/ValidateWidget'
+        meetings:
+          $ref: '#/components/schemas/PendingWidget'
+        expenses_to_pay:
+          $ref: '#/components/schemas/PendingWidget'
+        missing_receipts:
+          $ref: '#/components/schemas/PendingWidget'
+      required:
+      - expenses_to_pay
+      - meetings
+      - missing_receipts
+      - next7
+      - overdue
+      - pinned
+      - to_validate
+      - today
     DirectMembership:
       type: object
       properties:
@@ -2030,13 +2350,13 @@ components:
       type: object
       properties:
         kind:
-          $ref: '#/components/schemas/KindEnum'
+          $ref: '#/components/schemas/InviteResultKindEnum'
         detail:
           type: string
       required:
       - detail
       - kind
-    KindEnum:
+    InviteResultKindEnum:
       enum:
       - membership
       - invitation
@@ -2167,6 +2487,39 @@ components:
       - can_view_finance
       - id
       - role
+    Milestone:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/MilestoneKindEnum'
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        title:
+          type: string
+        project:
+          type: integer
+        color:
+          type: string
+      required:
+      - color
+      - date
+      - id
+      - kind
+      - project
+      - title
+    MilestoneKindEnum:
+      enum:
+      - task
+      - project_start
+      - project_end
+      type: string
+      description: |-
+        * `task` - task
+        * `project_start` - project_start
+        * `project_end` - project_end
     MoveProjectRequest:
       type: object
       properties:
@@ -2189,6 +2542,35 @@ components:
     NullEnum:
       enum:
       - null
+    OverdueProject:
+      type: object
+      description: 'What the "fin dépassée" modal needs: « MARCHIOLY devait se terminer
+        le … ».'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        color:
+          type: string
+          readOnly: true
+        end_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ProjectStatusEnum'
+          readOnly: true
+      required:
+      - color
+      - end_date
+      - id
+      - name
+      - status
     PaginatedTaskList:
       type: object
       required:
@@ -2255,6 +2637,21 @@ components:
         done:
           type: boolean
         pinned:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+    PatchedDashboardViewRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        filters: {}
+        layout: {}
+        is_default:
           type: boolean
         position:
           type: integer
@@ -2439,6 +2836,82 @@ components:
           minLength: 1
           pattern: ^#[0-9A-Fa-f]{6}$
           maxLength: 7
+    PendingWidget:
+      type: object
+      description: 'A widget whose feature is not built yet: the front hides it.'
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+      required:
+      - available
+      - count
+    PinnedItem:
+      type: object
+      description: A pinned item with enough context for the dashboard widget.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        task:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 240
+        done:
+          type: boolean
+        pinned:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        done_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        task_title:
+          type: string
+          readOnly: true
+        project:
+          type: integer
+          readOnly: true
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+      required:
+      - done
+      - done_at
+      - id
+      - pinned
+      - position
+      - project
+      - project_color
+      - project_name
+      - task
+      - task_title
+      - title
+    PinnedWidget:
+      type: object
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PinnedItem'
+      required:
+      - available
+      - count
+      - items
     Project:
       type: object
       description: Create / read / update a project the user has a real role on.
@@ -2487,8 +2960,7 @@ components:
           maximum: 2147483647
           minimum: 0
         temporal:
-          allOf:
-          - $ref: '#/components/schemas/TemporalEnum'
+          type: string
           readOnly: true
         end_overdue:
           type: boolean
@@ -2629,6 +3101,25 @@ components:
       - type
       - type_name
       - workspace
+    ProjectOverview:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        overdue:
+          $ref: '#/components/schemas/TaskWidget'
+        today:
+          $ref: '#/components/schemas/TaskWidget'
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+      required:
+      - date
+      - milestones
+      - overdue
+      - today
     ProjectRequest:
       type: object
       description: Create / read / update a project the user has a real role on.
@@ -3095,6 +3586,22 @@ components:
         * `to_validate` - À valider
         * `done` - Terminé
         * `cancelled` - Annulé
+    TaskWidget:
+      type: object
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+          description: Total, even beyond the listed items
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+      required:
+      - available
+      - count
+      - items
     TemporalEnum:
       enum:
       - past
@@ -3139,6 +3646,53 @@ components:
           minLength: 1
       required:
       - username
+    ValidateItem:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ValidateItemKindEnum'
+        id:
+          type: integer
+        title:
+          type: string
+        project:
+          type: integer
+        project_name:
+          type: string
+        project_color:
+          type: string
+      required:
+      - id
+      - kind
+      - project
+      - project_color
+      - project_name
+      - title
+    ValidateItemKindEnum:
+      enum:
+      - task
+      - project
+      - asset
+      type: string
+      description: |-
+        * `task` - task
+        * `project` - project
+        * `asset` - asset
+    ValidateWidget:
+      type: object
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidateItem'
+      required:
+      - available
+      - count
+      - items
     Workspace:
       type: object
       description: Full view of a workspace, for its members.

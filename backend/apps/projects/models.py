@@ -280,3 +280,39 @@ class Invitation(TimeStampedModel):
     @classmethod
     def find_by_token(cls, token: str):
         return cls.objects.filter(token_hash=hash_token(token)).first()
+
+
+class ProjectUserState(TimeStampedModel):
+    """What ONE user remembers about ONE project (nothing shared).
+
+    - `overdue_snoozed_until`: "Me rappeler demain" in the end-date modal.
+      The answer is personal; "Terminé" and "Reprogrammer" change the project
+      itself and therefore apply to everybody.
+    - `tasks_view`: the task view last used on this project (phase 5).
+    """
+
+    class TasksView(models.TextChoices):
+        LIST = "list", "Liste"
+        KANBAN = "kanban", "Kanban"
+        CALENDAR = "calendar", "Calendrier"
+        GANTT = "gantt", "Gantt"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="project_states",
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="user_states"
+    )
+    tasks_view = models.CharField(
+        max_length=10, choices=TasksView.choices, default=TasksView.LIST
+    )
+    overdue_snoozed_until = models.DateField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="projectuserstate_unique_user_project"
+            )
+        ]

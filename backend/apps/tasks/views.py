@@ -6,9 +6,6 @@ member who is ASSIGNED to a task may change its status and tick its checklist
 with the Commenter role, without being an Editor of the whole project.
 """
 
-import zoneinfo
-from datetime import datetime
-
 from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
@@ -21,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
+from apps.core.localtime import local_today
 from apps.projects.access import Role, effective_access, get_access_map
 from apps.projects.permissions import ProjectScopedViewSet
 
@@ -39,15 +37,6 @@ from .serializers import (
 STOP_NEEDS_FOLLOWING = (
     "Pour arrêter la récurrence, applique le changement à toutes les suivantes."
 )
-
-
-def local_today(user):
-    """Today's date where the user lives: "overdue" is a local notion."""
-    try:
-        zone = zoneinfo.ZoneInfo(user.timezone)
-    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
-        zone = zoneinfo.ZoneInfo("Europe/Zurich")
-    return datetime.now(zone).date()
 
 
 def _renumber(project_id: int, column: str, moved: Task | None = None, index: int = 0):

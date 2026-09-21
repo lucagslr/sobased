@@ -153,11 +153,15 @@ class ProjectSerializer(serializers.ModelSerializer):
     @extend_schema_field(
         serializers.ChoiceField(choices=[tree.PAST, tree.CURRENT, tree.UPCOMING])
     )
+    def _today(self):
+        # The view passes the user's local date; the server date is a fallback.
+        return self.context.get("today") or timezone.localdate()
+
     def get_temporal(self, project) -> str:
-        return tree.temporal(project.status, project.start_date, timezone.localdate())
+        return tree.temporal(project.status, project.start_date, self._today())
 
     def get_end_overdue(self, project) -> bool:
-        return tree.end_overdue(project.status, project.end_date, timezone.localdate())
+        return tree.end_overdue(project.status, project.end_date, self._today())
 
     @extend_schema_field(BreadcrumbSerializer(many=True))
     def get_breadcrumb(self, project) -> list[dict]:
@@ -240,6 +244,15 @@ class ProjectSerializer(serializers.ModelSerializer):
                 {"workspace": "Indique l'espace (ou le projet parent)."}
             )
         return attrs
+
+
+class OverdueProjectSerializer(serializers.ModelSerializer):
+    """What the "fin dépassée" modal needs: « MARCHIOLY devait se terminer le … »."""
+
+    class Meta:
+        model = Project
+        fields = ["id", "name", "color", "end_date", "status"]
+        read_only_fields = fields
 
 
 class ShellProjectSerializer(serializers.Serializer):

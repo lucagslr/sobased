@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.workspaces",
     "apps.projects",
     "apps.tasks",
+    "apps.dashboard",
 ]
 
 MIDDLEWARE = [

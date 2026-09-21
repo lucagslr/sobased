@@ -230,6 +230,85 @@ export interface paths {
         patch: operations["checklist_items_partial_update"];
         trace?: never;
     };
+    "/api/dashboard/summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Data of every widget in one call (one round trip, one consistent "now"). */
+        get: operations["dashboard_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/views/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+         *
+         *     A user only ever sees and edits their own views. The first call creates
+         *     "Mon dashboard", so that the layout can be saved before any view is named.
+         */
+        get: operations["dashboard_views_list"];
+        put?: never;
+        /**
+         * @description My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+         *
+         *     A user only ever sees and edits their own views. The first call creates
+         *     "Mon dashboard", so that the layout can be saved before any view is named.
+         */
+        post: operations["dashboard_views_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/views/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+         *
+         *     A user only ever sees and edits their own views. The first call creates
+         *     "Mon dashboard", so that the layout can be saved before any view is named.
+         */
+        get: operations["dashboard_views_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+         *
+         *     A user only ever sees and edits their own views. The first call creates
+         *     "Mon dashboard", so that the layout can be saved before any view is named.
+         */
+        delete: operations["dashboard_views_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description My saved views ("Perso", "100SATIONS", "École"): filters + layout.
+         *
+         *     A user only ever sees and edits their own views. The first call creates
+         *     "Mon dashboard", so that the layout can be saved before any view is named.
+         */
+        patch: operations["dashboard_views_partial_update"];
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -522,6 +601,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{id}/overview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Mini-dashboard of one project and its sub-projects (SPEC §15, page 3). */
+        get: operations["projects_overview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/snooze-overdue/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description "Me rappeler demain": hides the modal for ME until tomorrow. */
+        post: operations["projects_snooze_overdue_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{id}/transfer-ownership/": {
         parameters: {
             query?: never;
@@ -533,6 +646,30 @@ export interface paths {
         put?: never;
         /** @description Root projects only: hand ownership to someone with direct access. */
         post: operations["projects_transfer_ownership_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/overdue/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Queue of the "fin dépassée" modal (SPEC §5).
+         *
+         *     Projects whose end date has passed (in MY timezone) while still open,
+         *     where I may edit, and that I have not snoozed until tomorrow. Oldest
+         *     first. As soon as any editor answers "Terminé" or "Reprogrammer" the
+         *     project leaves everybody's queue, because the project itself changed.
+         */
+        get: operations["projects_overdue_list"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -953,6 +1090,39 @@ export interface components {
             pinned?: boolean;
             position?: number;
         };
+        DashboardSummary: {
+            /**
+             * Format: date
+             * @description Today, on the user's clock
+             */
+            date: string;
+            widgets: components["schemas"]["DashboardWidgets"];
+        };
+        DashboardView: {
+            readonly id: number;
+            name: string;
+            filters: unknown;
+            layout: unknown;
+            is_default: boolean;
+            position: number;
+        };
+        DashboardViewRequest: {
+            name: string;
+            filters?: unknown;
+            layout?: unknown;
+            is_default?: boolean;
+            position?: number;
+        };
+        DashboardWidgets: {
+            overdue: components["schemas"]["TaskWidget"];
+            today: components["schemas"]["TaskWidget"];
+            pinned: components["schemas"]["PinnedWidget"];
+            next7: components["schemas"]["TaskWidget"];
+            to_validate: components["schemas"]["ValidateWidget"];
+            meetings: components["schemas"]["PendingWidget"];
+            expenses_to_pay: components["schemas"]["PendingWidget"];
+            missing_receipts: components["schemas"]["PendingWidget"];
+        };
         DirectMembership: {
             readonly id: number;
             role: components["schemas"]["RoleEnum"];
@@ -1016,7 +1186,7 @@ export interface components {
             is_pending: boolean;
         };
         InviteResult: {
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["InviteResultKindEnum"];
             detail: string;
         };
         /**
@@ -1024,7 +1194,7 @@ export interface components {
          *     * `invitation` - invitation
          * @enum {string}
          */
-        KindEnum: "membership" | "invitation";
+        InviteResultKindEnum: "membership" | "invitation";
         LoginRequest: {
             username: string;
             password: string;
@@ -1071,6 +1241,22 @@ export interface components {
             can_view_finance: boolean;
             can_edit_finance: boolean;
         };
+        Milestone: {
+            kind: components["schemas"]["MilestoneKindEnum"];
+            id: number;
+            /** Format: date */
+            date: string;
+            title: string;
+            project: number;
+            color: string;
+        };
+        /**
+         * @description * `task` - task
+         *     * `project_start` - project_start
+         *     * `project_end` - project_end
+         * @enum {string}
+         */
+        MilestoneKindEnum: "task" | "project_start" | "project_end";
         MoveProjectRequest: {
             parent: number | null;
         };
@@ -1080,6 +1266,15 @@ export interface components {
         };
         /** @enum {unknown} */
         NullEnum: null;
+        /** @description What the "fin dépassée" modal needs: « MARCHIOLY devait se terminer le … ». */
+        OverdueProject: {
+            readonly id: number;
+            readonly name: string;
+            readonly color: string;
+            /** Format: date */
+            readonly end_date: string | null;
+            readonly status: components["schemas"]["ProjectStatusEnum"];
+        };
         PaginatedTaskList: {
             /** @example 123 */
             count: number;
@@ -1108,6 +1303,13 @@ export interface components {
             title?: string;
             done?: boolean;
             pinned?: boolean;
+            position?: number;
+        };
+        PatchedDashboardViewRequest: {
+            name?: string;
+            filters?: unknown;
+            layout?: unknown;
+            is_default?: boolean;
             position?: number;
         };
         /** @description The signed-in user's own profile and preferences. */
@@ -1186,6 +1388,31 @@ export interface components {
             name?: string;
             color?: string;
         };
+        /** @description A widget whose feature is not built yet: the front hides it. */
+        PendingWidget: {
+            available: boolean;
+            count: number;
+        };
+        /** @description A pinned item with enough context for the dashboard widget. */
+        PinnedItem: {
+            readonly id: number;
+            readonly task: number;
+            title: string;
+            done: boolean;
+            pinned: boolean;
+            position: number;
+            /** Format: date-time */
+            readonly done_at: string | null;
+            readonly task_title: string;
+            readonly project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+        };
+        PinnedWidget: {
+            available: boolean;
+            count: number;
+            items: components["schemas"]["PinnedItem"][];
+        };
         /** @description Create / read / update a project the user has a real role on. */
         Project: {
             readonly id: number;
@@ -1204,7 +1431,7 @@ export interface components {
             color: string;
             tags: number[];
             position: number;
-            readonly temporal: components["schemas"]["TemporalEnum"];
+            readonly temporal: string;
             readonly end_overdue: boolean;
             readonly breadcrumb: components["schemas"]["Breadcrumb"][];
             readonly my_role: (components["schemas"]["RoleEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -1244,6 +1471,13 @@ export interface components {
             my_role: (components["schemas"]["RoleEnum"] | components["schemas"]["NullEnum"]) | null;
             can_view_finance: boolean;
             can_edit_finance: boolean;
+        };
+        ProjectOverview: {
+            /** Format: date */
+            date: string;
+            overdue: components["schemas"]["TaskWidget"];
+            today: components["schemas"]["TaskWidget"];
+            milestones: components["schemas"]["Milestone"][];
         };
         /** @description Create / read / update a project the user has a real role on. */
         ProjectRequest: {
@@ -1420,6 +1654,12 @@ export interface components {
          * @enum {string}
          */
         TaskStatusEnum: "todo" | "in_progress" | "to_validate" | "done" | "cancelled";
+        TaskWidget: {
+            available: boolean;
+            /** @description Total, even beyond the listed items */
+            count: number;
+            items: components["schemas"]["Task"][];
+        };
         /**
          * @description * `past` - past
          *     * `current` - current
@@ -1442,6 +1682,26 @@ export interface components {
         };
         TransferProjectOwnershipRequest: {
             username: string;
+        };
+        ValidateItem: {
+            kind: components["schemas"]["ValidateItemKindEnum"];
+            id: number;
+            title: string;
+            project: number;
+            project_name: string;
+            project_color: string;
+        };
+        /**
+         * @description * `task` - task
+         *     * `project` - project
+         *     * `asset` - asset
+         * @enum {string}
+         */
+        ValidateItemKindEnum: "task" | "project" | "asset";
+        ValidateWidget: {
+            available: boolean;
+            count: number;
+            items: components["schemas"]["ValidateItem"][];
         };
         /** @description Full view of a workspace, for its members. */
         Workspace: {
@@ -1779,6 +2039,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChecklistItem"];
+                };
+            };
+        };
+    };
+    dashboard_summary_retrieve: {
+        parameters: {
+            query?: {
+                only_mine?: boolean;
+                /** @description Sous-projets inclus */
+                project?: number[];
+                tag?: number[];
+                /** @description Filtres d'une vue enregistrée */
+                view?: number;
+                workspace?: number[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"];
+                };
+            };
+        };
+    };
+    dashboard_views_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardView"][];
+                };
+            };
+        };
+    };
+    dashboard_views_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DashboardViewRequest"];
+                "multipart/form-data": components["schemas"]["DashboardViewRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardView"];
+                };
+            };
+        };
+    };
+    dashboard_views_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) dashboard view. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardView"];
+                };
+            };
+        };
+    };
+    dashboard_views_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) dashboard view. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    dashboard_views_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) dashboard view. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDashboardViewRequest"];
+                "multipart/form-data": components["schemas"]["PatchedDashboardViewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardView"];
                 };
             };
         };
@@ -2330,6 +2730,48 @@ export interface operations {
             };
         };
     };
+    projects_overview_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectOverview"];
+                };
+            };
+        };
+    };
+    projects_snooze_overdue_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     projects_transfer_ownership_create: {
         parameters: {
             query?: never;
@@ -2353,6 +2795,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_overdue_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverdueProject"][];
                 };
             };
         };
