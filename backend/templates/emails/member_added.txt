@@ -1,0 +1,5 @@
+Salut {{ name }},
+
+{{ actor }} t'a donné accès à « {{ scope_name }} » avec le rôle {{ role }}.
+
+{{ url }}

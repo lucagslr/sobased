@@ -1,0 +1,7 @@
+Bonjour,
+
+{{ actor }} t'invite à rejoindre « {{ scope_name }} » sur SOBASED, avec le rôle {{ role }}.
+
+{{ url }}
+
+Cette invitation est valable 14 jours. Tu pourras créer ton compte ou te connecter depuis ce lien.

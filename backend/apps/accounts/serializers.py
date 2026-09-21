@@ -131,6 +131,8 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
     last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
     accept_privacy = serializers.BooleanField()
+    # Token of the invitation link the visitor came from, if any.
+    invitation = serializers.CharField(required=False, allow_blank=True)
 
     def validate_username(self, value):
         if User.objects.filter(username__iexact=value).exists():

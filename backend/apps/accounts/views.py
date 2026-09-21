@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+from django.utils.module_loading import import_string
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
@@ -47,6 +48,7 @@ from .serializers import (
     TokenSerializer,
     _check_password_strength,
 )
+from .signals import email_verified
 from .tokens import read_email_token
 
 User = get_user_model()
@@ -95,16 +97,22 @@ class RegisterView(PublicAPIView):
 
     @extend_schema(request=RegisterSerializer, responses={201: MeSerializer})
     def post(self, request):
-        # With closed registration, sign-up is only possible through an
-        # invitation link (handled in phase 2).
-        if not settings.REGISTRATION_OPEN:
-            return Response(
-                {"detail": "Les inscriptions se font uniquement sur invitation."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        # An invitation link proves the visitor owns the invited address: if
+        # they sign up with it, the e-mail is verified at once, and sign-up is
+        # allowed even when registration is closed.
+        resolve = import_string(settings.INVITATION_EMAIL_RESOLVER)
+        invited = resolve(data.get("invitation", "")) == data["email"]
+        if not settings.REGISTRATION_OPEN and not invited:
+            return Response(
+                {
+                    "detail": "Les inscriptions se font uniquement sur invitation, "
+                    "avec l'adresse e-mail qui a reçu l'invitation."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         user = User.objects.create_user(
             username=data["username"],
             email=data["email"],
@@ -112,8 +120,12 @@ class RegisterView(PublicAPIView):
             first_name=data.get("first_name", ""),
             last_name=data.get("last_name", ""),
             privacy_accepted_at=timezone.now(),
+            email_verified_at=timezone.now() if invited else None,
         )
-        send_verification_email(user)
+        if invited:
+            email_verified.send(sender=User, user=user)  # applies the invitation
+        else:
+            send_verification_email(user)
         # An unverified account can sign in; it just cannot invite or be
         # invited by e-mail yet (SPECIFICATIONS §1.4).
         login(request, user)
@@ -142,6 +154,7 @@ class VerifyEmailView(PublicAPIView):
         if not user.email_verified_at:
             user.email_verified_at = timezone.now()
             user.save(update_fields=["email_verified_at"])
+            email_verified.send(sender=User, user=user)
         return Response(OK)
 
 
@@ -251,9 +264,12 @@ class PasswordResetConfirmView(PublicAPIView):
             )
         user.set_password(data["new_password"])
         # Receiving the link proves ownership of the mailbox.
-        if not user.email_verified_at:
+        newly_verified = not user.email_verified_at
+        if newly_verified:
             user.email_verified_at = timezone.now()
         user.save()
+        if newly_verified:
+            email_verified.send(sender=User, user=user)
         cache.delete(_login_failures_key(user.username))
         return Response(OK)
 

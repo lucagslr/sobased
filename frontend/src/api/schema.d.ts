@@ -199,6 +199,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invitations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Pending invitations of a scope. Admins only (they contain e-mails). */
+        get: operations["invitations_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invitations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Pending invitations of a scope. Admins only (they contain e-mails). */
+        delete: operations["invitations_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invitations/{id}/resend/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description New link, new 14 days. The previous link stops working. */
+        post: operations["invitations_resend_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invitations/accept/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Pending invitations of a scope. Admins only (they contain e-mails). */
+        post: operations["invitations_accept_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invitations/lookup/{token}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public: what the acceptance page shows before sign-in or sign-up. */
+        get: operations["invitations_lookup_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/": {
         parameters: {
             query?: never;
@@ -229,6 +314,265 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Who has access to a workspace or a project, and managing it.
+         *
+         *     - list: any real member of the scope (viewer and up). Shells see nothing.
+         *     - create / update / delete: admins of the scope the membership is on.
+         *       An admin may change or remove another admin, never the owner, and nobody
+         *       can grant "owner" here (SPEC §6).
+         *     - anyone may delete their own membership, except the owner.
+         */
+        get: operations["memberships_list"];
+        put?: never;
+        /**
+         * @description Who has access to a workspace or a project, and managing it.
+         *
+         *     - list: any real member of the scope (viewer and up). Shells see nothing.
+         *     - create / update / delete: admins of the scope the membership is on.
+         *       An admin may change or remove another admin, never the owner, and nobody
+         *       can grant "owner" here (SPEC §6).
+         *     - anyone may delete their own membership, except the owner.
+         */
+        post: operations["memberships_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memberships/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Who has access to a workspace or a project, and managing it.
+         *
+         *     - list: any real member of the scope (viewer and up). Shells see nothing.
+         *     - create / update / delete: admins of the scope the membership is on.
+         *       An admin may change or remove another admin, never the owner, and nobody
+         *       can grant "owner" here (SPEC §6).
+         *     - anyone may delete their own membership, except the owner.
+         */
+        delete: operations["memberships_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Who has access to a workspace or a project, and managing it.
+         *
+         *     - list: any real member of the scope (viewer and up). Shells see nothing.
+         *     - create / update / delete: admins of the scope the membership is on.
+         *       An admin may change or remove another admin, never the owner, and nobody
+         *       can grant "owner" here (SPEC §6).
+         *     - anyone may delete their own membership, except the owner.
+         */
+        patch: operations["memberships_partial_update"];
+        trace?: never;
+    };
+    "/api/project-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Project types of a workspace. Read: anyone in it. Write: admins. */
+        get: operations["project_types_list"];
+        put?: never;
+        /** @description Project types of a workspace. Read: anyone in it. Write: admins. */
+        post: operations["project_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/project-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Project types of a workspace. Read: anyone in it. Write: admins. */
+        get: operations["project_types_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Project types of a workspace. Read: anyone in it. Write: admins. */
+        delete: operations["project_types_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Project types of a workspace. Read: anyone in it. Write: admins. */
+        patch: operations["project_types_partial_update"];
+        trace?: never;
+    };
+    "/api/projects/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Projects. There is no flat list: navigation uses the `tree` action. */
+        post: operations["projects_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Full project, or the reduced "shell" view of an ancestor. */
+        get: operations["projects_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Sub-project: editor of the PARENT. Root project: owner (D5). */
+        delete: operations["projects_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Projects. There is no flat list: navigation uses the `tree` action. */
+        patch: operations["projects_partial_update"];
+        trace?: never;
+    };
+    "/api/projects/{id}/move/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Re-parent inside the workspace: admin here, editor on the target. */
+        post: operations["projects_move_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/transfer-ownership/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Root projects only: hand ownership to someone with direct access. */
+        post: operations["projects_transfer_ownership_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/tree/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every node the user can see, shells included, as a flat list. */
+        get: operations["projects_tree_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tags/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Tags of a workspace.
+         *
+         *     Read: anyone in the workspace. Create: editors of the workspace or of any
+         *     of its projects (they tag their own content). Rename / delete: workspace
+         *     editors only, because it affects everybody's content.
+         */
+        get: operations["tags_list"];
+        put?: never;
+        /**
+         * @description Tags of a workspace.
+         *
+         *     Read: anyone in the workspace. Create: editors of the workspace or of any
+         *     of its projects (they tag their own content). Rename / delete: workspace
+         *     editors only, because it affects everybody's content.
+         */
+        post: operations["tags_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tags/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Tags of a workspace.
+         *
+         *     Read: anyone in the workspace. Create: editors of the workspace or of any
+         *     of its projects (they tag their own content). Rename / delete: workspace
+         *     editors only, because it affects everybody's content.
+         */
+        get: operations["tags_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Tags of a workspace.
+         *
+         *     Read: anyone in the workspace. Create: editors of the workspace or of any
+         *     of its projects (they tag their own content). Rename / delete: workspace
+         *     editors only, because it affects everybody's content.
+         */
+        delete: operations["tags_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Tags of a workspace.
+         *
+         *     Read: anyone in the workspace. Create: editors of the workspace or of any
+         *     of its projects (they tag their own content). Rename / delete: workspace
+         *     editors only, because it affects everybody's content.
+         */
+        patch: operations["tags_partial_update"];
         trace?: never;
     };
     "/api/users/{username}/avatar/": {
@@ -269,14 +613,153 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/workspaces/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        get: operations["workspaces_list"];
+        put?: never;
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        post: operations["workspaces_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        get: operations["workspaces_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        delete: operations["workspaces_destroy"];
+        options?: never;
+        head?: never;
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        patch: operations["workspaces_partial_update"];
+        trace?: never;
+    };
+    "/api/workspaces/{id}/leave/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description CRUD on workspaces. Any signed-in user may create one and owns it. */
+        post: operations["workspaces_leave_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workspaces/{id}/transfer-ownership/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The owner hands the workspace over to a member and becomes admin. */
+        post: operations["workspaces_transfer_ownership_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        DirectMembership: {
+            readonly id: number;
+            role: components["schemas"]["RoleEnum"];
+            can_view_finance?: boolean;
+            can_edit_finance?: boolean;
+        };
+        /** @description One person with access to a scope: effective rights and where they come from. */
+        EffectiveMember: {
+            user: components["schemas"]["PublicUser"];
+            role: components["schemas"]["RoleEnum"];
+            can_view_finance: boolean;
+            can_edit_finance: boolean;
+            direct: components["schemas"]["DirectMembership"] | null;
+            inherited_from: components["schemas"]["InheritedGrant"][];
+        };
         EmailRequest: {
             /** Format: email */
             email: string;
         };
+        /**
+         * @description * `viewer` - Lecteur
+         *     * `commenter` - Commentateur
+         *     * `editor` - Éditeur
+         *     * `admin` - Admin
+         * @enum {string}
+         */
+        GrantableRoleEnum: "viewer" | "commenter" | "editor" | "admin";
+        InheritedGrant: {
+            scope_type: components["schemas"]["ScopeTypeEnum"];
+            scope_id: number;
+            scope_name: string;
+            role: components["schemas"]["RoleEnum"];
+        };
+        Invitation: {
+            readonly id: number;
+            /** Format: email */
+            readonly email: string;
+            readonly workspace: number | null;
+            readonly project: number | null;
+            readonly role: components["schemas"]["RoleEnum"];
+            readonly can_view_finance: boolean;
+            readonly can_edit_finance: boolean;
+            readonly invited_by: components["schemas"]["PublicUser"];
+            /** Format: date-time */
+            readonly expires_at: string;
+            readonly is_pending: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        InvitationAcceptRequest: {
+            token: string;
+        };
+        /** @description What the (public) acceptance page shows about an invitation. */
+        InvitationLookup: {
+            /** Format: email */
+            email: string;
+            scope_type: components["schemas"]["ScopeTypeEnum"];
+            scope_name: string;
+            role: components["schemas"]["RoleEnum"];
+            invited_by: string | null;
+            is_pending: boolean;
+        };
+        InviteResult: {
+            kind: components["schemas"]["KindEnum"];
+            detail: string;
+        };
+        /**
+         * @description * `membership` - membership
+         *     * `invitation` - invitation
+         * @enum {string}
+         */
+        KindEnum: "membership" | "invitation";
         LoginRequest: {
             username: string;
             password: string;
@@ -307,6 +790,27 @@ export interface components {
             email_on_mention?: boolean;
             email_on_assignment?: boolean;
         };
+        /** @description Invite by username (existing account) or by e-mail. */
+        MembershipCreateRequest: {
+            workspace?: number;
+            project?: number;
+            username?: string;
+            email?: string;
+            role: components["schemas"]["GrantableRoleEnum"];
+            can_view_finance?: boolean | null;
+            can_edit_finance?: boolean | null;
+        };
+        MembershipUpdate: {
+            readonly id: number;
+            role?: components["schemas"]["GrantableRoleEnum"];
+            can_view_finance?: boolean;
+            can_edit_finance?: boolean;
+        };
+        MoveProjectRequest: {
+            parent: number | null;
+        };
+        /** @enum {unknown} */
+        NullEnum: null;
         PasswordChangeRequest: {
             current_password: string;
             new_password: string;
@@ -337,6 +841,141 @@ export interface components {
             email_on_assignment?: boolean;
             current_password?: string;
         };
+        PatchedMembershipUpdateRequest: {
+            role?: components["schemas"]["GrantableRoleEnum"];
+            can_view_finance?: boolean;
+            can_edit_finance?: boolean;
+        };
+        /** @description Create / read / update a project the user has a real role on. */
+        PatchedProjectRequest: {
+            workspace?: number;
+            parent?: number | null;
+            name?: string;
+            description?: string;
+            type?: number;
+            status?: components["schemas"]["ProjectStatusEnum"];
+            /** Format: date */
+            start_date?: string | null;
+            /** Format: date */
+            end_date?: string | null;
+            color?: string;
+            tags?: number[];
+            position?: number;
+        };
+        PatchedProjectTypeRequest: {
+            workspace?: number;
+            name?: string;
+            position?: number;
+        };
+        PatchedTagRequest: {
+            workspace?: number;
+            name?: string;
+            color?: string;
+        };
+        /** @description Full view of a workspace, for its members. */
+        PatchedWorkspaceRequest: {
+            name?: string;
+            color?: string;
+        };
+        /** @description Create / read / update a project the user has a real role on. */
+        Project: {
+            readonly id: number;
+            workspace?: number;
+            parent?: number | null;
+            readonly depth: number;
+            name: string;
+            description?: string;
+            type?: number;
+            readonly type_name: string;
+            status?: components["schemas"]["ProjectStatusEnum"];
+            /** Format: date */
+            start_date?: string | null;
+            /** Format: date */
+            end_date?: string | null;
+            color?: string;
+            tags?: number[];
+            position?: number;
+            readonly temporal: string;
+            readonly end_overdue: boolean;
+            readonly breadcrumb: {
+                [key: string]: unknown;
+            }[];
+            readonly my_role: string | null;
+            readonly can_view_finance: boolean;
+            readonly can_edit_finance: boolean;
+            readonly is_shell: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description One node of GET /api/projects/tree/ (a flat list; the front nests it).
+         *
+         *     For a SHELL node only id, workspace, parent, depth, name, color and
+         *     is_shell are filled: every other field is null (SPECIFICATIONS §1.2).
+         */
+        ProjectNode: {
+            id: number;
+            workspace: number;
+            parent: number | null;
+            depth: number;
+            name: string;
+            color: string;
+            is_shell: boolean;
+            type: number | null;
+            type_name: string | null;
+            status: (components["schemas"]["ProjectStatusEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: date */
+            start_date: string | null;
+            /** Format: date */
+            end_date: string | null;
+            temporal: (components["schemas"]["TemporalEnum"] | components["schemas"]["NullEnum"]) | null;
+            end_overdue: boolean;
+            tags: number[];
+            position: number;
+            my_role: (components["schemas"]["RoleEnum"] | components["schemas"]["NullEnum"]) | null;
+            can_view_finance: boolean;
+            can_edit_finance: boolean;
+        };
+        /** @description Create / read / update a project the user has a real role on. */
+        ProjectRequest: {
+            workspace?: number;
+            parent?: number | null;
+            name: string;
+            description?: string;
+            type?: number;
+            status?: components["schemas"]["ProjectStatusEnum"];
+            /** Format: date */
+            start_date?: string | null;
+            /** Format: date */
+            end_date?: string | null;
+            color?: string;
+            tags?: number[];
+            position?: number;
+        };
+        /**
+         * @description * `idea` - Idée
+         *     * `planned` - Planifié
+         *     * `in_progress` - En cours
+         *     * `to_validate` - À valider
+         *     * `done` - Terminé
+         *     * `cancelled` - Annulé
+         *     * `archived` - Archivé
+         * @enum {string}
+         */
+        ProjectStatusEnum: "idea" | "planned" | "in_progress" | "to_validate" | "done" | "cancelled" | "archived";
+        ProjectType: {
+            readonly id: number;
+            workspace: number;
+            name: string;
+            position?: number;
+        };
+        ProjectTypeRequest: {
+            workspace: number;
+            name: string;
+            position?: number;
+        };
         /**
          * @description The ONLY shape in which a user is exposed to other users (SPEC §4).
          *
@@ -357,11 +996,45 @@ export interface components {
             first_name?: string;
             last_name?: string;
             accept_privacy: boolean;
+            invitation?: string;
         };
+        /**
+         * @description * `viewer` - Lecteur
+         *     * `commenter` - Commentateur
+         *     * `editor` - Éditeur
+         *     * `admin` - Admin
+         *     * `owner` - Propriétaire
+         * @enum {string}
+         */
+        RoleEnum: "viewer" | "commenter" | "editor" | "admin" | "owner";
+        /**
+         * @description * `workspace` - workspace
+         *     * `project` - project
+         * @enum {string}
+         */
+        ScopeTypeEnum: "workspace" | "project";
         /** @description Shape of GET /api/auth/session/: the profile, or null when signed out. */
         Session: {
             user: components["schemas"]["Me"] | null;
         };
+        Tag: {
+            readonly id: number;
+            workspace: number;
+            name: string;
+            color?: string;
+        };
+        TagRequest: {
+            workspace: number;
+            name: string;
+            color?: string;
+        };
+        /**
+         * @description * `past` - past
+         *     * `current` - current
+         *     * `upcoming` - upcoming
+         * @enum {string}
+         */
+        TemporalEnum: "past" | "current" | "upcoming";
         /**
          * @description * `light` - Clair
          *     * `dark` - Sombre
@@ -371,6 +1044,30 @@ export interface components {
         ThemeEnum: "light" | "dark" | "system";
         TokenRequest: {
             token: string;
+        };
+        TransferOwnershipRequest: {
+            username: string;
+        };
+        TransferProjectOwnershipRequest: {
+            username: string;
+        };
+        /** @description Full view of a workspace, for its members. */
+        Workspace: {
+            readonly id: number;
+            name: string;
+            color?: string;
+            readonly my_role: string | null;
+            readonly is_shell: boolean;
+            readonly owner: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /** @description Full view of a workspace, for its members. */
+        WorkspaceRequest: {
+            name: string;
+            color?: string;
         };
     };
     responses: never;
@@ -612,6 +1309,117 @@ export interface operations {
             };
         };
     };
+    invitations_list: {
+        parameters: {
+            query?: {
+                /** @description Portée : un projet */
+                project?: number;
+                /** @description Portée : un espace */
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"][];
+                };
+            };
+        };
+    };
+    invitations_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) invitation. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    invitations_resend_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) invitation. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+        };
+    };
+    invitations_accept_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationAcceptRequest"];
+                "multipart/form-data": components["schemas"]["InvitationAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    invitations_lookup_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationLookup"];
+                };
+            };
+        };
+    };
     me_retrieve: {
         parameters: {
             query?: never;
@@ -700,6 +1508,499 @@ export interface operations {
             };
         };
     };
+    memberships_list: {
+        parameters: {
+            query?: {
+                /** @description Portée : un projet */
+                project?: number;
+                /** @description Portée : un espace */
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectiveMember"][];
+                };
+            };
+        };
+    };
+    memberships_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipCreateRequest"];
+                "multipart/form-data": components["schemas"]["MembershipCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResult"];
+                };
+            };
+        };
+    };
+    memberships_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) membership. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    memberships_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) membership. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedMembershipUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMembershipUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipUpdate"];
+                };
+            };
+        };
+    };
+    project_types_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectType"][];
+                };
+            };
+        };
+    };
+    project_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectTypeRequest"];
+                "multipart/form-data": components["schemas"]["ProjectTypeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectType"];
+                };
+            };
+        };
+    };
+    project_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectType"];
+                };
+            };
+        };
+    };
+    project_types_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    project_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProjectTypeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProjectTypeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectType"];
+                };
+            };
+        };
+    };
+    projects_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectRequest"];
+                "multipart/form-data": components["schemas"]["ProjectRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    projects_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProjectRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProjectRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_move_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveProjectRequest"];
+                "multipart/form-data": components["schemas"]["MoveProjectRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_transfer_ownership_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferProjectOwnershipRequest"];
+                "multipart/form-data": components["schemas"]["TransferProjectOwnershipRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_tree_list: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+                /** @description Limiter à un espace */
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectNode"][];
+                };
+            };
+        };
+    };
+    tags_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"][];
+                };
+            };
+        };
+    };
+    tags_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagRequest"];
+                "multipart/form-data": components["schemas"]["TagRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    tags_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    tags_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    tags_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTagRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTagRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
     users_avatar_retrieve: {
         parameters: {
             query?: never;
@@ -736,6 +2037,167 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicUser"][];
+                };
+            };
+        };
+    };
+    workspaces_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"][];
+                };
+            };
+        };
+    };
+    workspaces_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceRequest"];
+                "multipart/form-data": components["schemas"]["WorkspaceRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
+                };
+            };
+        };
+    };
+    workspaces_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) workspace. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
+                };
+            };
+        };
+    };
+    workspaces_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) workspace. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaces_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) workspace. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWorkspaceRequest"];
+                "multipart/form-data": components["schemas"]["PatchedWorkspaceRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
+                };
+            };
+        };
+    };
+    workspaces_leave_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) workspace. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaces_transfer_ownership_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) workspace. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferOwnershipRequest"];
+                "multipart/form-data": components["schemas"]["TransferOwnershipRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workspace"];
                 };
             };
         };

@@ -11,4 +11,6 @@ urlpatterns = [
     path("api/health/", HealthView.as_view(), name="health"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/", include("apps.accounts.urls")),
+    path("api/", include("apps.workspaces.urls")),
+    path("api/", include("apps.projects.urls")),
 ]

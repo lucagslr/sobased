@@ -220,7 +220,7 @@ def test_logout(auth_api):
     assert auth_api.get("/api/me/").status_code == 401
 
 
-# --- Password reset and change -------------------------------------------------------
+# --- Password reset and change ------------------------------------------------------
 
 
 def _reset_link_parts(body: str) -> tuple[str, str]:

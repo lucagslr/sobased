@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     # Project apps, in dependency order (see docs/PLAN.md §1).
     "apps.core",
     "apps.accounts",
+    "apps.workspaces",
+    "apps.projects",
 ]
 
 MIDDLEWARE = [
@@ -91,6 +93,9 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 EMAIL_VERIFICATION_MAX_AGE = 60 * 60 * 24 * 3
 # true: anyone can sign up. false: only through an invitation link (phase 2).
 REGISTRATION_OPEN = env_bool("REGISTRATION_OPEN", True)
+# Hook used by sign-up to honour invitation links without apps.accounts
+# importing apps.projects: token -> invited e-mail, or None.
+INVITATION_EMAIL_RESOLVER = "apps.projects.services.resolve_invitation_email"
 # Failed logins tolerated per username per hour before a temporary lock.
 LOGIN_MAX_FAILURES_PER_HOUR = 10
 
@@ -185,6 +190,7 @@ REST_FRAMEWORK = {
         "password_reset": "5/hour",
         "verify_email": "5/hour",
         "user_search": "30/min",
+        "invitation_lookup": "30/min",
     },
     # One proxy (Caddy) sits in front: trust the last X-Forwarded-For entry.
     "NUM_PROXIES": 1,
@@ -196,6 +202,12 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],
     "COMPONENT_SPLIT_REQUEST": True,
+    # Readable, stable enum names in the generated TypeScript types.
+    "ENUM_NAME_OVERRIDES": {
+        "RoleEnum": "apps.projects.models.Role.choices",
+        "GrantableRoleEnum": "apps.projects.serializers.GRANTABLE_ROLES",
+        "ProjectStatusEnum": "apps.projects.models.PROJECT_STATUS_CHOICES",
+    },
 }
 
 LOGGING = {
