@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { onMounted, reactive } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import { membersApi } from '@/api/projects'
 import AuthCard from '@/components/ui/AuthCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -13,7 +14,13 @@ import { useUiStore } from '@/stores/ui'
 const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
+const route = useRoute()
 const { loading, error, fieldErrors, submit } = useFormSubmit()
+
+// Coming from /invitation/:token : the token travels with the sign-up. The
+// invited address is fetched from the token rather than passed in the URL
+// (an e-mail in a query string ends up in server logs and browser history).
+const invitation = typeof route.query.invitation === 'string' ? route.query.invitation : ''
 
 const form = reactive({
   username: '',
@@ -24,10 +31,27 @@ const form = reactive({
   accept_privacy: false,
 })
 
+onMounted(async () => {
+  if (!invitation) return
+  try {
+    const invited = await membersApi.lookupInvitation(invitation)
+    // Signing up with this address verifies it at once.
+    if (invited.is_pending && !form.email) form.email = invited.email
+  } catch {
+    /* expired or cancelled: a normal sign-up */
+  }
+})
+
 async function onSubmit() {
-  if (!(await submit(() => auth.register({ ...form })))) return
-  ui.toast('Compte créé', 'success', 'Un e-mail de confirmation vient de partir.')
-  router.push('/')
+  if (!(await submit(() => auth.register({ ...form, invitation })))) return
+  if (auth.user?.email_verified) {
+    ui.toast('Compte créé', 'success', "L'invitation a été acceptée.")
+    router.push('/projets')
+  } else {
+    ui.toast('Compte créé', 'success', 'Un e-mail de confirmation vient de partir.')
+    // With another address than the invited one, the invitation is still to accept.
+    router.push(invitation ? `/invitation/${invitation}` : '/')
+  }
 }
 </script>
 

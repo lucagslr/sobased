@@ -1144,6 +1144,22 @@ paths:
           description: ''
 components:
   schemas:
+    Breadcrumb:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        is_shell:
+          type: boolean
+      required:
+      - color
+      - id
+      - is_shell
+      - name
     DirectMembership:
       type: object
       properties:
@@ -1157,6 +1173,8 @@ components:
         can_edit_finance:
           type: boolean
       required:
+      - can_edit_finance
+      - can_view_finance
       - id
       - role
     EffectiveMember:
@@ -1396,10 +1414,19 @@ components:
           type: boolean
       required:
       - avatar_url
+      - daily_digest_enabled
+      - daily_digest_time
       - display_name
       - email
+      - email_on_assignment
+      - email_on_mention
       - email_verified
+      - first_name
       - id
+      - last_name
+      - phone
+      - theme
+      - timezone
       - username
     MembershipCreateRequest:
       type: object
@@ -1440,7 +1467,10 @@ components:
         can_edit_finance:
           type: boolean
       required:
+      - can_edit_finance
+      - can_view_finance
       - id
+      - role
     MoveProjectRequest:
       type: object
       properties:
@@ -1660,7 +1690,8 @@ components:
           maximum: 2147483647
           minimum: 0
         temporal:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/TemporalEnum'
           readOnly: true
         end_overdue:
           type: boolean
@@ -1668,13 +1699,14 @@ components:
         breadcrumb:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/Breadcrumb'
           readOnly: true
         my_role:
-          type: string
           nullable: true
           readOnly: true
+          oneOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          - $ref: '#/components/schemas/NullEnum'
         can_view_finance:
           type: boolean
           readOnly: true
@@ -1696,16 +1728,26 @@ components:
       - breadcrumb
       - can_edit_finance
       - can_view_finance
+      - color
       - created_at
       - depth
+      - description
+      - end_date
       - end_overdue
       - id
       - is_shell
       - my_role
       - name
+      - parent
+      - position
+      - start_date
+      - status
+      - tags
       - temporal
+      - type
       - type_name
       - updated_at
+      - workspace
     ProjectNode:
       type: object
       description: |-
@@ -1868,6 +1910,7 @@ components:
       required:
       - id
       - name
+      - position
       - workspace
     ProjectTypeRequest:
       type: object
@@ -1988,6 +2031,7 @@ components:
           pattern: ^#[0-9A-Fa-f]{6}$
           maxLength: 7
       required:
+      - color
       - id
       - name
       - workspace
@@ -2067,15 +2111,17 @@ components:
           pattern: ^#[0-9A-Fa-f]{6}$
           maxLength: 7
         my_role:
-          type: string
           nullable: true
           readOnly: true
+          oneOf:
+          - $ref: '#/components/schemas/WorkspaceMyRoleEnum'
+          - $ref: '#/components/schemas/NullEnum'
         is_shell:
           type: boolean
           readOnly: true
         owner:
-          type: object
-          additionalProperties: {}
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
           nullable: true
           readOnly: true
         created_at:
@@ -2083,12 +2129,27 @@ components:
           format: date-time
           readOnly: true
       required:
+      - color
       - created_at
       - id
       - is_shell
       - my_role
       - name
       - owner
+    WorkspaceMyRoleEnum:
+      enum:
+      - viewer
+      - commenter
+      - editor
+      - admin
+      - owner
+      type: string
+      description: |-
+        * `viewer` - viewer
+        * `commenter` - commenter
+        * `editor` - editor
+        * `admin` - admin
+        * `owner` - owner
     WorkspaceRequest:
       type: object
       description: Full view of a workspace, for its members.

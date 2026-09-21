@@ -47,8 +47,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'projets',
         name: 'projects',
-        component: comingSoon,
-        meta: { title: 'Projets', phase: 2 },
+        component: () => import('@/pages/ProjectsPage.vue'),
+        meta: { title: 'Projets' },
+      },
+      {
+        path: 'projets/:id(\\d+)/:tab?',
+        name: 'project',
+        component: () => import('@/pages/project/ProjectPage.vue'),
+        meta: { title: 'Projet' },
       },
       {
         path: 'contacts',
@@ -115,6 +121,12 @@ const routes: RouteRecordRaw[] = [
         name: 'verify-email',
         component: () => import('@/pages/auth/VerifyEmailPage.vue'),
         meta: { title: "Vérification de l'e-mail", public: true },
+      },
+      {
+        path: 'invitation/:token',
+        name: 'invitation',
+        component: () => import('@/pages/InvitationPage.vue'),
+        meta: { title: 'Invitation', public: true },
       },
       {
         path: 'confidentialite',

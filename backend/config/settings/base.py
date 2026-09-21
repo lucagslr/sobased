@@ -202,6 +202,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],
     "COMPONENT_SPLIT_REQUEST": True,
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "apps.core.schema.mark_response_fields_required",
+    ],
     # Readable, stable enum names in the generated TypeScript types.
     "ENUM_NAME_OVERRIDES": {
         "RoleEnum": "apps.projects.models.Role.choices",

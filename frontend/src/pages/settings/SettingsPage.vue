@@ -4,7 +4,7 @@
  * can be linked and survives a reload. Later phases add their sections here:
  * connections (10-11), my data (13).
  */
-import { Bell, KeyRound, Palette, UserRound } from 'lucide-vue-next'
+import { Bell, KeyRound, Layers, Palette, UserRound } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
@@ -14,9 +14,11 @@ import AppearanceSection from './AppearanceSection.vue'
 import NotificationsSection from './NotificationsSection.vue'
 import ProfileSection from './ProfileSection.vue'
 import SecuritySection from './SecuritySection.vue'
+import WorkspacesSection from './WorkspacesSection.vue'
 
 const SECTIONS = [
   { slug: 'profil', label: 'Profil', icon: UserRound, component: ProfileSection },
+  { slug: 'espaces', label: 'Espaces', icon: Layers, component: WorkspacesSection },
   { slug: 'apparence', label: 'Apparence', icon: Palette, component: AppearanceSection },
   { slug: 'notifications', label: 'Notifications', icon: Bell, component: NotificationsSection },
   { slug: 'securite', label: 'Sécurité', icon: KeyRound, component: SecuritySection },

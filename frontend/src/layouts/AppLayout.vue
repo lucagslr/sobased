@@ -4,11 +4,21 @@
  * - lg and up (>= 1024px): fixed sidebar on the left;
  * - below: content first, tab bar fixed at the bottom (thumb reach).
  */
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import MobileTabBar from '@/components/layout/MobileTabBar.vue'
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner.vue'
+import { useProjectsStore } from '@/stores/projects'
+import { useWorkspacesStore } from '@/stores/workspaces'
+
+// Workspaces and the project tree feed the sidebar and most pages: load them
+// as soon as the signed-in shell appears.
+onMounted(() => {
+  useWorkspacesStore().load()
+  useProjectsStore().load()
+})
 </script>
 
 <template>

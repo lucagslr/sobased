@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 21.09.2026 · Plan validé par Luca. Phase 1 terminée. Prochaine étape : phase 2 (espaces, projets, permissions, invitations).**
+**Dernière mise à jour : 21.09.2026 · Phases 0, 1 et 2 terminées. Prochaine étape : phase 3 (tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -12,7 +12,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 |---|---|---|
 | 0 | Plan (arborescence, schéma ER, endpoints, pages et composants, risques) | ✅ terminé, validé le 21.09.2026 |
 | 1 | Socle : dépôt, Docker, Django, Vue, auth, profil, thèmes, layout responsive, CI | ✅ terminé · [doc](docs/phases/phase-01-socle.md) |
-| 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ⏳ |
+| 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ✅ terminé · [doc](docs/phases/phase-02-espaces-projets-droits.md) |
 | 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ⏳ |
 | 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ⏳ |
 | 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ⏳ |
@@ -79,6 +79,22 @@ Détail dans `docs/phases/phase-01-socle.md`. En bref : pile Docker Compose comp
 - Ouvrir le site dans le navigateur intégré : `preview_start` avec l'URL (un `navigate` direct vers `localhost:8080` est refusé).
 - Docker Hub a fait un timeout TLS une fois (`docker pull` relancé = OK).
 
+## Phase 2 : ce qui a été produit
+
+Détail dans `docs/phases/phase-02-espaces-projets-droits.md`. Apps `workspaces` et `projects`, moteur de droits (`apps/projects/access.py`), mixins `ProjectScopedViewSet` / `WorkspaceScopedViewSet`, invitations, front (arbre, page projet, membres, page d'invitation, paramètres des espaces). 849 tests backend, 17 tests front, CI verte.
+
+À retenir pour la suite :
+
+- **Tout nouveau modèle lié à un projet** : manager `ProjectScopedQuerySet.as_manager()` (avec `project_lookup` si indirect) + viewset `ProjectScopedViewSet`. Toute vue hors mixin doit être justifiée dans `apps/projects/tests/test_route_audit.py`, sinon la CI échoue.
+- Après avoir modifié des adhésions ou l'arbre dans une vue : `invalidate_access_map(request)`, et si la réponse sérialise des droits, remettre `serializer.context["access_map"]`.
+- Contrôle sur le **conteneur** (parent, espace) d'un objet visible : répondre 403, pas 404 (`_require_container`).
+- Vérifier les droits **avant** les règles métier qui renseignent sur l'objet (ex. limite des 4 niveaux).
+- `on_delete=RESTRICT` plutôt que `PROTECT` pour les listes par espace (types, catégories) : sinon la suppression d'un espace casse.
+- Champs calculés des sérialiseurs : `@extend_schema_field(...)` pour que les types TypeScript soient exacts. Chemins de `ENUM_NAME_OVERRIDES` : attribut de module uniquement (pas de classe imbriquée).
+- Ne jamais mettre une donnée personnelle (e-mail) dans une URL du front.
+- Jeu de données jetable pour vérifier l'interface : `backend/scripts/dev_scenario.py` (affiche deux clés de session ; les supprimer après usage).
+- Les scripts `.py` ponctuels passent par un fichier du scratchpad, jamais par un heredoc.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -98,6 +114,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 2 : pas de glisser-déposer pour déplacer un projet (API prête, interface en phase 5) ; transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
 
 Limites **anticipées**, à confirmer par test le moment venu :
 

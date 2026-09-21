@@ -1,8 +1,12 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.accounts.serializers import PublicUserSerializer
 
 from .models import ProjectType, Tag, Workspace
+
+# Kept in sync with apps.projects.models.Role (not imported: this app sits below).
+ROLE_CHOICES = ["viewer", "commenter", "editor", "admin", "owner"]
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
@@ -20,6 +24,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
     def _access(self, workspace):
         return self.context["access_map"].for_workspace(workspace.pk)
 
+    @extend_schema_field(serializers.ChoiceField(choices=ROLE_CHOICES, allow_null=True))
     def get_my_role(self, workspace) -> str | None:
         role = self._access(workspace).role
         return role.stored if role else None
@@ -27,6 +32,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
     def get_is_shell(self, workspace) -> bool:
         return self._access(workspace).is_shell
 
+    @extend_schema_field(PublicUserSerializer(allow_null=True))
     def get_owner(self, workspace) -> dict | None:
         # A shell member learns nothing about the people of the workspace.
         if self._access(workspace).is_shell:

@@ -1,4 +1,5 @@
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.accounts.serializers import PublicUserSerializer
@@ -149,12 +150,16 @@ class ProjectSerializer(serializers.ModelSerializer):
     def _access(self, project):
         return self.context["access_map"].for_project(project.pk)
 
+    @extend_schema_field(
+        serializers.ChoiceField(choices=[tree.PAST, tree.CURRENT, tree.UPCOMING])
+    )
     def get_temporal(self, project) -> str:
         return tree.temporal(project.status, project.start_date, timezone.localdate())
 
     def get_end_overdue(self, project) -> bool:
         return tree.end_overdue(project.status, project.end_date, timezone.localdate())
 
+    @extend_schema_field(BreadcrumbSerializer(many=True))
     def get_breadcrumb(self, project) -> list[dict]:
         access_map = self.context["access_map"]
         return [
@@ -167,6 +172,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             for ancestor in tree.ancestors(project)
         ]
 
+    @extend_schema_field(
+        serializers.ChoiceField(choices=StoredRole.choices, allow_null=True)
+    )
     def get_my_role(self, project) -> str | None:
         role = self._access(project).role
         return role.stored if role else None

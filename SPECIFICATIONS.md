@@ -2,7 +2,7 @@
 
 [SPEC.md](SPEC.md) reste la **source de vérité** du périmètre. Ce document la complète : il fixe, règle par règle, le comportement attendu là où le cahier des charges laisse une marge d'interprétation. En cas de contradiction, SPEC.md l'emporte et ce fichier est corrigé.
 
-Les points marqués **[À valider]** sont des interprétations de ma part, résumées dans [docs/PLAN.md](docs/PLAN.md#5-décisions-à-valider).
+Les points marqués **[À valider]** étaient des interprétations de ma part (résumées dans [docs/PLAN.md](docs/PLAN.md#5-décisions-à-valider)) ; Luca les a validées en bloc le 21.09.2026.
 
 ## 1. Droits d'accès
 

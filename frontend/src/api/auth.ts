@@ -13,6 +13,8 @@ export interface RegisterPayload {
   first_name?: string
   last_name?: string
   accept_privacy: boolean
+  /** Token of the invitation link the visitor came from, if any. */
+  invitation?: string
 }
 
 export const authApi = {

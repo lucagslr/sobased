@@ -688,11 +688,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Breadcrumb: {
+            id: number;
+            name: string;
+            color: string;
+            is_shell: boolean;
+        };
         DirectMembership: {
             readonly id: number;
             role: components["schemas"]["RoleEnum"];
-            can_view_finance?: boolean;
-            can_edit_finance?: boolean;
+            can_view_finance: boolean;
+            can_edit_finance: boolean;
         };
         /** @description One person with access to a scope: effective rights and where they come from. */
         EffectiveMember: {
@@ -776,19 +782,19 @@ export interface components {
             email: string;
             readonly email_verified: boolean;
             /** Prénom */
-            first_name?: string;
+            first_name: string;
             /** Nom */
-            last_name?: string;
+            last_name: string;
             readonly display_name: string;
             readonly avatar_url: string | null;
-            phone?: string;
-            timezone?: string;
-            theme?: components["schemas"]["ThemeEnum"];
-            daily_digest_enabled?: boolean;
+            phone: string;
+            timezone: string;
+            theme: components["schemas"]["ThemeEnum"];
+            daily_digest_enabled: boolean;
             /** Format: time */
-            daily_digest_time?: string;
-            email_on_mention?: boolean;
-            email_on_assignment?: boolean;
+            daily_digest_time: string;
+            email_on_mention: boolean;
+            email_on_assignment: boolean;
         };
         /** @description Invite by username (existing account) or by e-mail. */
         MembershipCreateRequest: {
@@ -802,9 +808,9 @@ export interface components {
         };
         MembershipUpdate: {
             readonly id: number;
-            role?: components["schemas"]["GrantableRoleEnum"];
-            can_view_finance?: boolean;
-            can_edit_finance?: boolean;
+            role: components["schemas"]["GrantableRoleEnum"];
+            can_view_finance: boolean;
+            can_edit_finance: boolean;
         };
         MoveProjectRequest: {
             parent: number | null;
@@ -880,27 +886,25 @@ export interface components {
         /** @description Create / read / update a project the user has a real role on. */
         Project: {
             readonly id: number;
-            workspace?: number;
-            parent?: number | null;
+            workspace: number;
+            parent: number | null;
             readonly depth: number;
             name: string;
-            description?: string;
-            type?: number;
+            description: string;
+            type: number;
             readonly type_name: string;
-            status?: components["schemas"]["ProjectStatusEnum"];
+            status: components["schemas"]["ProjectStatusEnum"];
             /** Format: date */
-            start_date?: string | null;
+            start_date: string | null;
             /** Format: date */
-            end_date?: string | null;
-            color?: string;
-            tags?: number[];
-            position?: number;
-            readonly temporal: string;
+            end_date: string | null;
+            color: string;
+            tags: number[];
+            position: number;
+            readonly temporal: components["schemas"]["TemporalEnum"];
             readonly end_overdue: boolean;
-            readonly breadcrumb: {
-                [key: string]: unknown;
-            }[];
-            readonly my_role: string | null;
+            readonly breadcrumb: components["schemas"]["Breadcrumb"][];
+            readonly my_role: (components["schemas"]["RoleEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly can_view_finance: boolean;
             readonly can_edit_finance: boolean;
             readonly is_shell: boolean;
@@ -969,7 +973,7 @@ export interface components {
             readonly id: number;
             workspace: number;
             name: string;
-            position?: number;
+            position: number;
         };
         ProjectTypeRequest: {
             workspace: number;
@@ -1021,7 +1025,7 @@ export interface components {
             readonly id: number;
             workspace: number;
             name: string;
-            color?: string;
+            color: string;
         };
         TagRequest: {
             workspace: number;
@@ -1055,15 +1059,22 @@ export interface components {
         Workspace: {
             readonly id: number;
             name: string;
-            color?: string;
-            readonly my_role: string | null;
+            color: string;
+            readonly my_role: (components["schemas"]["WorkspaceMyRoleEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly is_shell: boolean;
-            readonly owner: {
-                [key: string]: unknown;
-            } | null;
+            readonly owner: components["schemas"]["PublicUser"] | null;
             /** Format: date-time */
             readonly created_at: string;
         };
+        /**
+         * @description * `viewer` - viewer
+         *     * `commenter` - commenter
+         *     * `editor` - editor
+         *     * `admin` - admin
+         *     * `owner` - owner
+         * @enum {string}
+         */
+        WorkspaceMyRoleEnum: "viewer" | "commenter" | "editor" | "admin" | "owner";
         /** @description Full view of a workspace, for its members. */
         WorkspaceRequest: {
             name: string;

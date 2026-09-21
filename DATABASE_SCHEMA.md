@@ -10,7 +10,7 @@ Conventions :
 - Montants : `numeric(12,2)`, toujours positifs, le signe vient de `kind`.
 - Couleurs : chaîne `#RRGGBB` choisie dans une palette pastel côté front (la base ne contraint pas la palette).
 - `created_at` / `updated_at` sur toutes les tables métier (omis des diagrammes pour la lisibilité).
-- Suppressions : `CASCADE` du projet vers son contenu ; `SET_NULL` vers les auteurs (compte anonymisé, jamais supprimé physiquement) ; `PROTECT` sur les catégories et types utilisés.
+- Suppressions : `CASCADE` du projet vers son contenu ; `SET_NULL` vers les auteurs (compte anonymisé, jamais supprimé physiquement) ; `RESTRICT` sur les catégories et types utilisés (un type utilisé ne se supprime pas seul, mais la suppression d'un espace entier cascade ; `PROTECT` la bloquerait).
 
 ## 1. Vue d'ensemble
 
@@ -120,7 +120,7 @@ erDiagram
         int depth "1 à 4, CHECK"
         string name
         text description
-        bigint type_id FK "PROTECT"
+        bigint type_id FK "RESTRICT"
         enum status "idea, planned, in_progress, to_validate, done, cancelled, archived"
         date start_date
         date end_date
