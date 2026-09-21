@@ -24,11 +24,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_spectacular",
+    "django_filters",
     # Project apps, in dependency order (see docs/PLAN.md §1).
     "apps.core",
     "apps.accounts",
     "apps.workspaces",
     "apps.projects",
+    "apps.tasks",
 ]
 
 MIDDLEWARE = [
@@ -139,7 +141,13 @@ CELERY_TASK_IGNORE_RESULT = True
 CELERY_TIMEZONE = "UTC"
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 # Periodic tasks are declared here, phase by phase (no database scheduler).
-CELERY_BEAT_SCHEDULE = {}
+CELERY_BEAT_SCHEDULE = {
+    # Extends the 90-day window of every recurring task series (SPEC §7).
+    "materialise-task-series": {
+        "task": "apps.tasks.tasks.materialise_all_series",
+        "schedule": 60 * 60 * 24,
+    },
+}
 
 # --- Files ---------------------------------------------------------------------
 STATIC_URL = "/static/"
@@ -211,6 +219,7 @@ SPECTACULAR_SETTINGS = {
         "RoleEnum": "apps.projects.models.Role.choices",
         "GrantableRoleEnum": "apps.projects.serializers.GRANTABLE_ROLES",
         "ProjectStatusEnum": "apps.projects.models.PROJECT_STATUS_CHOICES",
+        "TaskStatusEnum": "apps.tasks.models.TASK_STATUS_CHOICES",
     },
 }
 

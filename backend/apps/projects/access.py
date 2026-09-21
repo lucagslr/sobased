@@ -259,6 +259,30 @@ def effective_access(actor, project) -> Access:
     return get_access_map(actor).for_project(project_id)
 
 
+def member_user_ids(project) -> set[int]:
+    """Ids of every user with a real role on `project` (direct or inherited).
+
+    The reverse question of effective_access(): used to decide who may be
+    assigned a task or mentioned. Same rules 1 and 2: a membership on the
+    workspace, on the project, or on any of its ancestors.
+    """
+    chain = [project.pk]
+    parent_id = project.parent_id
+    while parent_id is not None:
+        chain.append(parent_id)
+        parent_id = (
+            Project.objects.filter(pk=parent_id)
+            .values_list("parent_id", flat=True)
+            .first()
+        )
+    rows = Membership.objects.filter(workspace_id=project.workspace_id).values_list(
+        "user_id", flat=True
+    ) | Membership.objects.filter(project_id__in=chain).values_list(
+        "user_id", flat=True
+    )
+    return set(rows)
+
+
 def workspace_access(actor, workspace) -> Access:
     workspace_id = workspace.pk if hasattr(workspace, "pk") else int(workspace)
     return get_access_map(actor).for_workspace(workspace_id)

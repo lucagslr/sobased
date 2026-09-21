@@ -1,0 +1,7 @@
+Salut {{ name }},
+
+{{ actor }} t'a mentionné dans un commentaire de la tâche « {{ task_title }} » :
+
+> {{ excerpt }}
+
+{{ url }}

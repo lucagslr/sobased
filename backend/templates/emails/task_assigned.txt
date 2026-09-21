@@ -1,0 +1,7 @@
+Salut {{ name }},
+
+{{ actor }} t'a assigné une tâche dans « {{ project_name }} » :
+
+{{ task_title }}
+
+{{ url }}

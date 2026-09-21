@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Salut {{ name }},</p>
+<p><strong>{{ actor }}</strong> t'a mentionné dans un commentaire de la tâche <strong>{{ task_title }}</strong> :</p>
+<p style="border-left:3px solid #e7e5e4;padding-left:12px;color:#57534e;">{{ excerpt }}</p>
+{% include "emails/_button.html" with url=url label="Répondre" %}
+{% endblock %}

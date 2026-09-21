@@ -196,6 +196,109 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/checklist-items/:
+    get:
+      operationId: checklist_items_list
+      description: |-
+        Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+        "Todo épinglées" widget (open items of open tasks).
+      tags:
+      - checklist-items
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChecklistItem'
+          description: ''
+    post:
+      operationId: checklist_items_create
+      description: |-
+        Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+        "Todo épinglées" widget (open items of open tasks).
+      parameters:
+      - in: query
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - checklist-items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChecklistItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChecklistItemRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistItem'
+          description: ''
+  /api/checklist-items/{id}/:
+    patch:
+      operationId: checklist_items_partial_update
+      description: |-
+        Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+        "Todo épinglées" widget (open items of open tasks).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) checklist
+          item.
+        required: true
+      tags:
+      - checklist-items
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChecklistItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChecklistItemRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistItem'
+          description: ''
+    delete:
+      operationId: checklist_items_destroy
+      description: |-
+        Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+        "Todo épinglées" widget (open items of open tasks).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) checklist
+          item.
+        required: true
+      tags:
+      - checklist-items
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/health/:
     get:
       operationId: health_retrieve
@@ -937,6 +1040,503 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/task-comments/:
+    get:
+      operationId: task_comments_list
+      description: |-
+        Comments of a task (`?task=`). Writing needs the Commenter role;
+        editing is for the author, deleting for the author or an admin.
+      tags:
+      - task-comments
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskComment'
+          description: ''
+    post:
+      operationId: task_comments_create
+      description: |-
+        Comments of a task (`?task=`). Writing needs the Commenter role;
+        editing is for the author, deleting for the author or an admin.
+      parameters:
+      - in: query
+        name: task
+        schema:
+          type: integer
+        required: true
+      tags:
+      - task-comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCommentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCommentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskComment'
+          description: ''
+  /api/task-comments/{id}/:
+    patch:
+      operationId: task_comments_partial_update
+      description: |-
+        Comments of a task (`?task=`). Writing needs the Commenter role;
+        editing is for the author, deleting for the author or an admin.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task comment.
+        required: true
+      tags:
+      - task-comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCommentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCommentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskComment'
+          description: ''
+    delete:
+      operationId: task_comments_destroy
+      description: |-
+        Comments of a task (`?task=`). Writing needs the Commenter role;
+        editing is for the author, deleting for the author or an admin.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task comment.
+        required: true
+      tags:
+      - task-comments
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/tasks/:
+    get:
+      operationId: tasks_list
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: query
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: due_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: due_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: no_date
+        schema:
+          type: boolean
+      - in: query
+        name: open
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: priority
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - cancelled
+            - done
+            - in_progress
+            - to_validate
+            - todo
+        description: |-
+          * `todo` - À faire
+          * `in_progress` - En cours
+          * `to_validate` - À valider
+          * `done` - Terminé
+          * `cancelled` - Annulé
+        explode: true
+        style: form
+      - in: query
+        name: tag
+        schema:
+          type: array
+          items:
+            type: integer
+        explode: true
+        style: form
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - tasks
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: tasks_create
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/tasks/{id}/:
+    get:
+      operationId: tasks_retrieve
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    patch:
+      operationId: tasks_partial_update
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task.
+        required: true
+      - in: query
+        name: scope
+        schema:
+          type: string
+          enum:
+          - following
+          - this
+        description: 'Récurrence : cette occurrence, ou toutes les suivantes'
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    delete:
+      operationId: tasks_destroy
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/tasks/{id}/move/:
+    post:
+      operationId: tasks_move_create
+      description: Drop a card in a column at a position. Warns if it is still blocked.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveTaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MoveTaskRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/tasks/blocker-candidates/:
+    get:
+      operationId: tasks_blocker_candidates_list
+      description: |-
+        Search for the "Bloquée par" field: tasks of the same root project
+        that I can see and that would not create a loop.
+      parameters:
+      - in: query
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: due_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: due_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: no_date
+        schema:
+          type: boolean
+      - in: query
+        name: open
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
+      - in: query
+        name: priority
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - cancelled
+            - done
+            - in_progress
+            - to_validate
+            - todo
+        description: |-
+          * `todo` - À faire
+          * `in_progress` - En cours
+          * `to_validate` - À valider
+          * `done` - Terminé
+          * `cancelled` - Annulé
+        explode: true
+        style: form
+      - in: query
+        name: tag
+        schema:
+          type: array
+          items:
+            type: integer
+        explode: true
+        style: form
+      - in: query
+        name: task
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - tasks
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlockerCandidate'
+          description: ''
   /api/users/{username}/avatar/:
     get:
       operationId: users_avatar_retrieve
@@ -1144,6 +1744,52 @@ paths:
           description: ''
 components:
   schemas:
+    Blocker:
+      type: object
+      description: |-
+        A task blocking another one. For a blocker the user cannot see, only
+        `id` and `is_open` are filled: enough for the padlock, nothing more.
+      properties:
+        id:
+          type: integer
+        visible:
+          type: boolean
+        title:
+          type: string
+          nullable: true
+        status:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/TaskStatusEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        project_name:
+          type: string
+          nullable: true
+        is_open:
+          type: boolean
+      required:
+      - id
+      - is_open
+      - project_name
+      - status
+      - title
+      - visible
+    BlockerCandidate:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        project_name:
+          type: string
+      required:
+      - id
+      - project_name
+      - status
+      - title
     Breadcrumb:
       type: object
       properties:
@@ -1160,6 +1806,56 @@ components:
       - id
       - is_shell
       - name
+    ChecklistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        task:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 240
+        done:
+          type: boolean
+        pinned:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        done_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - done
+      - done_at
+      - id
+      - pinned
+      - position
+      - task
+      - title
+    ChecklistItemRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        done:
+          type: boolean
+        pinned:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - title
     DirectMembership:
       type: object
       properties:
@@ -1479,9 +2175,45 @@ components:
           nullable: true
       required:
       - parent
+    MoveTaskRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        position:
+          type: integer
+          minimum: 0
+      required:
+      - position
+      - status
     NullEnum:
       enum:
       - null
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
     PasswordChangeRequest:
       type: object
       properties:
@@ -1513,6 +2245,21 @@ components:
       - new_password
       - token
       - uid
+    PatchedChecklistItemRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        done:
+          type: boolean
+        pinned:
+          type: boolean
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
     PatchedMeRequest:
       type: object
       description: The signed-in user's own profile and preferences.
@@ -1629,6 +2376,56 @@ components:
           minLength: 1
           pattern: ^#[0-9A-Fa-f]{6}$
           maxLength: 7
+    PatchedTaskCommentRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+    PatchedTaskRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        all_day:
+          type: boolean
+        assignee_usernames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          writeOnly: true
+        tags:
+          type: array
+          items:
+            type: integer
+        blocked_by:
+          type: array
+          items:
+            type: integer
+        rrule:
+          type: string
+          writeOnly: true
     PatchedWorkspaceRequest:
       type: object
       description: Full view of a workspace, for its members.
@@ -1952,6 +2749,35 @@ components:
       - avatar_url
       - display_name
       - username
+    PublicUserRequest:
+      type: object
+      description: |-
+        The ONLY shape in which a user is exposed to other users (SPEC §4).
+
+        Never add e-mail, phone or id here: the search endpoint is open to every
+        signed-in user.
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: Nom d'utilisateur
+          pattern: ^[A-Za-z0-9_.-]{3,30}$
+          maxLength: 30
+      required:
+      - username
+    Recurrence:
+      type: object
+      properties:
+        series:
+          type: integer
+        rrule:
+          type: string
+        is_exception:
+          type: boolean
+      required:
+      - is_exception
+      - rrule
+      - series
     RegisterRequest:
       type: object
       properties:
@@ -2052,6 +2878,223 @@ components:
       required:
       - name
       - workspace
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 240
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        all_day:
+          type: boolean
+        position:
+          type: integer
+          readOnly: true
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: integer
+        blocked_by:
+          type: array
+          items:
+            type: integer
+        blockers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Blocker'
+          readOnly: true
+        is_blocked:
+          type: boolean
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        checklist:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+          readOnly: true
+        comments_count:
+          type: integer
+          readOnly: true
+        recurrence:
+          allOf:
+          - $ref: '#/components/schemas/Recurrence'
+          nullable: true
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - all_day
+      - assignees
+      - blocked_by
+      - blockers
+      - checklist
+      - comments_count
+      - completed_at
+      - created_at
+      - description
+      - due_at
+      - id
+      - is_blocked
+      - is_overdue
+      - position
+      - priority
+      - project
+      - project_color
+      - project_name
+      - recurrence
+      - start_at
+      - status
+      - tags
+      - title
+      - updated_at
+    TaskComment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        task:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+        body:
+          type: string
+        is_mine:
+          type: boolean
+          readOnly: true
+        edited_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - body
+      - created_at
+      - edited_at
+      - id
+      - is_mine
+      - task
+    TaskCommentRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required:
+      - body
+    TaskRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+        priority:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        all_day:
+          type: boolean
+        assignee_usernames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          writeOnly: true
+        tags:
+          type: array
+          items:
+            type: integer
+        blocked_by:
+          type: array
+          items:
+            type: integer
+        rrule:
+          type: string
+          writeOnly: true
+      required:
+      - project
+      - title
+    TaskStatusEnum:
+      enum:
+      - todo
+      - in_progress
+      - to_validate
+      - done
+      - cancelled
+      type: string
+      description: |-
+        * `todo` - À faire
+        * `in_progress` - En cours
+        * `to_validate` - À valider
+        * `done` - Terminé
+        * `cancelled` - Annulé
     TemporalEnum:
       enum:
       - past

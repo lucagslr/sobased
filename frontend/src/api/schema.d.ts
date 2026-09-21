@@ -182,6 +182,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/checklist-items/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+         *     "Todo épinglées" widget (open items of open tasks).
+         */
+        get: operations["checklist_items_list"];
+        put?: never;
+        /**
+         * @description Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+         *     "Todo épinglées" widget (open items of open tasks).
+         */
+        post: operations["checklist_items_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checklist-items/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+         *     "Todo épinglées" widget (open items of open tasks).
+         */
+        delete: operations["checklist_items_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Checklist items. `?task=` lists a checklist, `?pinned=true` feeds the
+         *     "Todo épinglées" widget (open items of open tasks).
+         */
+        patch: operations["checklist_items_partial_update"];
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -575,6 +623,183 @@ export interface paths {
         patch: operations["tags_partial_update"];
         trace?: never;
     };
+    "/api/task-comments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Comments of a task (`?task=`). Writing needs the Commenter role;
+         *     editing is for the author, deleting for the author or an admin.
+         */
+        get: operations["task_comments_list"];
+        put?: never;
+        /**
+         * @description Comments of a task (`?task=`). Writing needs the Commenter role;
+         *     editing is for the author, deleting for the author or an admin.
+         */
+        post: operations["task_comments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/task-comments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Comments of a task (`?task=`). Writing needs the Commenter role;
+         *     editing is for the author, deleting for the author or an admin.
+         */
+        delete: operations["task_comments_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Comments of a task (`?task=`). Writing needs the Commenter role;
+         *     editing is for the author, deleting for the author or an admin.
+         */
+        patch: operations["task_comments_partial_update"];
+        trace?: never;
+    };
+    "/api/tasks/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        get: operations["tasks_list"];
+        put?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        post: operations["tasks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        get: operations["tasks_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        delete: operations["tasks_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        patch: operations["tasks_partial_update"];
+        trace?: never;
+    };
+    "/api/tasks/{id}/move/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Drop a card in a column at a position. Warns if it is still blocked. */
+        post: operations["tasks_move_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/blocker-candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Search for the "Bloquée par" field: tasks of the same root project
+         *     that I can see and that would not create a loop.
+         */
+        get: operations["tasks_blocker_candidates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/{username}/avatar/": {
         parameters: {
             query?: never;
@@ -688,11 +913,45 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description A task blocking another one. For a blocker the user cannot see, only
+         *     `id` and `is_open` are filled: enough for the padlock, nothing more.
+         */
+        Blocker: {
+            id: number;
+            visible: boolean;
+            title: string | null;
+            status: (components["schemas"]["TaskStatusEnum"] | components["schemas"]["NullEnum"]) | null;
+            project_name: string | null;
+            is_open: boolean;
+        };
+        BlockerCandidate: {
+            id: number;
+            title: string;
+            status: components["schemas"]["TaskStatusEnum"];
+            project_name: string;
+        };
         Breadcrumb: {
             id: number;
             name: string;
             color: string;
             is_shell: boolean;
+        };
+        ChecklistItem: {
+            readonly id: number;
+            readonly task: number;
+            title: string;
+            done: boolean;
+            pinned: boolean;
+            position: number;
+            /** Format: date-time */
+            readonly done_at: string | null;
+        };
+        ChecklistItemRequest: {
+            title: string;
+            done?: boolean;
+            pinned?: boolean;
+            position?: number;
         };
         DirectMembership: {
             readonly id: number;
@@ -815,8 +1074,27 @@ export interface components {
         MoveProjectRequest: {
             parent: number | null;
         };
+        MoveTaskRequest: {
+            status: components["schemas"]["TaskStatusEnum"];
+            position: number;
+        };
         /** @enum {unknown} */
         NullEnum: null;
+        PaginatedTaskList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["Task"][];
+        };
         PasswordChangeRequest: {
             current_password: string;
             new_password: string;
@@ -825,6 +1103,12 @@ export interface components {
             uid: string;
             token: string;
             new_password: string;
+        };
+        PatchedChecklistItemRequest: {
+            title?: string;
+            done?: boolean;
+            pinned?: boolean;
+            position?: number;
         };
         /** @description The signed-in user's own profile and preferences. */
         PatchedMeRequest: {
@@ -877,6 +1161,25 @@ export interface components {
             workspace?: number;
             name?: string;
             color?: string;
+        };
+        PatchedTaskCommentRequest: {
+            body?: string;
+        };
+        PatchedTaskRequest: {
+            project?: number;
+            title?: string;
+            description?: string;
+            status?: components["schemas"]["TaskStatusEnum"];
+            priority?: number;
+            /** Format: date-time */
+            start_at?: string | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            all_day?: boolean;
+            assignee_usernames?: string[];
+            tags?: number[];
+            blocked_by?: number[];
+            rrule?: string;
         };
         /** @description Full view of a workspace, for its members. */
         PatchedWorkspaceRequest: {
@@ -992,6 +1295,21 @@ export interface components {
             readonly display_name: string;
             readonly avatar_url: string | null;
         };
+        /**
+         * @description The ONLY shape in which a user is exposed to other users (SPEC §4).
+         *
+         *     Never add e-mail, phone or id here: the search endpoint is open to every
+         *     signed-in user.
+         */
+        PublicUserRequest: {
+            /** Nom d'utilisateur */
+            username: string;
+        };
+        Recurrence: {
+            series: number;
+            rrule: string;
+            is_exception: boolean;
+        };
         RegisterRequest: {
             username: string;
             /** Format: email */
@@ -1032,6 +1350,76 @@ export interface components {
             name: string;
             color?: string;
         };
+        Task: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            title: string;
+            description: string;
+            status: components["schemas"]["TaskStatusEnum"];
+            priority: number;
+            /** Format: date-time */
+            start_at: string | null;
+            /** Format: date-time */
+            due_at: string | null;
+            all_day: boolean;
+            readonly position: number;
+            readonly assignees: components["schemas"]["PublicUser"][];
+            tags: number[];
+            blocked_by: number[];
+            readonly blockers: components["schemas"]["Blocker"][];
+            readonly is_blocked: boolean;
+            readonly is_overdue: boolean;
+            readonly checklist: components["schemas"]["ChecklistItem"][];
+            readonly comments_count: number;
+            readonly recurrence: components["schemas"]["Recurrence"] | null;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        TaskComment: {
+            readonly id: number;
+            readonly task: number;
+            readonly author: components["schemas"]["PublicUser"];
+            body: string;
+            readonly is_mine: boolean;
+            /** Format: date-time */
+            readonly edited_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        TaskCommentRequest: {
+            body: string;
+        };
+        TaskRequest: {
+            project: number;
+            title: string;
+            description?: string;
+            status?: components["schemas"]["TaskStatusEnum"];
+            priority?: number;
+            /** Format: date-time */
+            start_at?: string | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            all_day?: boolean;
+            assignee_usernames?: string[];
+            tags?: number[];
+            blocked_by?: number[];
+            rrule?: string;
+        };
+        /**
+         * @description * `todo` - À faire
+         *     * `in_progress` - En cours
+         *     * `to_validate` - À valider
+         *     * `done` - Terminé
+         *     * `cancelled` - Annulé
+         * @enum {string}
+         */
+        TaskStatusEnum: "todo" | "in_progress" | "to_validate" | "done" | "cancelled";
         /**
          * @description * `past` - past
          *     * `current` - current
@@ -1299,6 +1687,99 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    checklist_items_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChecklistItem"][];
+                };
+            };
+        };
+    };
+    checklist_items_create: {
+        parameters: {
+            query: {
+                task: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChecklistItemRequest"];
+                "multipart/form-data": components["schemas"]["ChecklistItemRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChecklistItem"];
+                };
+            };
+        };
+    };
+    checklist_items_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) checklist item. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    checklist_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) checklist item. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedChecklistItemRequest"];
+                "multipart/form-data": components["schemas"]["PatchedChecklistItemRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChecklistItem"];
+                };
             };
         };
     };
@@ -2008,6 +2489,313 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    task_comments_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskComment"][];
+                };
+            };
+        };
+    };
+    task_comments_create: {
+        parameters: {
+            query: {
+                task: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCommentRequest"];
+                "multipart/form-data": components["schemas"]["TaskCommentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskComment"];
+                };
+            };
+        };
+    };
+    task_comments_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    task_comments_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTaskCommentRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTaskCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskComment"];
+                };
+            };
+        };
+    };
+    tasks_list: {
+        parameters: {
+            query?: {
+                assignee?: string;
+                due_after?: string;
+                due_before?: string;
+                include_descendants?: boolean;
+                no_date?: boolean;
+                open?: boolean;
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                overdue?: boolean;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                priority?: number;
+                project?: number;
+                search?: string;
+                /**
+                 * @description * `todo` - À faire
+                 *     * `in_progress` - En cours
+                 *     * `to_validate` - À valider
+                 *     * `done` - Terminé
+                 *     * `cancelled` - Annulé
+                 */
+                status?: ("cancelled" | "done" | "in_progress" | "to_validate" | "todo")[];
+                tag?: number[];
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTaskList"];
+                };
+            };
+        };
+    };
+    tasks_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskRequest"];
+                "multipart/form-data": components["schemas"]["TaskRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+        };
+    };
+    tasks_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+        };
+    };
+    tasks_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    tasks_partial_update: {
+        parameters: {
+            query?: {
+                /** @description Récurrence : cette occurrence, ou toutes les suivantes */
+                scope?: "following" | "this";
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTaskRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTaskRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+        };
+    };
+    tasks_move_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) task. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveTaskRequest"];
+                "multipart/form-data": components["schemas"]["MoveTaskRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+        };
+    };
+    tasks_blocker_candidates_list: {
+        parameters: {
+            query?: {
+                assignee?: string;
+                due_after?: string;
+                due_before?: string;
+                include_descendants?: boolean;
+                no_date?: boolean;
+                open?: boolean;
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                overdue?: boolean;
+                priority?: number;
+                project?: number;
+                q?: string;
+                search?: string;
+                /**
+                 * @description * `todo` - À faire
+                 *     * `in_progress` - En cours
+                 *     * `to_validate` - À valider
+                 *     * `done` - Terminé
+                 *     * `cancelled` - Annulé
+                 */
+                status?: ("cancelled" | "done" | "in_progress" | "to_validate" | "todo")[];
+                tag?: number[];
+                task?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockerCandidate"][];
                 };
             };
         };

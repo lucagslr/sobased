@@ -1,0 +1,7 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Salut {{ name }},</p>
+<p><strong>{{ actor }}</strong> t'a assigné une tâche dans <strong>{{ project_name }}</strong> :</p>
+<p style="font-size:17px;font-weight:600;">{{ task_title }}</p>
+{% include "emails/_button.html" with url=url label="Voir la tâche" %}
+{% endblock %}
