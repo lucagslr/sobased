@@ -206,9 +206,9 @@ erDiagram
         text rrule "RFC 5545"
         datetime dtstart
         string timezone "fuseau d'expansion, gère l'heure d'été"
-        date until "null = sans fin"
-        date generated_until "fenêtre glissante 90 j"
-        json template "titre, priorité, assignés, tags, durée, checklist"
+        bool all_day "journée entière : développée en UTC"
+        datetime generated_until "fenêtre glissante 90 j"
+        json template "titre, priorité, assignés, tags, écart début-échéance, checklist"
     }
     TASK {
         bigint id PK
@@ -223,7 +223,7 @@ erDiagram
         int position "ordre dans la colonne kanban"
         bigint source_event_id FK "créée depuis ce RDV"
         bigint series_id FK
-        date occurrence_date "date théorique dans la série"
+        datetime occurrence_at "date théorique dans la série"
         bool is_exception "modifiée seule, ignorée par les mises à jour de série"
         datetime completed_at
         bigint created_by_id FK
@@ -287,7 +287,7 @@ erDiagram
 ```
 
 - `task_blocked_by` : M2M asymétrique. Validation à l'écriture : les deux tâches partagent le même projet racine, et l'ajout ne crée pas de cycle (parcours en profondeur du graphe des bloqueurs).
-- Unicité `(series, occurrence_date)` pour rendre la matérialisation idempotente.
+- Unicité `(series, occurrence_at)` pour rendre la matérialisation idempotente. La fin d'une série vit dans son RRULE (`UNTIL`), pas dans une colonne. `source_event_id` sera ajouté avec l'app `events` (phase 6).
 - La couleur d'un événement n'est pas stockée : elle est héritée du projet à la lecture.
 
 ## 4. Contacts

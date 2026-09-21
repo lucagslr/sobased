@@ -8,12 +8,14 @@
 	encode zstd gzip
 
 	# Same security headers as production (minus HSTS) so that a CSP violation
-	# shows up during development, not after deployment.
+	# shows up during development, not after deployment. Two dev-only additions
+	# for Vite: the HMR WebSocket (connect-src ws:) and its ping worker
+	# (worker-src blob:). Neither exists in the production Caddyfile.
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
 		Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws://localhost:8080; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws://localhost:8080; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 		-Server
 	}
 

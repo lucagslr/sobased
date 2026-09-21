@@ -23,6 +23,7 @@ import { atLeast } from '@/utils/roles'
 
 import ProjectOverviewTab from './ProjectOverviewTab.vue'
 import ProjectSettingsTab from './ProjectSettingsTab.vue'
+import ProjectTasksTab from './ProjectTasksTab.vue'
 import ShellProjectView from './ShellProjectView.vue'
 
 const route = useRoute()
@@ -44,6 +45,7 @@ const canEdit = computed(() => atLeast(full.value?.my_role, 'editor'))
 
 const TABS = [
   { slug: 'apercu', label: "Vue d'ensemble" },
+  { slug: 'taches', label: 'Tâches' },
   { slug: 'parametres', label: 'Paramètres' },
 ]
 const currentTab = computed(() =>
@@ -159,6 +161,7 @@ watch(projectId, load, { immediate: true })
     </nav>
 
     <ProjectOverviewTab v-if="currentTab === 'apercu'" :project="full" />
+    <ProjectTasksTab v-else-if="currentTab === 'taches'" :project="full" />
     <ProjectSettingsTab
       v-else
       :project="full"

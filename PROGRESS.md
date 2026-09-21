@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 21.09.2026 · Phases 0, 1 et 2 terminées. Prochaine étape : phase 3 (tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions).**
+**Dernière mise à jour : 21.09.2026 · Phases 0 à 3 terminées. Prochaine étape : phase 4 (dashboard global et dashboard projet, widgets, vues enregistrées, modale de fin dépassée).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -13,7 +13,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 0 | Plan (arborescence, schéma ER, endpoints, pages et composants, risques) | ✅ terminé, validé le 21.09.2026 |
 | 1 | Socle : dépôt, Docker, Django, Vue, auth, profil, thèmes, layout responsive, CI | ✅ terminé · [doc](docs/phases/phase-01-socle.md) |
 | 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ✅ terminé · [doc](docs/phases/phase-02-espaces-projets-droits.md) |
-| 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ⏳ |
+| 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ✅ terminé · [doc](docs/phases/phase-03-taches.md) |
 | 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ⏳ |
 | 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ⏳ |
 | 6 | Événements et RDV, contacts | ⏳ |
@@ -95,6 +95,22 @@ Détail dans `docs/phases/phase-02-espaces-projets-droits.md`. Apps `workspaces`
 - Jeu de données jetable pour vérifier l'interface : `backend/scripts/dev_scenario.py` (affiche deux clés de session ; les supprimer après usage).
 - Les scripts `.py` ponctuels passent par un fichier du scratchpad, jamais par un heredoc.
 
+## Phase 3 : ce qui a été produit
+
+Détail dans `docs/phases/phase-03-taches.md`. App `tasks`, moteur de récurrence partagé `apps/core/recurrence.py`, tâche Celery beat nocturne, front (onglet Tâches, panneau de tâche piloté par `?tache=`, « Mes tâches »). 932 tests backend, 38 tests front.
+
+À retenir pour la suite :
+
+- **Après l'ajout d'une dépendance** : npm → `docker compose restart frontend` (ses `node_modules` sont dans un volume) ; pip → `docker compose up -d --build backend worker beat` puis `pip freeze > requirements/constraints.txt`.
+- Le moteur de récurrence est prêt pour les événements (phase 6) : `normalise_rrule`, `occurrences_between`, `window_end`, `with_until`. Reprendre le schéma série + gabarit JSON + `occurrence_at` + `is_exception` de `apps/tasks`.
+- `member_user_ids(project)` dans `access.py` = qui peut être assigné, mentionné, invité à un événement.
+- Modèle indirect (rattaché à une tâche, une version…) : queryset avec `project_lookup = "task__project"` et `get_project()` dans le viewset.
+- Exception de droits localisée (D6) : surcharger `check_object_permissions` et n'autoriser qu'un ensemble fermé de champs (`set(request.data) <= {...}`).
+- `v-html` n'est permis que dans `MarkdownView.vue`.
+- Un formulaire à un seul champ doit avoir un vrai bouton `type="submit"`.
+- CSP de dev : `worker-src 'self' blob:` pour Vite uniquement ; ne pas le reporter dans le Caddyfile de prod.
+- Écart au schéma de la phase 0 : `Task.occurrence_at` (date-heure) remplace `occurrence_date`, `TaskSeries.all_day` ajouté, la fin de série vit dans le RRULE (`UNTIL`) et non dans une colonne.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -104,8 +120,9 @@ Détail dans `docs/phases/phase-02-espaces-projets-droits.md`. Apps `workspaces`
 | `@fontsource-variable/inter` | front | Police Inter auto-hébergée, sans binaire à commiter |
 | `psycopg[binary]`, `redis`, `gunicorn` | back | Pilotes PostgreSQL / Redis et serveur WSGI, implicites dans la stack |
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
+| `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`pdfjs-dist` et `markdown-it` (D2) seront ajoutés quand ils serviront (phases 8 et 3). **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -114,6 +131,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 3 : heures saisies dans le fuseau du navigateur (pas celui du profil) ; checklist non réordonnable à la souris ; une règle avec `COUNT` repart de zéro après une scission ; une tâche quotidienne ignorée laisse une tâche en retard par jour (conséquence voulue de « jamais de report automatique »).
 - Phase 2 : pas de glisser-déposer pour déplacer un projet (API prête, interface en phase 5) ; transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
 
 Limites **anticipées**, à confirmer par test le moment venu :

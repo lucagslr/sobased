@@ -41,8 +41,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'taches',
         name: 'my-tasks',
-        component: comingSoon,
-        meta: { title: 'Mes tâches', phase: 3 },
+        component: () => import('@/pages/tasks/MyTasksPage.vue'),
+        meta: { title: 'Mes tâches' },
       },
       {
         path: 'projets',

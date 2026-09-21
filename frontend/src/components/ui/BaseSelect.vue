@@ -6,6 +6,7 @@ defineProps<{
   label: string
   options: { value: string; label: string }[]
   errors?: string[]
+  disabled?: boolean
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -18,7 +19,8 @@ const id = useId()
     <select
       :id="id"
       v-model="model"
-      class="h-10 w-full rounded-lg border border-line bg-surface px-3 text-[15px]"
+      :disabled="disabled"
+      class="h-10 w-full rounded-lg border border-line bg-surface px-3 text-[15px] disabled:opacity-60"
     >
       <option v-for="option in options" :key="option.value" :value="option.value">
         {{ option.label }}

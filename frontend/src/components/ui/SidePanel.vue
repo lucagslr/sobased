@@ -29,8 +29,9 @@ const open = defineModel<boolean>('open', { required: true })
         <header class="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div class="min-w-0">
             <DialogTitle class="truncate text-lg font-semibold">{{ title }}</DialogTitle>
-            <DialogDescription v-if="description" class="mt-0.5 text-sm text-muted">
-              {{ description }}
+            <!-- Always rendered: screen readers need a description (hidden if none). -->
+            <DialogDescription :class="description ? 'mt-0.5 text-sm text-muted' : 'sr-only'">
+              {{ description ?? title }}
             </DialogDescription>
           </div>
           <DialogClose
