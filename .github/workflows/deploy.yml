@@ -9,6 +9,7 @@ name: Deploy
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -19,7 +20,7 @@ jobs:
     steps:
       - name: Skip when no server is configured
         if: env.DEPLOY_HOST == ''
-        run: echo "DEPLOY_HOST is not set: nothing to deploy."
+        run: echo "DEPLOY_HOST is not set, nothing to deploy."
       - name: Install the SSH key
         if: env.DEPLOY_HOST != ''
         run: |

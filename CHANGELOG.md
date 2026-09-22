@@ -2,6 +2,12 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
+## [1.0.2] - 2026-09-23
+
+### Corrigé
+
+- Fichier `.github/workflows/deploy.yml` invalide (un `: ` dans une commande non citée) : le workflow de déploiement sur tag se lance et s'ignore proprement sans secrets.
+
 ## [1.0.1] - 2026-09-23
 
 ### Ajouté
