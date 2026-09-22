@@ -69,6 +69,12 @@ cd /srv/sobased && make deploy
 
 (`git pull`, build, migrations, statiques, redémarrage ; les fichiers envoyés et la base sont dans des volumes Docker et ne bougent pas.) Journaux : `make prod-logs`.
 
+**Déploiement automatique sur tag** (`.github/workflows/deploy.yml`) : quand un tag `v*` est poussé sur GitHub, l'action se connecte en SSH au serveur et y lance `scripts/deploy.sh` sur ce tag. À configurer une fois :
+
+1. Sur le serveur, un utilisateur `deploy` (membre du groupe `docker`, propriétaire de `/srv/sobased`) et une paire de clés dédiée : `ssh-keygen -t ed25519 -f deploy_key -N ""`, clé publique dans `/home/deploy/.ssh/authorized_keys`.
+2. Sur GitHub, **Settings › Environments › production** (tu peux y exiger une validation manuelle), puis les secrets `DEPLOY_HOST` (IP ou nom du serveur), `DEPLOY_USER` (`deploy`), `DEPLOY_SSH_KEY` (le contenu de `deploy_key`, la clé privée) et `DEPLOY_PATH` (`/srv/sobased`).
+3. `git tag -a v1.0.1 -m "…" && git push origin v1.0.1` → l'onglet Actions montre le déploiement. Sans ces secrets, le job est simplement ignoré.
+
 ## 4. Google et Microsoft
 
 Les intégrations sont **désactivées tant que les variables sont vides** : l'application fonctionne sans.

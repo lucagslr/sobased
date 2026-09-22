@@ -56,7 +56,7 @@ docker compose up -d --build
 
 Le site est servi sur `http://localhost:8080` (les migrations s'appliquent toutes seules en développement). Sans SMTP configuré, les e-mails s'affichent dans `docker compose logs worker`. Sous Linux ou macOS, `make up`, `make test`, `make lint` font la même chose ([Makefile](Makefile)).
 
-Jeu de données de démonstration (comptes `demo` et `helder`, supprimable avec `--remove`) :
+Jeu de données de démonstration (comptes `demo`, `ana` et `helder`, supprimable avec `--remove`) :
 
 ```bash
 docker compose exec backend python manage.py seed_demo --password 'demo-sobased'

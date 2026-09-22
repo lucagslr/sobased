@@ -12,6 +12,7 @@ Ce que couvre cette phase (SPEC §17, §18, §19) : la pile de **production** (C
 | `backend/Dockerfile` | `/data/media` et `/data/static` créés et donnés à `app` dans l'image : les volumes nommés en héritent à leur première utilisation. |
 | `scripts/deploy.sh` (`make deploy`) | `git pull --ff-only`, build, postgres + redis, `chown` de sécurité des volumes, `migrate`, `collectstatic --clear`, `up -d --remove-orphans`, `check --deploy`. Idempotent : sert au premier déploiement comme aux mises à jour. |
 | `.github/workflows/ci.yml` | Nouveau job `docker` : construction de l'image backend `prod`, de l'image Caddy, validation du `Caddyfile.prod`. |
+| `.github/workflows/deploy.yml` | Déploiement **par SSH sur tag `v*`** (SPEC §17) : `git reset --hard <tag>` sur `main` puis `scripts/deploy.sh` sur le serveur ; ignoré tant que les secrets `DEPLOY_*` n'existent pas (environnement GitHub `production`, validation manuelle possible). |
 
 Vérifié localement : `docker compose -f docker-compose.prod.yml config`, image backend `prod` construite et lancée en `app` (`manage.py check`, `collectstatic`, gunicorn répond `200` sur `/api/health/`), image Caddy construite avec `dist/` (manifest, `sw.js`, icônes présents), `caddy validate` sur `Caddyfile.prod`, `manage.py check --deploy` sans avertissement avec les réglages de production. **Pas de déploiement réel** : il attend le VPS et le domaine (SPEC §20).
 
@@ -24,7 +25,7 @@ Vérifié localement : `docker compose -f docker-compose.prod.yml config`, image
 
 ## 3. `manage.py seed_demo`
 
-Remplace `scripts/dev_scenario.py` (supprimé). Deux utilisateurs (`demo`, propriétaire de deux espaces ; `helder`, invité d'un sous-projet), projets sur quatre niveaux, tâches de tous statuts, RDV, contacts, compta, fichiers générés (PNG, WAV, PDF, MP4 si ffmpeg), liens partagés. Options : `--password` (comptes utilisables), `--sessions` (dev : sessions prêtes pour le navigateur intégré), `--remove`. Les espaces s'appellent **« Démo · 100SATIONS »** et **« Démo · École HEG »** et seuls les espaces **créés par les comptes démo** sont supprimés : une exécution sur une vraie instance ne touche jamais aux données réelles. Vérifié : création, suppression, recréation avec mot de passe.
+Remplace `scripts/dev_scenario.py` (supprimé). Trois utilisateurs aux rôles différents (`demo`, propriétaire de deux espaces ; `ana`, commentatrice de tout l'espace 100SATIONS avec vue sur la compta ; `helder`, invité d'un sous-projet), projets sur quatre niveaux, tâches en retard, du jour et futures, checklist épinglée, RDV dont un **point hebdomadaire récurrent**, contacts, compta (avance de frais, frais récurrents, budget), fichiers générés (PNG, WAV, PDF, MP4 si ffmpeg) avec versions et commentaires, liens partagés : le contenu demandé par SPEC §18. Options : `--password` (comptes utilisables), `--sessions` (dev : sessions prêtes pour le navigateur intégré), `--remove`. Les espaces s'appellent **« Démo · 100SATIONS »** et **« Démo · École HEG »** et seuls les espaces **créés par les comptes démo** sont supprimés : une exécution sur une vraie instance ne touche jamais aux données réelles. Vérifié : création, suppression, recréation avec mot de passe.
 
 ## 4. Relecture sécurité
 

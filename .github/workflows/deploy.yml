@@ -1,0 +1,38 @@
+# Deployment on tag (SPEC §17): when a v* tag is pushed, SSH to the server
+# and run scripts/deploy.sh on that tag. Needs four repository secrets
+# (docs/deploy.md §3): DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key
+# of a deploy-only user whose public key is in ~/.ssh/authorized_keys on the
+# server) and DEPLOY_PATH (e.g. /srv/sobased). Without them the job is skipped,
+# so that forks and the first weeks without a server stay green.
+name: Deploy
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    steps:
+      - name: Skip when no server is configured
+        if: env.DEPLOY_HOST == ''
+        run: echo "DEPLOY_HOST is not set: nothing to deploy."
+      - name: Install the SSH key
+        if: env.DEPLOY_HOST != ''
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+      - name: Deploy the tag
+        if: env.DEPLOY_HOST != ''
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.DEPLOY_USER }}@$DEPLOY_HOST" \
+            "cd '${{ secrets.DEPLOY_PATH }}' \
+             && git fetch -q --tags origin main \
+             && git checkout -q main \
+             && git reset -q --hard '${{ github.ref_name }}' \
+             && SKIP_PULL=1 scripts/deploy.sh"

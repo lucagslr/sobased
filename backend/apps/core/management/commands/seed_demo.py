@@ -1,6 +1,7 @@
 """`manage.py seed_demo`: a demo dataset to discover SOBASED (SPEC §19).
 
-Two users (demo: owner of two workspaces with every feature exercised;
+Three users (demo: owner of two workspaces with every feature exercised;
+ana: commenter of the whole association workspace with a view on the money;
 helder: guest of one sub-project), projects on four levels, tasks in every
 state, meetings, contacts, bookkeeping, generated files (PNG, WAV, PDF, MP4)
 and share links. Only the demo users and the workspaces they own are ever
@@ -37,6 +38,7 @@ from PIL import Image, ImageDraw
 
 from apps.contacts.models import Contact, ProjectContact
 from apps.core import crypto
+from apps.events import services as event_services
 from apps.events.models import Event
 from apps.files import services as file_services
 from apps.files.models import Asset, AssetComment
@@ -47,7 +49,7 @@ from apps.sharing.models import ShareLink, ShareLinkItem
 from apps.tasks.models import ChecklistItem, Task
 from apps.workspaces.models import Workspace
 
-DEMO_USERS = ["demo", "helder"]
+DEMO_USERS = ["demo", "ana", "helder"]
 DEMO_WORKSPACES = ["Démo · 100SATIONS", "Démo · École HEG"]
 
 User = get_user_model()
@@ -87,6 +89,7 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
         return user
 
     demo = make_user("demo", "Demo", "Test")
+    ana = make_user("ana", "Ana", "Costa")
     helder = make_user("helder", "Helder", "S")
 
     today = date.today()
@@ -158,7 +161,16 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
     ecole = project(heg, "62-52 BPMN", "Cours", color="#BAE6FD", status="in_progress")
     project(heg, "TP 3", "TP", ecole, color="#BFDBFE")
 
-    # Helder: guest of ONE sub-project only -> sees SHORTY7G and MARCHIOLY as shells.
+    # Ana: commenter of the whole association, allowed to SEE the money (SPEC §18:
+    # three users with different roles). Helder: guest of ONE sub-project only
+    # -> sees SHORTY7G and MARCHIOLY as shells.
+    Membership.objects.create(
+        user=ana,
+        workspace=asso,
+        role="commenter",
+        can_view_finance=True,
+        invited_by=demo,
+    )
     Membership.objects.create(user=helder, project=clip, role="editor", invited_by=demo)
     out("PROJECT_IDS", shorty.pk, album.pk, clip.pk)
 
@@ -287,6 +299,10 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
     ).contacts.add(booker)
     event(ecole, "Examen BPMN", 12, hour=8, type="exam", location="HEG, salle 3")
     event(album, "Release party", 45, type="release_party")
+    # A recurring meeting (SPEC §18): weekly, materialised 90 days ahead.
+    weekly = event(shorty, "Point hebdo SHORTY7G", 1, hour=18, location="Studio")
+    weekly.participants.add(ana, helder)
+    event_services.start_series(weekly, "FREQ=WEEKLY;BYDAY=MO", demo.timezone)
     montage.source_event = brief
     montage.save(update_fields=["source_event"])
     out("EVENTS", Event.objects.count(), "CONTACTS", Contact.objects.count())
@@ -654,4 +670,6 @@ class Command(BaseCommand):
             password=options["password"],
             sessions=options["sessions"],
         )
-        self.stdout.write(self.style.SUCCESS("Démo prête : comptes demo et helder."))
+        self.stdout.write(
+            self.style.SUCCESS("Démo prête : comptes demo, ana et helder.")
+        )

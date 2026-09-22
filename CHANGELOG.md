@@ -2,6 +2,12 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
+## [1.0.1] - 2026-09-23
+
+### Ajouté
+
+- Déploiement automatique par SSH quand un tag `v*` est poussé (`.github/workflows/deploy.yml`, ignoré tant que les secrets `DEPLOY_*` ne sont pas définis) ; `seed_demo` : un troisième compte (`ana`, commentatrice avec vue sur la compta) et un RDV hebdomadaire récurrent, comme le demandent SPEC §17 et §18.
+
 ## [1.0.0] - 2026-09-23
 
 Première version complète : les quatorze phases du cahier des charges.

@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Les 14 phases sont terminées, `v1.0.0` taguée. Il ne reste que ce qui dépend de Luca (SPEC §20) : VPS et nom de domaine puis `make deploy` (`docs/deploy.md`), SMTP, identifiants Google et Microsoft, essais manuels listés dans « Limites connues ».**
+**Dernière mise à jour : 23.09.2026 · Les 14 phases sont terminées, `v1.0.0` taguée (puis `v1.0.1` : déploiement sur tag et compléments de `seed_demo`). Il ne reste que ce qui dépend de Luca (SPEC §20) : VPS et nom de domaine puis `make deploy` (`docs/deploy.md`), SMTP, identifiants Google et Microsoft, essais manuels listés dans « Limites connues ».**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -261,7 +261,7 @@ Détail dans `docs/phases/phase-13-activite-export-pwa.md`. App `apps/activity` 
 
 ## Phase 14 : ce qui a été produit
 
-Détail dans `docs/phases/phase-14-deploiement.md`. `docker-compose.prod.yml` (gunicorn non root, Caddy HTTPS avec le bundle Vue dans l'image, volumes, seuls 80 / 443 exposés), `Caddyfile.prod` (HSTS, même CSP qu'en dev sans les exceptions Vite, relais des fichiers protégés, SPA, caches), `scripts/deploy.sh` idempotent, `scripts/backup.sh` (dump + fichiers, AES-256, rétention 30 jours, copie rclone) et `scripts/restore.sh` **testés de bout en bout sur la pile de dev**, `manage.py seed_demo` (remplace `scripts/dev_scenario.py`, ne touche jamais aux données réelles), relecture OWASP (`docs/securite.md`, Pillow passé en 12.3.0 après `pip-audit`), `docs/deploy.md` avec la liste exacte pour Google et Microsoft, README v1.0.0, job CI de construction des images. **Aucun déploiement réel** (VPS et domaine à fournir).
+Détail dans `docs/phases/phase-14-deploiement.md`. `docker-compose.prod.yml` (gunicorn non root, Caddy HTTPS avec le bundle Vue dans l'image, volumes, seuls 80 / 443 exposés), `Caddyfile.prod` (HSTS, même CSP qu'en dev sans les exceptions Vite, relais des fichiers protégés, SPA, caches), `scripts/deploy.sh` idempotent, `scripts/backup.sh` (dump + fichiers, AES-256, rétention 30 jours, copie rclone) et `scripts/restore.sh` **testés de bout en bout sur la pile de dev**, `manage.py seed_demo` (remplace `scripts/dev_scenario.py`, trois comptes aux rôles différents, RDV récurrent, ne touche jamais aux données réelles), déploiement par SSH sur tag (`deploy.yml`, ignoré sans secrets), relecture OWASP (`docs/securite.md`, Pillow passé en 12.3.0 après `pip-audit`), `docs/deploy.md` avec la liste exacte pour Google et Microsoft, README v1.0.0, job CI de construction des images. **Aucun déploiement réel** (VPS et domaine à fournir).
 
 À retenir pour la suite :
 
