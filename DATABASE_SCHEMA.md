@@ -467,12 +467,14 @@ erDiagram
         enum kind "expense, income"
         decimal amount "CHF, supérieur à 0"
         date date
-        bigint category_id FK "PROTECT"
+        bigint category_id FK "RESTRICT"
         string label
         string vendor "fournisseur, texte libre"
-        bigint contact_id FK "optionnel"
-        bigint event_id FK "optionnel, ex. RDV studio"
-        file receipt "image ou PDF"
+        bigint contact_id FK "optionnel, SET_NULL"
+        bigint event_id FK "optionnel, ex. RDV studio, SET_NULL"
+        file receipt "image ou PDF, nom aléatoire"
+        string receipt_name "nom d'origine"
+        string receipt_content_type
         enum payment_status "to_pay, paid"
         bigint paid_by_user_id FK "avance de frais"
         bigint paid_by_contact_id FK "avance de frais"
@@ -510,7 +512,9 @@ erDiagram
     RECURRING_EXPENSE ||--o{ TRANSACTION : "génère"
 ```
 
-- « À justifier » est **calculé** : `kind = expense AND receipt IS NULL`. Pas de statut stocké qui pourrait diverger du fichier.
+- « À justifier » est **calculé** : `kind = expense AND receipt = ''`. Pas de statut stocké qui pourrait diverger du fichier. Le fichier est supprimé avec la ligne, cascade comprise (signal `post_delete`).
+- Clés vers `CATEGORY` en `RESTRICT` (migration `finance.0003`) : une catégorie utilisée ne se supprime pas seule (l'API la remplace d'abord), mais la suppression d'un espace entier cascade. `PROTECT` bloquait cette cascade.
+- `amount` : `DECIMAL(12,2)`, `CHECK amount > 0`. Contrainte `CHECK` : au plus un de `paid_by_user` / `paid_by_contact`.
 - Avance de frais : au plus un de `paid_by_user` / `paid_by_contact`. « À rembourser » = `to_reimburse AND reimbursed_on IS NULL`.
 - Unique `(recurring_expense, period_key)` : Celery beat peut tourner plusieurs fois sans doublon.
 - Unique `(project, category, kind)` sur `BUDGET_LINE`. Les cumuls parents sont calculés (un `GROUP BY project` + somme dans l'arbre en mémoire), jamais stockés.
@@ -622,7 +626,7 @@ erDiagram
 | `event` | `(project, start)`, `(start)` | calendrier |
 | `project` | `(workspace, parent)`, `(end_date)` | arbre, modale de fin dépassée |
 | `membership` | `(user)` + uniques partiels | résolution des droits |
-| `transaction` | `(project, date)`, `(payment_status)`, `(recurring_expense, period_key)` unique | compta, dashboard |
+| `transaction` | `(project, date)`, `(date)`, `(recurring_expense, period_key)` unique | compta, dashboard |
 | `share_link` | `(token_hash)` unique | page publique |
 | `notification` | `(recipient, read_at)` | cloche |
 | `activity_entry` | `(project, created_at)` | onglet Activité, purge |

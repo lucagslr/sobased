@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.events.serializers import EventSerializer
+from apps.finance.serializers import BudgetTotalsSerializer, TransactionSerializer
 from apps.projects import tree
 from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
@@ -97,11 +98,12 @@ class MeetingsWidgetSerializer(serializers.Serializer):
     items = EventSerializer(many=True)
 
 
-class PendingWidgetSerializer(serializers.Serializer):
-    """A widget whose feature is not built yet: the front hides it."""
+class MoneyWidgetSerializer(serializers.Serializer):
+    """Transactions; `available` is false without any can_view_finance."""
 
     available = serializers.BooleanField()
     count = serializers.IntegerField()
+    items = TransactionSerializer(many=True, required=False)
 
 
 class DashboardWidgetsSerializer(serializers.Serializer):
@@ -111,8 +113,8 @@ class DashboardWidgetsSerializer(serializers.Serializer):
     next7 = TaskWidgetSerializer()
     to_validate = ValidateWidgetSerializer()
     meetings = MeetingsWidgetSerializer()
-    expenses_to_pay = PendingWidgetSerializer()
-    missing_receipts = PendingWidgetSerializer()
+    expenses_to_pay = MoneyWidgetSerializer()
+    missing_receipts = MoneyWidgetSerializer()
 
 
 class DashboardSummarySerializer(serializers.Serializer):
@@ -131,14 +133,31 @@ class MilestoneSerializer(serializers.Serializer):
     color = serializers.CharField()
 
 
+class OverviewBudgetSerializer(serializers.Serializer):
+    """Planned versus actual, own and with the sub-projects I may see."""
+
+    own = BudgetTotalsSerializer()
+    with_children = BudgetTotalsSerializer()
+    needs_receipt = serializers.IntegerField()
+    to_pay = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
 class ProjectOverviewSerializer(serializers.Serializer):
     date = serializers.DateField()
     overdue = TaskWidgetSerializer()
     today = TaskWidgetSerializer()
     milestones = MilestoneSerializer(many=True)
+    budget = OverviewBudgetSerializer(allow_null=True)
 
 
 # --- Cards mode of the Projects page (documentation of cards.build_cards) -------
+
+
+class CardBudgetSerializer(serializers.Serializer):
+    """Expense budget of a branch. Only with can_view_finance (else null)."""
+
+    planned = serializers.DecimalField(max_digits=14, decimal_places=2)
+    spent = serializers.DecimalField(max_digits=14, decimal_places=2)
 
 
 class CardStatsSerializer(serializers.Serializer):
@@ -149,6 +168,7 @@ class CardStatsSerializer(serializers.Serializer):
     )
     tasks_done = serializers.IntegerField()
     tasks_overdue = serializers.IntegerField()
+    budget = CardBudgetSerializer(allow_null=True)
 
 
 class NextDueSerializer(serializers.Serializer):

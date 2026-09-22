@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.events.serializers import EventSerializer
+from apps.finance.serializers import TransactionSerializer
 from apps.projects.access import Role, effective_access, get_access_map
 from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
@@ -25,6 +26,7 @@ from .models import DashboardView, normalise_filters
 from .serializers import (
     DashboardSummarySerializer,
     DashboardViewSerializer,
+    OverviewBudgetSerializer,
     ProjectCardSerializer,
     ProjectOverviewSerializer,
 )
@@ -91,9 +93,11 @@ class DashboardSummaryView(APIView):
         pinned = services.pinned_items(request, scope)
         to_validate = services.to_validate_items(request, scope)
         meetings = services.upcoming_events(request, scope)
-        # Features of later phases: the front hides a widget that is not
-        # available, and existing layouts already have a slot for it.
-        pending = {"available": False, "count": 0}
+        # Money widgets only list projects where I have can_view_finance;
+        # without any such project they are hidden (available: false).
+        money = get_access_map(request).project_ids(finance="view")
+        to_pay = services.expenses_to_pay(request, scope)
+        missing = services.missing_receipts(request, scope)
         return Response(
             {
                 "date": scope.today,
@@ -128,11 +132,23 @@ class DashboardSummaryView(APIView):
                             context=context,
                         ).data,
                     },
-                    "expenses_to_pay": pending,
-                    "missing_receipts": pending,
+                    "expenses_to_pay": self._money_widget(money, to_pay, context),
+                    "missing_receipts": self._money_widget(money, missing, context),
                 },
             }
         )
+
+    @staticmethod
+    def _money_widget(money_project_ids, queryset, context) -> dict:
+        if not money_project_ids:
+            return {"available": False, "count": 0}
+        return {
+            "available": True,
+            "count": queryset.count(),
+            "items": TransactionSerializer(
+                queryset[: services.WIDGET_LIMIT], many=True, context=context
+            ).data,
+        }
 
 
 class ProjectOverviewView(APIView):
@@ -146,6 +162,7 @@ class ProjectOverviewView(APIView):
             raise NotFound()
         scope = services.resolve_scope(request, normalise_filters({"projects": [pk]}))
         context = _task_context(request, scope)
+        access = effective_access(request, project)
         return Response(
             {
                 "date": scope.today,
@@ -154,6 +171,15 @@ class ProjectOverviewView(APIView):
                 ),
                 "today": _task_widget(services.today_tasks(request, scope), context),
                 "milestones": services.milestones(request, scope, project.pk),
+                # Money only with can_view_finance: null otherwise, never zeros
+                # that would look like "nothing spent".
+                "budget": (
+                    OverviewBudgetSerializer(
+                        services.project_budget(request, project)
+                    ).data
+                    if access.can_view_finance
+                    else None
+                ),
             }
         )
 
@@ -167,9 +193,8 @@ class ProjectCardsView(APIView):
     )
     def get(self, request):
         workspace = request.query_params.get("workspace", "")
-        return Response(
-            build_cards(request, int(workspace) if workspace.isdigit() else None)
-        )
+        cards = build_cards(request, int(workspace) if workspace.isdigit() else None)
+        return Response(ProjectCardSerializer(cards, many=True).data)
 
 
 class DashboardViewViewSet(viewsets.ModelViewSet):

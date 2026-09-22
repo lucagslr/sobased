@@ -1,0 +1,90 @@
+{# Rapport comptable PDF (WeasyPrint). Tout est pré-formaté par exports.build_pdf ; aucun fichier externe. #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport comptable SOBASED</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; @bottom-center { content: "Page " counter(page) " / " counter(pages); font-size: 9pt; color: #78716c; } }
+  body { font-family: "DejaVu Sans", "Liberation Sans", sans-serif; font-size: 10pt; color: #1c1917; }
+  h1 { font-size: 20pt; margin: 0 0 2pt; }
+  h2 { font-size: 13pt; margin: 18pt 0 6pt; border-bottom: 1px solid #e7e5e4; padding-bottom: 3pt; }
+  .meta { color: #78716c; margin: 0 0 12pt; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8pt; }
+  th, td { padding: 4pt 5pt; border-bottom: 1px solid #e7e5e4; text-align: left; vertical-align: top; }
+  th { background: #f5f5f4; font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tr.total td { font-weight: 700; border-top: 2px solid #1c1917; }
+  .cards { display: flex; gap: 8pt; margin-bottom: 6pt; }
+  .card { flex: 1; border: 1px solid #e7e5e4; border-radius: 6pt; padding: 8pt 10pt; }
+  .card .label { color: #78716c; font-size: 9pt; }
+  .card .value { font-size: 14pt; font-weight: 700; }
+  .alert { color: #b91c1c; }
+  .muted { color: #78716c; }
+  tbody tr { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+  <h1>Rapport comptable</h1>
+  <p class="meta">Période : {{ period }} · Généré le {{ generated_on }} par {{ author }} · Montants en CHF, sans TVA.</p>
+
+  <div class="cards">
+    <div class="card"><div class="label">Recettes</div><div class="value">{{ totals.income }}</div></div>
+    <div class="card"><div class="label">Dépenses</div><div class="value">{{ totals.expense }}</div></div>
+    <div class="card"><div class="label">Solde</div><div class="value">{{ totals.balance }}</div></div>
+    <div class="card"><div class="label">À justifier</div><div class="value {% if missing %}alert{% endif %}">{{ missing|length }}</div></div>
+  </div>
+
+  <h2>Synthèse par catégorie</h2>
+  <table>
+    <thead><tr><th>Catégorie</th><th class="num">Dépenses</th><th class="num">Recettes</th><th class="num">Solde</th></tr></thead>
+    <tbody>
+      {% for entry in by_category %}
+      <tr><td>{{ entry.name }}</td><td class="num">{{ entry.expense }}</td><td class="num">{{ entry.income }}</td><td class="num">{{ entry.balance }}</td></tr>
+      {% endfor %}
+      <tr class="total"><td>Total</td><td class="num">{{ totals.expense }}</td><td class="num">{{ totals.income }}</td><td class="num">{{ totals.balance }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Synthèse par projet</h2>
+  <table>
+    <thead><tr><th>Projet</th><th class="num">Dépenses</th><th class="num">Recettes</th><th class="num">Solde</th></tr></thead>
+    <tbody>
+      {% for entry in by_project %}
+      <tr><td>{{ entry.name }}</td><td class="num">{{ entry.expense }}</td><td class="num">{{ entry.income }}</td><td class="num">{{ entry.balance }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Transactions ({{ rows|length }})</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Projet</th><th>Catégorie</th><th>Libellé</th><th>Statut</th><th class="num">Montant</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.date }}</td>
+        <td>{{ row.project }}</td>
+        <td>{{ row.category }}</td>
+        <td>{{ row.label }}{% if row.vendor %} <span class="muted">· {{ row.vendor }}</span>{% endif %}</td>
+        <td{% if row.alert %} class="alert"{% endif %}>{{ row.status }}</td>
+        <td class="num">{{ row.amount }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Dépenses sans justificatif ({{ missing|length }})</h2>
+  {% if missing %}
+  <table>
+    <thead><tr><th>Date</th><th>Projet</th><th>Libellé</th><th class="num">Montant</th></tr></thead>
+    <tbody>
+      {% for row in missing %}
+      <tr><td>{{ row.date }}</td><td>{{ row.project }}</td><td>{{ row.label }}</td><td class="num">{{ row.amount }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Aucune : tous les justificatifs sont là.</p>
+  {% endif %}
+</body>
+</html>

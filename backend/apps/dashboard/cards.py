@@ -18,16 +18,42 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from apps.core.localtime import all_day_moment, local_today, user_zone
+from apps.finance.models import BudgetLine, Kind, Transaction
 from apps.projects import tree
 from apps.projects.access import get_access_map
 from apps.projects.models import Project
 from apps.tasks.models import Task
 
 EMPTY_STATS = {"tasks_total": 0, "tasks_done": 0, "tasks_overdue": 0}
+
+
+def _money_stats(request, project_ids: list[int]) -> dict[int, dict]:
+    """Planned and spent (expenses) per project, for projects where I may
+    see money. Roll-ups happen in build_cards, like the task counts."""
+    stats: dict[int, dict] = {}
+    planned = (
+        BudgetLine.objects.for_user(request, finance="view")
+        .filter(project_id__in=project_ids, kind=Kind.EXPENSE)
+        .values("project_id")
+        .annotate(total=Sum("amount"))
+    )
+    for row in planned:
+        stats.setdefault(row["project_id"], {"planned": 0, "spent": 0})
+        stats[row["project_id"]]["planned"] = row["total"]
+    spent = (
+        Transaction.objects.for_user(request, finance="view")
+        .filter(project_id__in=project_ids, kind=Kind.EXPENSE)
+        .values("project_id")
+        .annotate(total=Sum("amount"))
+    )
+    for row in spent:
+        stats.setdefault(row["project_id"], {"planned": 0, "spent": 0})
+        stats[row["project_id"]]["spent"] = row["total"]
+    return stats
 
 
 def _own_stats(request, project_ids: list[int], today: date) -> dict[int, dict]:
@@ -107,6 +133,8 @@ def build_cards(request, workspace_id: int | None = None) -> list[dict]:
     in_scope = [p.pk for group in children.values() for p in group if p.pk in readable]
     own = _own_stats(request, in_scope, today)
     due = _next_due(request, in_scope, today)
+    money_ids = set(access_map.project_ids(finance="view"))
+    money = _money_stats(request, [p for p in in_scope if p in money_ids])
 
     def branch(project: Project) -> list[Project]:
         """`project` and everything below it that I can see."""
@@ -121,6 +149,19 @@ def build_cards(request, workspace_id: int | None = None) -> list[dict]:
             for key, value in own.get(node.pk, EMPTY_STATS).items():
                 totals[key] += value
         return totals
+
+    def budget_of(project: Project) -> dict | None:
+        """Expense budget over the branch, or None without can_view_finance
+        on the project itself (a shell root gets None too)."""
+        if project.pk not in money_ids:
+            return None
+        planned = spent = 0
+        for node in branch(project):
+            entry = money.get(node.pk)
+            if entry:
+                planned += entry["planned"]
+                spent += entry["spent"]
+        return {"planned": planned, "spent": spent}
 
     def entries(project: Project):
         """Top-most projects under `project` that I can really open."""
@@ -141,6 +182,7 @@ def build_cards(request, workspace_id: int | None = None) -> list[dict]:
             "end_date": project.end_date,
             "end_overdue": tree.end_overdue(project.status, project.end_date, today),
             "children_count": len(children.get(project.pk, [])),
+            "budget": budget_of(project),
             **rollup(project),
         }
 
@@ -182,6 +224,7 @@ def build_cards(request, workspace_id: int | None = None) -> list[dict]:
                 "end_overdue": not is_shell
                 and tree.end_overdue(root.status, root.end_date, today),
                 "next_due": min(deadlines, key=lambda d: d["date"], default=None),
+                "budget": budget_of(root),
                 "past": columns[tree.PAST],
                 "current": columns[tree.CURRENT],
                 "upcoming": columns[tree.UPCOMING],

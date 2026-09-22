@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from apps.core.localtime import (
@@ -24,6 +24,7 @@ from apps.core.localtime import (
     user_zone,
 )
 from apps.events.models import Event
+from apps.finance.models import Transaction
 from apps.projects.access import get_access_map
 from apps.projects.models import Project
 from apps.tasks.models import ChecklistItem, Task
@@ -33,6 +34,60 @@ WIDGET_LIMIT = 50
 MILESTONE_LIMIT = 8
 # "RDV à venir" looks two weeks ahead: far enough to prepare a meeting.
 MEETINGS_DAYS = 14
+
+
+def _money(request, scope: Scope):
+    """Transactions of the scope I may see money of (can_view_finance)."""
+    queryset = Transaction.objects.for_user(request, finance="view").filter(
+        project_id__in=scope.project_ids
+    )
+    return queryset.select_related(
+        "project", "category", "contact", "event", "paid_by_user", "paid_by_contact"
+    )
+
+
+def expenses_to_pay(request, scope: Scope):
+    """« Frais à payer ce mois »: unpaid expenses due by the end of this
+    month, overdue ones included. Oldest first."""
+    first_next_month = (scope.today.replace(day=1) + timedelta(days=32)).replace(day=1)
+    return (
+        _money(request, scope)
+        .filter(
+            payment_status=Transaction.PaymentStatus.TO_PAY, date__lt=first_next_month
+        )
+        .order_by("date", "id")
+    )
+
+
+def missing_receipts(request, scope: Scope):
+    """« Justificatifs manquants »: expenses without a receipt, oldest first."""
+    return _money(request, scope).needing_receipt().order_by("date", "id")
+
+
+def project_budget(request, project) -> dict:
+    """Budget block of the project overview: planned versus actual (own and
+    with the sub-projects I may see), plus what still needs attention."""
+    from apps.finance import services as finance
+    from apps.finance.models import BudgetLine
+
+    readable = set(get_access_map(request).project_ids(finance="view"))
+    transactions = Transaction.objects.for_user(request, finance="view")
+    result = finance.budget(
+        project,
+        transactions,
+        BudgetLine.objects.for_user(request, finance="view"),
+        readable,
+    )
+    branch = [project.pk, *get_access_map(request).descendants(project.pk)]
+    in_branch = transactions.filter(project_id__in=branch)
+    return {
+        **result["totals"],
+        "needs_receipt": in_branch.needing_receipt().count(),
+        "to_pay": in_branch.filter(
+            payment_status=Transaction.PaymentStatus.TO_PAY
+        ).aggregate(total=Sum("amount"))["total"]
+        or 0,
+    }
 
 
 @dataclass

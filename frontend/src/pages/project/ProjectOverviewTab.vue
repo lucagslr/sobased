@@ -2,8 +2,8 @@
 /**
  * Overview of a project = its mini-dashboard (SPEC §15, page 3): what is late,
  * what is for today, the next milestones, then the sub-projects sorted into
- * Passé / En cours / À venir. Everything covers the project AND its
- * sub-projects. The budget block joins in phase 7.
+ * Passé / En cours / À venir, and the budget for those who may see money.
+ * Everything covers the project AND its sub-projects.
  */
 import { CalendarClock, CircleCheckBig, Flag, FlagOff } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
@@ -24,6 +24,7 @@ import { useTaskPanel } from '@/composables/useTaskPanel'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
+import { chf, percentOf } from '@/utils/money'
 import { formatDate, formatDateRange, TEMPORAL_LABELS } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
@@ -180,6 +181,67 @@ const eventPanelOpen = computed({
         <p v-else class="py-2 text-sm text-muted">Aucune date à venir.</p>
       </section>
     </div>
+
+    <!-- Budget: only with can_view_finance (the API answers null otherwise). -->
+    <section v-if="overview?.budget" class="rounded-2xl border border-line p-4">
+      <h2 class="mb-3 flex items-center justify-between text-sm font-semibold">
+        Budget
+        <RouterLink
+          :to="`/projets/${project.id}/compta`"
+          class="text-xs font-medium text-muted hover:text-fg"
+        >
+          Voir la compta
+        </RouterLink>
+      </h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div v-for="scope in ['own', 'with_children'] as const" :key="scope">
+          <p class="text-xs font-medium text-muted">
+            {{ scope === 'own' ? 'Ce projet' : 'Avec les sous-projets' }}
+          </p>
+          <p class="mt-1 text-sm">
+            Dépenses
+            <strong class="tabular-nums">{{ chf(overview.budget[scope].actual_expense) }}</strong>
+            <span class="text-muted"
+              >/ {{ chf(overview.budget[scope].planned_expense) }} prévus</span
+            >
+          </p>
+          <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
+            <div
+              class="h-full rounded-full"
+              :class="
+                Number(overview.budget[scope].actual_expense) >
+                Number(overview.budget[scope].planned_expense)
+                  ? 'bg-danger'
+                  : 'bg-accent'
+              "
+              :style="{
+                width: `${percentOf(overview.budget[scope].actual_expense, overview.budget[scope].planned_expense)}%`,
+              }"
+            />
+          </div>
+          <p class="mt-1 text-sm text-muted">
+            Recettes
+            <span class="tabular-nums">{{ chf(overview.budget[scope].actual_income) }}</span> /
+            {{ chf(overview.budget[scope].planned_income) }} prévues
+          </p>
+        </div>
+      </div>
+      <p
+        v-if="overview.budget.needs_receipt || Number(overview.budget.to_pay) > 0"
+        class="mt-3 text-sm"
+      >
+        <span v-if="overview.budget.needs_receipt" class="font-semibold text-danger">
+          {{ overview.budget.needs_receipt }} dépense{{
+            overview.budget.needs_receipt > 1 ? 's' : ''
+          }}
+          à justifier
+        </span>
+        <span v-if="overview.budget.needs_receipt && Number(overview.budget.to_pay) > 0"> · </span>
+        <span v-if="Number(overview.budget.to_pay) > 0" class="font-semibold text-warning">
+          {{ chf(overview.budget.to_pay) }} à payer
+        </span>
+      </p>
+    </section>
 
     <section>
       <h2 class="mb-3 text-sm font-semibold text-muted">Sous-projets</h2>

@@ -6,7 +6,8 @@
  *
  * Everything is computed by the server (GET /api/projects/cards/), rights
  * included: a root I only see as a shell comes with nothing but its name, its
- * colour and the branches I can open. The budget joins in phase 7.
+ * colour and the branches I can open. The budget only shows with
+ * can_view_finance (null otherwise).
  */
 import { CalendarClock, FolderTree } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
@@ -17,6 +18,7 @@ import ColorDot from '@/components/ui/ColorDot.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
 import { useWorkspacesStore } from '@/stores/workspaces'
+import { chf } from '@/utils/money'
 import { formatDate, formatDateRange, TEMPORAL_LABELS } from '@/utils/projects'
 
 import StatusBadge from './StatusBadge.vue'
@@ -107,6 +109,12 @@ function percent(stats: Pick<CardEntry, 'tasks_done' | 'tasks_total'>): number {
           <p v-if="card.tasks_overdue" class="mt-2 font-semibold text-danger">
             {{ card.tasks_overdue }} tâche{{ card.tasks_overdue > 1 ? 's' : '' }} en retard
           </p>
+          <p v-if="card.budget" class="mt-2 text-muted">
+            Dépensé <strong class="text-fg tabular-nums">{{ chf(card.budget.spent) }}</strong>
+            <template v-if="Number(card.budget.planned) > 0">
+              / {{ chf(card.budget.planned) }} prévus
+            </template>
+          </p>
           <button
             v-if="card.next_due"
             type="button"
@@ -169,11 +177,17 @@ function percent(stats: Pick<CardEntry, 'tasks_done' | 'tasks_total'>): number {
                   <span v-else>Aucune tâche</span>
                 </span>
                 <span
-                  v-if="entry.tasks_overdue || entry.children_count"
+                  v-if="entry.tasks_overdue || entry.children_count || entry.budget"
                   class="mt-1.5 flex flex-wrap gap-x-3 text-xs"
                 >
                   <span v-if="entry.tasks_overdue" class="font-semibold text-danger">
                     {{ entry.tasks_overdue }} en retard
+                  </span>
+                  <span v-if="entry.budget" class="text-muted tabular-nums">
+                    {{ chf(entry.budget.spent) }}
+                    <template v-if="Number(entry.budget.planned) > 0">
+                      / {{ chf(entry.budget.planned) }}
+                    </template>
                   </span>
                   <span v-if="entry.children_count" class="text-muted">
                     {{ entry.children_count }} sous-projet{{ entry.children_count > 1 ? 's' : '' }}

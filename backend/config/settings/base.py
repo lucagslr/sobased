@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.contacts",
     "apps.events",
     "apps.tasks",
+    "apps.finance",
     "apps.dashboard",
 ]
 
@@ -155,6 +156,11 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.events.tasks.materialise_all_series",
         "schedule": 60 * 60 * 24,
     },
+    # Recurring expenses: this period's "À payer" transaction (SPEC §13).
+    "generate-recurring-expenses": {
+        "task": "apps.finance.tasks.generate_recurring_expenses",
+        "schedule": 60 * 60 * 24,
+    },
 }
 
 # --- Files ---------------------------------------------------------------------
@@ -229,6 +235,10 @@ SPECTACULAR_SETTINGS = {
         "ProjectStatusEnum": "apps.projects.models.PROJECT_STATUS_CHOICES",
         "TaskStatusEnum": "apps.tasks.models.TASK_STATUS_CHOICES",
         "EventTypeEnum": "apps.events.models.EVENT_TYPE_CHOICES",
+        "TransactionKindEnum": "apps.finance.models.KIND_CHOICES",
+        "PaymentStatusEnum": "apps.finance.models.PAYMENT_STATUS_CHOICES",
+        "FrequencyEnum": "apps.finance.models.FREQUENCY_CHOICES",
+        "DisplayStatusEnum": "apps.finance.models.DISPLAY_STATUS_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

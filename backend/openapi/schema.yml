@@ -196,6 +196,230 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/budget-lines/:
+    get:
+      operationId: budget_lines_list
+      description: Planned amounts of a project (`?project=`), one per category and
+        kind.
+      parameters:
+      - in: query
+        name: project
+        schema:
+          type: integer
+      tags:
+      - budget-lines
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BudgetLine'
+          description: ''
+    post:
+      operationId: budget_lines_create
+      description: Planned amounts of a project (`?project=`), one per category and
+        kind.
+      tags:
+      - budget-lines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetLineRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BudgetLineRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetLine'
+          description: ''
+  /api/budget-lines/{id}/:
+    patch:
+      operationId: budget_lines_partial_update
+      description: Planned amounts of a project (`?project=`), one per category and
+        kind.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) budget line.
+        required: true
+      tags:
+      - budget-lines
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetLineRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBudgetLineRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetLine'
+          description: ''
+    delete:
+      operationId: budget_lines_destroy
+      description: Planned amounts of a project (`?project=`), one per category and
+        kind.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) budget line.
+        required: true
+      tags:
+      - budget-lines
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: |-
+        Bookkeeping categories of a workspace. Read: anyone in it (they are
+        just names). Write: admins.
+      parameters:
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+    post:
+      operationId: categories_create
+      description: |-
+        Bookkeeping categories of a workspace. Read: anyone in it (they are
+        just names). Write: admins.
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      description: |-
+        Bookkeeping categories of a workspace. Read: anyone in it (they are
+        just names). Write: admins.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) category.
+        required: true
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: categories_partial_update
+      description: |-
+        Bookkeeping categories of a workspace. Read: anyone in it (they are
+        just names). Write: admins.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: categories_destroy
+      description: |-
+        Bookkeeping categories of a workspace. Read: anyone in it (they are
+        just names). Write: admins.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) category.
+        required: true
+      - in: query
+        name: replace_with
+        schema:
+          type: integer
+        description: Catégorie de remplacement si utilisée
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/checklist-items/:
     get:
       operationId: checklist_items_list
@@ -879,6 +1103,292 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/finance/advances/:
+    get:
+      operationId: finance_advances_list
+      description: « Qui doit quoi à qui » (SPEC §13).
+      parameters:
+      - in: query
+        name: project
+        schema:
+          type: integer
+        description: Sous-projets inclus
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Advance'
+          description: ''
+    post:
+      operationId: finance_advances_create
+      description: Mark several advances reimbursed at once (« tout le solde »).
+      tags:
+      - finance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkReimbursedRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkReimbursedRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: integer
+          description: ''
+  /api/finance/budget/:
+    get:
+      operationId: finance_budget_retrieve
+      description: Planned versus actual of one project, own and with its sub-projects.
+      parameters:
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: project
+        schema:
+          type: integer
+        required: true
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+          description: ''
+  /api/finance/export-receipts.zip:
+    get:
+      operationId: finance_export_receipts.zip_retrieve
+      description: Downloads always cover the filtered, rights-limited transactions.
+      parameters:
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/finance/export.pdf:
+    get:
+      operationId: finance_export.pdf_retrieve
+      description: Downloads always cover the filtered, rights-limited transactions.
+      parameters:
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/finance/export.xlsx:
+    get:
+      operationId: finance_export.xlsx_retrieve
+      description: Downloads always cover the filtered, rights-limited transactions.
+      parameters:
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/finance/summary/:
+    get:
+      operationId: finance_summary_retrieve
+      description: Totals by category, project and month of the filtered transactions.
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: event
+        schema:
+          type: integer
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - expense
+          - income
+      - in: query
+        name: needs_receipt
+        schema:
+          type: boolean
+      - in: query
+        name: paid_by
+        schema:
+          type: string
+        description: '`me` ou nom d''utilisateur'
+      - in: query
+        name: paid_by_contact
+        schema:
+          type: integer
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+          enum:
+          - paid
+          - to_pay
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: reimbursed
+        schema:
+          type: boolean
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: to_reimburse
+        schema:
+          type: boolean
+        description: Avances ouvertes
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - finance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceSummary'
+          description: ''
   /api/health/:
     get:
       operationId: health_retrieve
@@ -1705,6 +2215,140 @@ paths:
                 items:
                   $ref: '#/components/schemas/ProjectNode'
           description: ''
+  /api/recurring-expenses/:
+    get:
+      operationId: recurring_expenses_list
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - recurring-expenses
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecurringExpense'
+          description: ''
+    post:
+      operationId: recurring_expenses_create
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      tags:
+      - recurring-expenses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringExpenseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecurringExpenseRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringExpense'
+          description: ''
+  /api/recurring-expenses/{id}/:
+    get:
+      operationId: recurring_expenses_retrieve
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) recurring
+          expense.
+        required: true
+      tags:
+      - recurring-expenses
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringExpense'
+          description: ''
+    patch:
+      operationId: recurring_expenses_partial_update
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) recurring
+          expense.
+        required: true
+      tags:
+      - recurring-expenses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecurringExpenseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecurringExpenseRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringExpense'
+          description: ''
+    delete:
+      operationId: recurring_expenses_destroy
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) recurring
+          expense.
+        required: true
+      tags:
+      - recurring-expenses
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/tags/:
     get:
       operationId: tags_list
@@ -2355,6 +2999,390 @@ paths:
                 items:
                   $ref: '#/components/schemas/BlockerCandidate'
           description: ''
+  /api/transactions/:
+    get:
+      operationId: transactions_list
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - in: query
+        name: date_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: event
+        schema:
+          type: integer
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - expense
+          - income
+      - in: query
+        name: needs_receipt
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: paid_by
+        schema:
+          type: string
+        description: '`me` ou nom d''utilisateur'
+      - in: query
+        name: paid_by_contact
+        schema:
+          type: integer
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+          enum:
+          - paid
+          - to_pay
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: reimbursed
+        schema:
+          type: boolean
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: to_reimburse
+        schema:
+          type: boolean
+        description: Avances ouvertes
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactionList'
+          description: ''
+    post:
+      operationId: transactions_create
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+  /api/transactions/{id}/:
+    get:
+      operationId: transactions_retrieve
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+    put:
+      operationId: transactions_update
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+    patch:
+      operationId: transactions_partial_update
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+    delete:
+      operationId: transactions_destroy
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/transactions/{id}/mark-paid/:
+    post:
+      operationId: transactions_mark_paid_create
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+  /api/transactions/{id}/mark-reimbursed/:
+    post:
+      operationId: transactions_mark_reimbursed_create
+      description: |-
+        ProjectScopedViewSet whose custom GET actions (receipt...) only need
+        the reading side of the finance rights.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkReimbursedRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkReimbursedRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarkReimbursedRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+  /api/transactions/{id}/receipt/:
+    get:
+      operationId: transactions_receipt_retrieve
+      description: |-
+        GET: the file itself (served after the rights check). PUT: replace.
+        DELETE: remove (the expense becomes « À justifier » again).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+    put:
+      operationId: transactions_receipt_update
+      description: |-
+        GET: the file itself (served after the rights check). PUT: replace.
+        DELETE: remove (the expense becomes « À justifier » again).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                receipt:
+                  type: string
+                  format: binary
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+    delete:
+      operationId: transactions_receipt_destroy
+      description: |-
+        GET: the file itself (served after the rights check). PUT: replace.
+        DELETE: remove (the expense becomes « À justifier » again).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
   /api/users/{username}/avatar/:
     get:
       operationId: users_avatar_retrieve
@@ -2562,6 +3590,52 @@ paths:
           description: ''
 components:
   schemas:
+    Advance:
+      type: object
+      properties:
+        payer_type:
+          $ref: '#/components/schemas/PayerTypeEnum'
+        payer_id:
+          type: integer
+        payer_name:
+          type: string
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvanceProject'
+      required:
+      - payer_id
+      - payer_name
+      - payer_type
+      - projects
+      - total
+    AdvanceProject:
+      type: object
+      properties:
+        project:
+          type: integer
+        project_name:
+          type: string
+        project_color:
+          type: string
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        transactions:
+          type: array
+          items:
+            type: integer
+      required:
+      - project
+      - project_color
+      - project_name
+      - total
+      - transactions
     Blocker:
       type: object
       description: |-
@@ -2624,6 +3698,144 @@ components:
       - id
       - is_shell
       - name
+    Budget:
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/BudgetEntry'
+        totals:
+          $ref: '#/components/schemas/BudgetScopes'
+      required:
+      - lines
+      - totals
+    BudgetEntry:
+      type: object
+      properties:
+        category:
+          type: integer
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        planned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        actual:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        planned_with_children:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        actual_with_children:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - actual
+      - actual_with_children
+      - category
+      - kind
+      - name
+      - planned
+      - planned_with_children
+    BudgetLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - category
+      - category_name
+      - id
+      - kind
+      - project
+    BudgetLineRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        category:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - category
+      - kind
+      - project
+    BudgetScopes:
+      type: object
+      properties:
+        own:
+          $ref: '#/components/schemas/BudgetTotals'
+        with_children:
+          $ref: '#/components/schemas/BudgetTotals'
+      required:
+      - own
+      - with_children
+    BudgetTotals:
+      type: object
+      properties:
+        planned_expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        actual_expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        planned_income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        actual_income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - actual_expense
+      - actual_income
+      - planned_expense
+      - planned_income
+    CardBudget:
+      type: object
+      description: Expense budget of a branch. Only with can_view_finance (else null).
+      properties:
+        planned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        spent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - planned
+      - spent
     CardEntry:
       type: object
       description: A sub-project inside one of the three columns of a card.
@@ -2635,6 +3847,10 @@ components:
           type: integer
         tasks_overdue:
           type: integer
+        budget:
+          allOf:
+          - $ref: '#/components/schemas/CardBudget'
+          nullable: true
         id:
           type: integer
         name:
@@ -2658,6 +3874,7 @@ components:
         children_count:
           type: integer
       required:
+      - budget
       - children_count
       - color
       - end_date
@@ -2670,6 +3887,67 @@ components:
       - tasks_overdue
       - tasks_total
       - type_name
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        workspace:
+          type: integer
+        name:
+          type: string
+          maxLength: 60
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - id
+      - name
+      - position
+      - workspace
+    CategoryRequest:
+      type: object
+      properties:
+        workspace:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - name
+      - workspace
+    CategoryTotal:
+      type: object
+      properties:
+        expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        category:
+          type: integer
+        name:
+          type: string
+      required:
+      - balance
+      - category
+      - expense
+      - income
+      - name
     ChecklistItem:
       type: object
       properties:
@@ -2874,6 +4152,18 @@ components:
           type: array
           items:
             type: integer
+    CountedTotal:
+      type: object
+      properties:
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        count:
+          type: integer
+      required:
+      - count
+      - total
     DashboardSummary:
       type: object
       properties:
@@ -2951,9 +4241,9 @@ components:
         meetings:
           $ref: '#/components/schemas/MeetingsWidget'
         expenses_to_pay:
-          $ref: '#/components/schemas/PendingWidget'
+          $ref: '#/components/schemas/MoneyWidget'
         missing_receipts:
-          $ref: '#/components/schemas/PendingWidget'
+          $ref: '#/components/schemas/MoneyWidget'
       required:
       - expenses_to_pay
       - meetings
@@ -2980,6 +4270,18 @@ components:
       - can_view_finance
       - id
       - role
+    DisplayStatusEnum:
+      enum:
+      - to_pay
+      - needs_receipt
+      - to_reimburse
+      - ok
+      type: string
+      description: |-
+        * `to_pay` - À payer
+        * `needs_receipt` - À justifier
+        * `to_reimburse` - À rembourser
+        * `ok` - OK
     EffectiveMember:
       type: object
       description: 'One person with access to a scope: effective rights and where
@@ -3221,6 +4523,60 @@ components:
         * `class` - Cours
         * `exam` - Examen
         * `other` - Autre
+    FinanceSummary:
+      type: object
+      properties:
+        expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        count:
+          type: integer
+        needs_receipt:
+          type: integer
+        to_pay:
+          $ref: '#/components/schemas/CountedTotal'
+        to_reimburse:
+          $ref: '#/components/schemas/CountedTotal'
+        by_category:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTotal'
+        by_project:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectTotal'
+        by_month:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthTotal'
+      required:
+      - balance
+      - by_category
+      - by_month
+      - by_project
+      - count
+      - expense
+      - income
+      - needs_receipt
+      - to_pay
+      - to_reimburse
+    FrequencyEnum:
+      enum:
+      - monthly
+      - yearly
+      type: string
+      description: |-
+        * `monthly` - Mensuel
+        * `yearly` - Annuel
     GrantableRoleEnum:
       enum:
       - viewer
@@ -3368,6 +4724,16 @@ components:
       required:
       - password
       - username
+    MarkReimbursedRequest:
+      type: object
+      properties:
+        reimbursed_on:
+          type: string
+          format: date
+        transactions:
+          type: array
+          items:
+            type: integer
     Me:
       type: object
       description: The signed-in user's own profile and preferences.
@@ -3528,6 +4894,46 @@ components:
         * `event` - event
         * `project_start` - project_start
         * `project_end` - project_end
+    MoneyWidget:
+      type: object
+      description: Transactions; `available` is false without any can_view_finance.
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+      required:
+      - available
+      - count
+      - items
+    MonthTotal:
+      type: object
+      properties:
+        expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        month:
+          type: string
+          format: date
+          description: First day of the month
+      required:
+      - balance
+      - expense
+      - income
+      - month
     MoveProjectRequest:
       type: object
       properties:
@@ -3604,6 +5010,25 @@ components:
       - id
       - name
       - status
+    OverviewBudget:
+      type: object
+      description: Planned versus actual, own and with the sub-projects I may see.
+      properties:
+        own:
+          $ref: '#/components/schemas/BudgetTotals'
+        with_children:
+          $ref: '#/components/schemas/BudgetTotals'
+        needs_receipt:
+          type: integer
+        to_pay:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - needs_receipt
+      - own
+      - to_pay
+      - with_children
     PaginatedEventList:
       type: object
       required:
@@ -3654,6 +5079,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+    PaginatedTransactionList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
     PasswordChangeRequest:
       type: object
       properties:
@@ -3685,6 +5135,32 @@ components:
       - new_password
       - token
       - uid
+    PatchedBudgetLineRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        category:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+    PatchedCategoryRequest:
+      type: object
+      properties:
+        workspace:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
     PatchedChecklistItemRequest:
       type: object
       properties:
@@ -3936,6 +5412,43 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+    PatchedRecurringExpenseRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        category:
+          type: integer
+        vendor:
+          type: string
+          maxLength: 120
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        day:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        is_active:
+          type: boolean
     PatchedTagRequest:
       type: object
       properties:
@@ -4004,6 +5517,55 @@ components:
           type: integer
           writeOnly: true
           nullable: true
+    PatchedTransactionRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        category:
+          type: integer
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        vendor:
+          type: string
+          maxLength: 120
+        contact:
+          type: integer
+          nullable: true
+        event:
+          type: integer
+          nullable: true
+        receipt:
+          type: string
+          format: binary
+          writeOnly: true
+          nullable: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        paid_by_username:
+          type: string
+          writeOnly: true
+          nullable: true
+        paid_by_contact:
+          type: integer
+          nullable: true
+        to_reimburse:
+          type: boolean
+        reimbursed_on:
+          type: string
+          format: date
+          nullable: true
     PatchedWorkspaceRequest:
       type: object
       description: Full view of a workspace, for its members.
@@ -4017,17 +5579,43 @@ components:
           minLength: 1
           pattern: ^#[0-9A-Fa-f]{6}$
           maxLength: 7
-    PendingWidget:
+    Payer:
       type: object
-      description: 'A widget whose feature is not built yet: the front hides it.'
+      description: 'Who advanced the money: a user (by username) or a contact.'
       properties:
-        available:
-          type: boolean
-        count:
+        type:
+          $ref: '#/components/schemas/PayerTypeEnum'
+        id:
           type: integer
+          description: Contact id (users have none)
+        username:
+          type: string
+          nullable: true
+        name:
+          type: string
       required:
-      - available
-      - count
+      - id
+      - name
+      - type
+      - username
+    PayerTypeEnum:
+      enum:
+      - user
+      - contact
+      - unknown
+      type: string
+      description: |-
+        * `user` - user
+        * `contact` - contact
+        * `unknown` - unknown
+    PaymentStatusEnum:
+      enum:
+      - to_pay
+      - paid
+      type: string
+      description: |-
+        * `to_pay` - À payer
+        * `paid` - Payé
     PinnedItem:
       type: object
       description: A pinned item with enough context for the dashboard widget.
@@ -4217,6 +5805,10 @@ components:
           type: integer
         tasks_overdue:
           type: integer
+        budget:
+          allOf:
+          - $ref: '#/components/schemas/CardBudget'
+          nullable: true
         id:
           type: integer
         workspace:
@@ -4267,6 +5859,7 @@ components:
           items:
             $ref: '#/components/schemas/CardEntry'
       required:
+      - budget
       - color
       - current
       - end_date
@@ -4419,7 +6012,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Milestone'
+        budget:
+          allOf:
+          - $ref: '#/components/schemas/OverviewBudget'
+          nullable: true
       required:
+      - budget
       - date
       - milestones
       - overdue
@@ -4484,6 +6082,28 @@ components:
         * `done` - Terminé
         * `cancelled` - Annulé
         * `archived` - Archivé
+    ProjectTotal:
+      type: object
+      properties:
+        expense:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        project:
+          type: integer
+      required:
+      - balance
+      - expense
+      - income
+      - project
     ProjectType:
       type: object
       properties:
@@ -4573,6 +6193,128 @@ components:
       - is_exception
       - rrule
       - series
+    RecurringExpense:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        label:
+          type: string
+          maxLength: 200
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        vendor:
+          type: string
+          maxLength: 120
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        day:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        is_active:
+          type: boolean
+        next_due:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category
+      - category_name
+      - created_at
+      - day
+      - end_date
+      - frequency
+      - id
+      - is_active
+      - label
+      - month
+      - next_due
+      - project
+      - project_color
+      - project_name
+      - start_date
+      - updated_at
+      - vendor
+    RecurringExpenseRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        category:
+          type: integer
+        vendor:
+          type: string
+          maxLength: 120
+        frequency:
+          $ref: '#/components/schemas/FrequencyEnum'
+        day:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        is_active:
+          type: boolean
+      required:
+      - amount
+      - category
+      - label
+      - project
+      - start_date
     RegisterRequest:
       type: object
       properties:
@@ -4977,6 +6719,209 @@ components:
           minLength: 1
       required:
       - token
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        label:
+          type: string
+          maxLength: 200
+        vendor:
+          type: string
+          maxLength: 120
+        contact:
+          type: integer
+          nullable: true
+        contact_name:
+          type: string
+          nullable: true
+          readOnly: true
+        event:
+          type: integer
+          nullable: true
+        event_title:
+          type: string
+          nullable: true
+          readOnly: true
+        has_receipt:
+          type: boolean
+          readOnly: true
+        receipt_name:
+          type: string
+          readOnly: true
+        receipt_content_type:
+          type: string
+          readOnly: true
+        receipt_url:
+          type: string
+          nullable: true
+          readOnly: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        paid_by_contact:
+          type: integer
+          nullable: true
+        payer:
+          allOf:
+          - $ref: '#/components/schemas/Payer'
+          nullable: true
+          readOnly: true
+        to_reimburse:
+          type: boolean
+        reimbursed_on:
+          type: string
+          format: date
+          nullable: true
+        recurring_expense:
+          type: integer
+          readOnly: true
+          nullable: true
+        period_key:
+          type: string
+          readOnly: true
+        needs_receipt:
+          type: boolean
+          readOnly: true
+        is_to_reimburse:
+          type: boolean
+          readOnly: true
+        display_status:
+          allOf:
+          - $ref: '#/components/schemas/DisplayStatusEnum'
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category
+      - category_name
+      - contact
+      - contact_name
+      - created_at
+      - created_by
+      - date
+      - display_status
+      - event
+      - event_title
+      - has_receipt
+      - id
+      - is_to_reimburse
+      - kind
+      - label
+      - needs_receipt
+      - paid_by_contact
+      - payer
+      - payment_status
+      - period_key
+      - project
+      - project_color
+      - project_name
+      - receipt_content_type
+      - receipt_name
+      - receipt_url
+      - recurring_expense
+      - reimbursed_on
+      - to_reimburse
+      - updated_at
+      - vendor
+    TransactionKindEnum:
+      enum:
+      - expense
+      - income
+      type: string
+      description: |-
+        * `expense` - Dépense
+        * `income` - Recette
+    TransactionRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/TransactionKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        category:
+          type: integer
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        vendor:
+          type: string
+          maxLength: 120
+        contact:
+          type: integer
+          nullable: true
+        event:
+          type: integer
+          nullable: true
+        receipt:
+          type: string
+          format: binary
+          writeOnly: true
+          nullable: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        paid_by_username:
+          type: string
+          writeOnly: true
+          nullable: true
+        paid_by_contact:
+          type: integer
+          nullable: true
+        to_reimburse:
+          type: boolean
+        reimbursed_on:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - amount
+      - category
+      - date
+      - kind
+      - label
+      - project
     TransferOwnershipRequest:
       type: object
       properties:

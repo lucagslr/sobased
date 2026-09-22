@@ -117,24 +117,27 @@ Toutes les routes exigent `finance:voir` en lecture et `finance:éditer` en écr
 
 | Méthode | Chemin | Description |
 |---|---|---|
-| GET, POST | `/api/categories/?workspace=` | Catégories de l'espace (écriture : Admin de l'espace) |
-| PATCH, DELETE | `/api/categories/{id}/` | Suppression : réaffectation obligatoire si utilisée |
-| GET | `/api/transactions/` | Filtres : `project`, `include_descendants`, `workspace`, `kind`, `category`, `date_after`, `date_before`, `payment_status`, `needs_receipt`, `to_reimburse`, `reimbursed`, `paid_by_user`, `paid_by_contact`, `search` |
-| POST | `/api/transactions/` | `multipart` : le justificatif s'envoie dans le même formulaire |
-| GET, PATCH, DELETE | `/api/transactions/{id}/` | |
-| GET, PUT, DELETE | `/api/transactions/{id}/receipt/` | Justificatif (servi après contrôle des droits) |
+| GET, POST | `/api/categories/?workspace=` | Catégories de l'espace (15 par défaut). Lecture : tout membre ; écriture : Admin de l'espace |
+| PATCH, DELETE | `/api/categories/{id}/?replace_with=` | Une catégorie utilisée est remplacée (par `replace_with`, sinon « Autre ») dans les écritures, frais récurrents et lignes de budget (fusionnées) ; refus s'il n'existe aucun remplacement |
+| GET | `/api/transactions/` | Filtres : `project`, `include_descendants`, `workspace`, `kind`, `category`, `date_after`, `date_before` (inclusifs), `payment_status`, `needs_receipt`, `to_reimburse` (avances ouvertes), `reimbursed`, `paid_by` (`me` ou nom d'utilisateur), `paid_by_contact`, `event`, `search`, `ordering`. Paginé, du plus récent au plus ancien. Chaque écriture : `amount` (chaîne à 2 décimales), `display_status` (`to_pay` > `needs_receipt` > `to_reimburse` > `ok`), `has_receipt`, `receipt_url`, `payer` (`{type, username | id, name}`), `is_to_reimburse` |
+| POST | `/api/transactions/` | JSON, ou `multipart` avec `receipt` (image JPEG / PNG / WebP ou PDF, 20 Mo, contenu vérifié). `paid_by_username` (membre du projet) ou `paid_by_contact`, jamais les deux. Une recette n'a ni justificatif ni payeur |
+| GET, PATCH, DELETE | `/api/transactions/{id}/` | PATCH en JSON (`receipt: null` retire le justificatif) ou en `multipart`. Une écriture ne change jamais de projet. Supprimer l'écriture supprime son fichier |
+| GET, PUT, DELETE | `/api/transactions/{id}/receipt/` | Le fichier lui-même (`inline`, servi par Caddy après contrôle des droits, jamais mis en cache), remplacement, retrait |
 | POST | `/api/transactions/{id}/mark-paid/` | À payer → Payé |
-| POST | `/api/transactions/{id}/mark-reimbursed/` | À rembourser → Remboursé (+ date) |
-| GET | `/api/finance/summary/` | Totaux par catégorie, par projet, par mois. Paramètres : `project`, `include_descendants`, `workspace`, période |
-| GET | `/api/finance/advances/` | « Qui doit quoi à qui » : soldes à rembourser par personne et par projet racine |
-| GET | `/api/finance/budget/?project=` | Prévisionnel / réel par catégorie, cumul récursif des sous-projets |
-| GET, POST | `/api/budget-lines/?project=` | Lignes de budget |
+| POST | `/api/transactions/{id}/mark-reimbursed/` | `{reimbursed_on}` facultatif (aujourd'hui sinon). 400 si l'écriture n'est pas une avance |
+| GET | `/api/finance/summary/` | Mêmes filtres que la liste : `expense`, `income`, `balance`, `count`, `needs_receipt`, `to_pay {total, count}`, `to_reimburse {total, count}`, `by_category`, `by_project`, `by_month` (premier jour du mois) |
+| GET | `/api/finance/advances/?workspace=&project=` | « Qui doit quoi à qui » : par payeur (`payer_type`, `payer_name`, `total`), puis par projet racine avec les identifiants des écritures |
+| POST | `/api/finance/advances/` | `{transactions: [...], reimbursed_on?}` : marque remboursées celles que je peux éditer ; répond `{updated}` |
+| GET | `/api/finance/budget/?project=&date_after=&date_before=` | `lines` (par catégorie et nature : `planned`, `actual`, `planned_with_children`, `actual_with_children`) et `totals {own, with_children}`. 404 sans `can_view_finance` |
+| GET, POST | `/api/budget-lines/?project=` | Poster une ligne existante (même projet, catégorie, nature) la met à jour |
 | PATCH, DELETE | `/api/budget-lines/{id}/` | |
-| GET, POST | `/api/recurring-expenses/` | Frais récurrents |
-| GET, PATCH, DELETE | `/api/recurring-expenses/{id}/` | |
-| GET | `/api/finance/export.xlsx` | Excel : transactions, synthèse par catégorie, synthèse par projet. Paramètres : `project`, `include_descendants`, période |
-| GET | `/api/finance/export.pdf` | Rapport PDF (WeasyPrint) |
-| GET | `/api/finance/export-receipts.zip` | ZIP des justificatifs + index CSV ; liste des dépenses « À justifier » incluse |
+| GET, POST | `/api/recurring-expenses/?project=&include_descendants=&workspace=` | `frequency` `monthly` / `yearly`, `day` 1-31 (borné au dernier jour du mois), `month`, `start_date`, `end_date`, `is_active` ; `next_due` calculé |
+| GET, PATCH, DELETE | `/api/recurring-expenses/{id}/` | Modifier n'affecte que les périodes futures |
+| GET | `/api/finance/export.xlsx` | Excel : feuilles Transactions, Par catégorie, Par projet, Export. Mêmes filtres que la liste (`project`, `include_descendants`, `workspace`, `date_after`, `date_before`…) |
+| GET | `/api/finance/export.pdf` | Rapport PDF (WeasyPrint) : synthèse, par catégorie, par projet, écritures, dépenses sans justificatif |
+| GET | `/api/finance/export-receipts.zip` | Justificatifs (`justificatifs/date_id.ext`) + `index.csv` (BOM UTF-8) listant aussi les dépenses « À justifier » |
+
+Les exports sont des téléchargements de même origine : le cookie de session suffit, aucun jeton dans l'URL. Le résumé des widgets compta du dashboard est dans `/api/dashboard/summary/` (`expenses_to_pay`, `missing_receipts`, `available: false` sans aucun projet avec `finance:voir`).
 
 ## 7. Fichiers et versions (`files`)
 

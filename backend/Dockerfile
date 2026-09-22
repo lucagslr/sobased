@@ -5,6 +5,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /app
+# WeasyPrint (PDF exports) renders through Pango; DejaVu is the font the
+# reports use. ffmpeg arrives with the files app (phase 8/9).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libharfbuzz-subset0 \
+        libffi8 libjpeg62-turbo libopenjp2-7 shared-mime-info fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 # Uploaded files live outside the code directory, on a volume shared with Caddy.
 RUN mkdir -p /data/media
 COPY requirements/ requirements/

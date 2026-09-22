@@ -65,8 +65,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'compta',
         name: 'finance',
-        component: comingSoon,
-        meta: { title: 'Compta', phase: 7 },
+        component: () => import('@/pages/FinancePage.vue'),
+        meta: { title: 'Compta' },
       },
       {
         path: 'liens',

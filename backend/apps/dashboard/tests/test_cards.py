@@ -221,7 +221,7 @@ def test_next_due_is_the_closest_open_deadline_that_is_not_late(tree, editor, ap
     card = cards(api)["R"]
 
     assert card["next_due"]["title"] == "bientôt"
-    assert card["next_due"]["date"] == local_date(editor, 2)
+    assert card["next_due"]["date"] == local_date(editor, 2).isoformat()
     assert card["next_due"]["project"] == tree["A1"].pk
 
 

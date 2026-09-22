@@ -252,3 +252,90 @@ event(album, "Release party", 45, type="release_party")
 montage.source_event = brief
 montage.save(update_fields=["source_event"])
 print("EVENTS", Event.objects.count(), "CONTACTS", Contact.objects.count())
+
+# --- Phase 7: bookkeeping (demo has both finance flags as owner) ----------------
+from decimal import Decimal  # noqa: E402
+
+from apps.finance.models import Transaction  # noqa: E402
+from apps.finance.models import BudgetLine, Category, RecurringExpense  # noqa: E402
+
+
+def cat(workspace, name):
+    return Category.objects.get(workspace=workspace, name=name)
+
+
+def tx(project_, label, amount, days_ago=0, kind="expense", category="Autre", **fields):
+    return Transaction.objects.create(
+        project=project_,
+        kind=kind,
+        amount=Decimal(str(amount)),
+        date=today - timedelta(days=days_ago),
+        category=cat(project_.workspace, category),
+        label=label,
+        created_by=demo,
+        **fields,
+    )
+
+
+tx(shorty, "Subvention Ville de Geneve", 5000, 40, kind="income", category="Subvention")
+tx(
+    album,
+    "Studio Les Forges : 2 jours",
+    800,
+    12,
+    category="Studio",
+    vendor="Les Forges",
+)
+tx(
+    clip,
+    "Location camera",
+    350,
+    5,
+    category="Location",
+    paid_by_user=demo,
+    to_reimburse=True,
+)
+tx(
+    clip,
+    "Train Geneve - Lausanne",
+    46.40,
+    3,
+    category="Transport",
+    paid_by_user=helder,
+    to_reimburse=True,
+)
+tx(
+    album,
+    "Adobe Creative Cloud",
+    59.90,
+    1,
+    category="Logiciel",
+    payment_status="to_pay",
+)
+tx(admin, "Assurance RC asso", 420, 8, category="Frais admin", payment_status="to_pay")
+tx(shorty, "Cachet date live", 600, 20, category="Cachet", contact=booker)
+tx(ecole, "Manuel BPMN", 89, 2, category="Matériel")
+BudgetLine.objects.create(
+    project=album, category=cat(asso, "Studio"), kind="expense", amount=1500
+)
+BudgetLine.objects.create(
+    project=clip, category=cat(asso, "Location"), kind="expense", amount=500
+)
+BudgetLine.objects.create(
+    project=clip, category=cat(asso, "Transport"), kind="expense", amount=100
+)
+BudgetLine.objects.create(
+    project=shorty, category=cat(asso, "Subvention"), kind="income", amount=8000
+)
+RecurringExpense.objects.create(
+    project=admin,
+    label="Studio One",
+    amount=Decimal("19.90"),
+    category=cat(asso, "Logiciel"),
+    vendor="PreSonus",
+    frequency="monthly",
+    day=5,
+    start_date=today - timedelta(days=90),
+    created_by=demo,
+)
+print("TRANSACTIONS", Transaction.objects.count())

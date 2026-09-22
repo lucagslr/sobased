@@ -2,7 +2,8 @@
 /**
  * Project page: the SAME component at every level of the tree (SPEC §15).
  * Header (breadcrumb, status, dates, colour, tags) + tabs. Tabs are added as
- * phases deliver them: Fichiers (8), Compta (7), Activité (13) still to come.
+ * phases deliver them: Fichiers (8) and Activité (13) still to come. The
+ * Compta tab only exists with can_view_finance.
  * A project seen as a shell gets a minimal page instead.
  */
 import { Pencil, Plus } from 'lucide-vue-next'
@@ -24,6 +25,7 @@ import { atLeast } from '@/utils/roles'
 import ProjectCalendarTab from './ProjectCalendarTab.vue'
 import ProjectContactsTab from './ProjectContactsTab.vue'
 import ProjectEventsTab from './ProjectEventsTab.vue'
+import ProjectFinanceTab from './ProjectFinanceTab.vue'
 import ProjectOverviewTab from './ProjectOverviewTab.vue'
 import ProjectSettingsTab from './ProjectSettingsTab.vue'
 import ProjectTasksTab from './ProjectTasksTab.vue'
@@ -46,16 +48,21 @@ const full = computed(() =>
 const node = computed(() => projects.byId.get(projectId.value) ?? null)
 const canEdit = computed(() => atLeast(full.value?.my_role, 'editor'))
 
-const TABS = [
+const ALL_TABS = [
   { slug: 'apercu', label: "Vue d'ensemble" },
   { slug: 'taches', label: 'Tâches' },
   { slug: 'calendrier', label: 'Calendrier' },
   { slug: 'rdv', label: 'RDV' },
+  { slug: 'compta', label: 'Compta' },
   { slug: 'contacts', label: 'Contacts' },
   { slug: 'parametres', label: 'Paramètres' },
 ]
+// Money is only for those with can_view_finance (SPEC §13).
+const TABS = computed(() =>
+  ALL_TABS.filter((tab) => tab.slug !== 'compta' || full.value?.can_view_finance),
+)
 const currentTab = computed(() =>
-  TABS.some((tab) => tab.slug === route.params.tab) ? String(route.params.tab) : 'apercu',
+  TABS.value.some((tab) => tab.slug === route.params.tab) ? String(route.params.tab) : 'apercu',
 )
 const tags = computed(() => {
   if (!full.value) return []
@@ -170,6 +177,7 @@ watch(projectId, load, { immediate: true })
     <ProjectTasksTab v-else-if="currentTab === 'taches'" :project="full" />
     <ProjectCalendarTab v-else-if="currentTab === 'calendrier'" :project="full" />
     <ProjectEventsTab v-else-if="currentTab === 'rdv'" :project="full" />
+    <ProjectFinanceTab v-else-if="currentTab === 'compta'" :project="full" />
     <ProjectContactsTab v-else-if="currentTab === 'contacts'" :project="full" />
     <ProjectSettingsTab
       v-else

@@ -18,6 +18,7 @@ import draggable from 'vuedraggable'
 import { ApiError } from '@/api/client'
 import type { DashboardView, ValidateItem, WidgetLayout } from '@/api/dashboard'
 import type { Event } from '@/api/events'
+import type { Transaction } from '@/api/finance'
 import { type PinnedItem, type Task, tasksApi } from '@/api/tasks'
 import DashboardViewPanel from '@/components/dashboard/DashboardViewPanel.vue'
 import MeetingsWidget from '@/components/dashboard/MeetingsWidget.vue'
@@ -26,12 +27,15 @@ import TaskListWidget from '@/components/dashboard/TaskListWidget.vue'
 import ToValidateWidget from '@/components/dashboard/ToValidateWidget.vue'
 import WidgetFrame from '@/components/dashboard/WidgetFrame.vue'
 import EventPanel from '@/components/events/EventPanel.vue'
+import TransactionPanel from '@/components/finance/TransactionPanel.vue'
+import TransactionRow from '@/components/finance/TransactionRow.vue'
 import TaskPanel from '@/components/tasks/TaskPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
 import { useEventPanel } from '@/composables/useEventPanel'
 import { useTaskPanel } from '@/composables/useTaskPanel'
+import { useTransactionPanel } from '@/composables/useTransactionPanel'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useUiStore } from '@/stores/ui'
@@ -43,6 +47,7 @@ const ui = useUiStore()
 const router = useRouter()
 const { taskId, openTask, closeTask } = useTaskPanel()
 const { eventId, openEvent, closeEvent } = useEventPanel()
+const { transactionId, openTransaction, closeTransaction } = useTransactionPanel()
 
 const editing = ref(false)
 // "Créer une tâche depuis ce RDV", from the meetings widget.
@@ -117,6 +122,12 @@ const eventPanelOpen = computed({
   get: () => eventId.value !== null,
   set: (value) => !value && closeEvent(),
 })
+const transactionPanelOpen = computed({
+  get: () => transactionId.value !== null,
+  set: (value) => !value && closeTransaction(),
+})
+const moneyItems = (key: 'expenses_to_pay' | 'missing_receipts'): Transaction[] =>
+  widgets.value?.[key].items ?? []
 
 function createTaskFrom(event: Event) {
   taskFromEvent.value = event
@@ -248,6 +259,15 @@ function createTaskFrom(event: Event) {
             :total="widgets.meetings.count"
             @open="openEvent($event.id)"
           />
+          <ul v-else-if="element.key === 'expenses_to_pay' || element.key === 'missing_receipts'">
+            <TransactionRow
+              v-for="item in moneyItems(element.key)"
+              :key="item.id"
+              :transaction="item"
+              show-project
+              @open="openTransaction(item.id)"
+            />
+          </ul>
         </template>
       </WidgetFrame>
     </template>
@@ -269,5 +289,10 @@ function createTaskFrom(event: Event) {
     @changed="dashboard.loadSummary()"
     @create-task="createTaskFrom"
     @open-task="openTask"
+  />
+  <TransactionPanel
+    v-model:open="transactionPanelOpen"
+    :transaction-id="transactionId"
+    @changed="dashboard.loadSummary()"
   />
 </template>

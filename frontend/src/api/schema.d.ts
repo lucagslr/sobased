@@ -182,6 +182,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/budget-lines/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Planned amounts of a project (`?project=`), one per category and kind. */
+        get: operations["budget_lines_list"];
+        put?: never;
+        /** @description Planned amounts of a project (`?project=`), one per category and kind. */
+        post: operations["budget_lines_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budget-lines/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Planned amounts of a project (`?project=`), one per category and kind. */
+        delete: operations["budget_lines_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Planned amounts of a project (`?project=`), one per category and kind. */
+        patch: operations["budget_lines_partial_update"];
+        trace?: never;
+    };
+    "/api/categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Bookkeeping categories of a workspace. Read: anyone in it (they are
+         *     just names). Write: admins.
+         */
+        get: operations["categories_list"];
+        put?: never;
+        /**
+         * @description Bookkeeping categories of a workspace. Read: anyone in it (they are
+         *     just names). Write: admins.
+         */
+        post: operations["categories_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/categories/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Bookkeeping categories of a workspace. Read: anyone in it (they are
+         *     just names). Write: admins.
+         */
+        get: operations["categories_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Bookkeeping categories of a workspace. Read: anyone in it (they are
+         *     just names). Write: admins.
+         */
+        delete: operations["categories_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Bookkeeping categories of a workspace. Read: anyone in it (they are
+         *     just names). Write: admins.
+         */
+        patch: operations["categories_partial_update"];
+        trace?: never;
+    };
     "/api/checklist-items/": {
         parameters: {
             query?: never;
@@ -461,6 +549,109 @@ export interface paths {
          *     The model's default manager must come from ProjectScopedQuerySet.
          */
         patch: operations["events_partial_update"];
+        trace?: never;
+    };
+    "/api/finance/advances/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description « Qui doit quoi à qui » (SPEC §13). */
+        get: operations["finance_advances_list"];
+        put?: never;
+        /** @description Mark several advances reimbursed at once (« tout le solde »). */
+        post: operations["finance_advances_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/budget/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Planned versus actual of one project, own and with its sub-projects. */
+        get: operations["finance_budget_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/export-receipts.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Downloads always cover the filtered, rights-limited transactions. */
+        get: operations["finance_export_receipts.zip_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/export.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Downloads always cover the filtered, rights-limited transactions. */
+        get: operations["finance_export.pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Downloads always cover the filtered, rights-limited transactions. */
+        get: operations["finance_export.xlsx_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/finance/summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Totals by category, project and month of the filtered transactions. */
+        get: operations["finance_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/health/": {
@@ -920,6 +1111,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/recurring-expenses/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        get: operations["recurring_expenses_list"];
+        put?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        post: operations["recurring_expenses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recurring-expenses/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        get: operations["recurring_expenses_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        delete: operations["recurring_expenses_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        patch: operations["recurring_expenses_partial_update"];
+        trace?: never;
+    };
     "/api/tags/": {
         parameters: {
             query?: never;
@@ -1164,6 +1407,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/transactions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        get: operations["transactions_list"];
+        put?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        post: operations["transactions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        get: operations["transactions_retrieve"];
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        put: operations["transactions_update"];
+        post?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        delete: operations["transactions_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        patch: operations["transactions_partial_update"];
+        trace?: never;
+    };
+    "/api/transactions/{id}/mark-paid/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        post: operations["transactions_mark_paid_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/{id}/mark-reimbursed/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description ProjectScopedViewSet whose custom GET actions (receipt...) only need
+         *     the reading side of the finance rights.
+         */
+        post: operations["transactions_mark_reimbursed_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/{id}/receipt/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET: the file itself (served after the rights check). PUT: replace.
+         *     DELETE: remove (the expense becomes « À justifier » again).
+         */
+        get: operations["transactions_receipt_retrieve"];
+        /**
+         * @description GET: the file itself (served after the rights check). PUT: replace.
+         *     DELETE: remove (the expense becomes « À justifier » again).
+         */
+        put: operations["transactions_receipt_update"];
+        post?: never;
+        /**
+         * @description GET: the file itself (served after the rights check). PUT: replace.
+         *     DELETE: remove (the expense becomes « À justifier » again).
+         */
+        delete: operations["transactions_receipt_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/{username}/avatar/": {
         parameters: {
             query?: never;
@@ -1277,6 +1644,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Advance: {
+            payer_type: components["schemas"]["PayerTypeEnum"];
+            payer_id: number;
+            payer_name: string;
+            /** Format: decimal */
+            total: string;
+            projects: components["schemas"]["AdvanceProject"][];
+        };
+        AdvanceProject: {
+            project: number;
+            project_name: string;
+            project_color: string;
+            /** Format: decimal */
+            total: string;
+            transactions: number[];
+        };
         /**
          * @description A task blocking another one. For a blocker the user cannot see, only
          *     `id` and `is_open` are filled: enough for the padlock, nothing more.
@@ -1301,12 +1684,67 @@ export interface components {
             color: string;
             is_shell: boolean;
         };
+        Budget: {
+            lines: components["schemas"]["BudgetEntry"][];
+            totals: components["schemas"]["BudgetScopes"];
+        };
+        BudgetEntry: {
+            category: number;
+            name: string;
+            kind: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            planned: string;
+            /** Format: decimal */
+            actual: string;
+            /** Format: decimal */
+            planned_with_children: string;
+            /** Format: decimal */
+            actual_with_children: string;
+        };
+        BudgetLine: {
+            readonly id: number;
+            project: number;
+            category: number;
+            readonly category_name: string;
+            kind: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount: string;
+        };
+        BudgetLineRequest: {
+            project: number;
+            category: number;
+            kind: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount: string;
+        };
+        BudgetScopes: {
+            own: components["schemas"]["BudgetTotals"];
+            with_children: components["schemas"]["BudgetTotals"];
+        };
+        BudgetTotals: {
+            /** Format: decimal */
+            planned_expense: string;
+            /** Format: decimal */
+            actual_expense: string;
+            /** Format: decimal */
+            planned_income: string;
+            /** Format: decimal */
+            actual_income: string;
+        };
+        /** @description Expense budget of a branch. Only with can_view_finance (else null). */
+        CardBudget: {
+            /** Format: decimal */
+            planned: string;
+            /** Format: decimal */
+            spent: string;
+        };
         /** @description A sub-project inside one of the three columns of a card. */
         CardEntry: {
             /** @description Cancelled tasks and future repetitions excluded */
             tasks_total: number;
             tasks_done: number;
             tasks_overdue: number;
+            budget: components["schemas"]["CardBudget"] | null;
             id: number;
             name: string;
             color: string;
@@ -1318,6 +1756,27 @@ export interface components {
             end_date: string | null;
             end_overdue: boolean;
             children_count: number;
+        };
+        Category: {
+            readonly id: number;
+            workspace: number;
+            name: string;
+            position: number;
+        };
+        CategoryRequest: {
+            workspace: number;
+            name: string;
+            position?: number;
+        };
+        CategoryTotal: {
+            /** Format: decimal */
+            expense: string;
+            /** Format: decimal */
+            income: string;
+            /** Format: decimal */
+            balance: string;
+            category: number;
+            name: string;
         };
         ChecklistItem: {
             readonly id: number;
@@ -1380,6 +1839,11 @@ export interface components {
             notes?: string;
             tags?: number[];
         };
+        CountedTotal: {
+            /** Format: decimal */
+            total: string;
+            count: number;
+        };
         DashboardSummary: {
             /**
              * Format: date
@@ -1410,8 +1874,8 @@ export interface components {
             next7: components["schemas"]["TaskWidget"];
             to_validate: components["schemas"]["ValidateWidget"];
             meetings: components["schemas"]["MeetingsWidget"];
-            expenses_to_pay: components["schemas"]["PendingWidget"];
-            missing_receipts: components["schemas"]["PendingWidget"];
+            expenses_to_pay: components["schemas"]["MoneyWidget"];
+            missing_receipts: components["schemas"]["MoneyWidget"];
         };
         DirectMembership: {
             readonly id: number;
@@ -1419,6 +1883,14 @@ export interface components {
             can_view_finance: boolean;
             can_edit_finance: boolean;
         };
+        /**
+         * @description * `to_pay` - À payer
+         *     * `needs_receipt` - À justifier
+         *     * `to_reimburse` - À rembourser
+         *     * `ok` - OK
+         * @enum {string}
+         */
+        DisplayStatusEnum: "to_pay" | "needs_receipt" | "to_reimburse" | "ok";
         /** @description One person with access to a scope: effective rights and where they come from. */
         EffectiveMember: {
             user: components["schemas"]["PublicUser"];
@@ -1505,6 +1977,27 @@ export interface components {
          * @enum {string}
          */
         EventTypeEnum: "meeting" | "live" | "shooting" | "release" | "release_party" | "class" | "exam" | "other";
+        FinanceSummary: {
+            /** Format: decimal */
+            expense: string;
+            /** Format: decimal */
+            income: string;
+            /** Format: decimal */
+            balance: string;
+            count: number;
+            needs_receipt: number;
+            to_pay: components["schemas"]["CountedTotal"];
+            to_reimburse: components["schemas"]["CountedTotal"];
+            by_category: components["schemas"]["CategoryTotal"][];
+            by_project: components["schemas"]["ProjectTotal"][];
+            by_month: components["schemas"]["MonthTotal"][];
+        };
+        /**
+         * @description * `monthly` - Mensuel
+         *     * `yearly` - Annuel
+         * @enum {string}
+         */
+        FrequencyEnum: "monthly" | "yearly";
         /**
          * @description * `viewer` - Lecteur
          *     * `commenter` - Commentateur
@@ -1561,6 +2054,11 @@ export interface components {
         LoginRequest: {
             username: string;
             password: string;
+        };
+        MarkReimbursedRequest: {
+            /** Format: date */
+            reimbursed_on?: string;
+            transactions?: number[];
         };
         /** @description The signed-in user's own profile and preferences. */
         Me: {
@@ -1626,6 +2124,25 @@ export interface components {
          * @enum {string}
          */
         MilestoneKindEnum: "task" | "event" | "project_start" | "project_end";
+        /** @description Transactions; `available` is false without any can_view_finance. */
+        MoneyWidget: {
+            available: boolean;
+            count: number;
+            items: components["schemas"]["Transaction"][];
+        };
+        MonthTotal: {
+            /** Format: decimal */
+            expense: string;
+            /** Format: decimal */
+            income: string;
+            /** Format: decimal */
+            balance: string;
+            /**
+             * Format: date
+             * @description First day of the month
+             */
+            month: string;
+        };
         MoveProjectRequest: {
             parent: number | null;
         };
@@ -1654,6 +2171,14 @@ export interface components {
             /** Format: date */
             readonly end_date: string | null;
             readonly status: components["schemas"]["ProjectStatusEnum"];
+        };
+        /** @description Planned versus actual, own and with the sub-projects I may see. */
+        OverviewBudget: {
+            own: components["schemas"]["BudgetTotals"];
+            with_children: components["schemas"]["BudgetTotals"];
+            needs_receipt: number;
+            /** Format: decimal */
+            to_pay: string;
         };
         PaginatedEventList: {
             /** @example 123 */
@@ -1685,6 +2210,21 @@ export interface components {
             previous: string | null;
             results: components["schemas"]["Task"][];
         };
+        PaginatedTransactionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["Transaction"][];
+        };
         PasswordChangeRequest: {
             current_password: string;
             new_password: string;
@@ -1693,6 +2233,18 @@ export interface components {
             uid: string;
             token: string;
             new_password: string;
+        };
+        PatchedBudgetLineRequest: {
+            project?: number;
+            category?: number;
+            kind?: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount?: string;
+        };
+        PatchedCategoryRequest: {
+            workspace?: number;
+            name?: string;
+            position?: number;
         };
         PatchedChecklistItemRequest: {
             title?: string;
@@ -1796,6 +2348,22 @@ export interface components {
             name?: string;
             position?: number;
         };
+        PatchedRecurringExpenseRequest: {
+            project?: number;
+            label?: string;
+            /** Format: decimal */
+            amount?: string;
+            category?: number;
+            vendor?: string;
+            frequency?: components["schemas"]["FrequencyEnum"];
+            day?: number;
+            month?: number;
+            /** Format: date */
+            start_date?: string;
+            /** Format: date */
+            end_date?: string | null;
+            is_active?: boolean;
+        };
         PatchedTagRequest: {
             workspace?: number;
             name?: string;
@@ -1821,16 +2389,53 @@ export interface components {
             rrule?: string;
             source_event?: number | null;
         };
+        PatchedTransactionRequest: {
+            project?: number;
+            kind?: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount?: string;
+            /** Format: date */
+            date?: string;
+            category?: number;
+            label?: string;
+            vendor?: string;
+            contact?: number | null;
+            event?: number | null;
+            /** Format: binary */
+            receipt?: string | null;
+            payment_status?: components["schemas"]["PaymentStatusEnum"];
+            paid_by_username?: string | null;
+            paid_by_contact?: number | null;
+            to_reimburse?: boolean;
+            /** Format: date */
+            reimbursed_on?: string | null;
+        };
         /** @description Full view of a workspace, for its members. */
         PatchedWorkspaceRequest: {
             name?: string;
             color?: string;
         };
-        /** @description A widget whose feature is not built yet: the front hides it. */
-        PendingWidget: {
-            available: boolean;
-            count: number;
+        /** @description Who advanced the money: a user (by username) or a contact. */
+        Payer: {
+            type: components["schemas"]["PayerTypeEnum"];
+            /** @description Contact id (users have none) */
+            id: number;
+            username: string | null;
+            name: string;
         };
+        /**
+         * @description * `user` - user
+         *     * `contact` - contact
+         *     * `unknown` - unknown
+         * @enum {string}
+         */
+        PayerTypeEnum: "user" | "contact" | "unknown";
+        /**
+         * @description * `to_pay` - À payer
+         *     * `paid` - Payé
+         * @enum {string}
+         */
+        PaymentStatusEnum: "to_pay" | "paid";
         /** @description A pinned item with enough context for the dashboard widget. */
         PinnedItem: {
             readonly id: number;
@@ -1891,6 +2496,7 @@ export interface components {
             tasks_total: number;
             tasks_done: number;
             tasks_overdue: number;
+            budget: components["schemas"]["CardBudget"] | null;
             id: number;
             workspace: number;
             name: string;
@@ -1956,6 +2562,7 @@ export interface components {
             overdue: components["schemas"]["TaskWidget"];
             today: components["schemas"]["TaskWidget"];
             milestones: components["schemas"]["Milestone"][];
+            budget: components["schemas"]["OverviewBudget"] | null;
         };
         /** @description Create / read / update a project the user has a real role on. */
         ProjectRequest: {
@@ -1984,6 +2591,15 @@ export interface components {
          * @enum {string}
          */
         ProjectStatusEnum: "idea" | "planned" | "in_progress" | "to_validate" | "done" | "cancelled" | "archived";
+        ProjectTotal: {
+            /** Format: decimal */
+            expense: string;
+            /** Format: decimal */
+            income: string;
+            /** Format: decimal */
+            balance: string;
+            project: number;
+        };
         ProjectType: {
             readonly id: number;
             workspace: number;
@@ -2021,6 +2637,47 @@ export interface components {
             series: number;
             rrule: string;
             is_exception: boolean;
+        };
+        RecurringExpense: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            label: string;
+            /** Format: decimal */
+            amount: string;
+            category: number;
+            readonly category_name: string;
+            vendor: string;
+            frequency: components["schemas"]["FrequencyEnum"];
+            day: number;
+            month: number;
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date: string | null;
+            is_active: boolean;
+            readonly next_due: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        RecurringExpenseRequest: {
+            project: number;
+            label: string;
+            /** Format: decimal */
+            amount: string;
+            category: number;
+            vendor?: string;
+            frequency?: components["schemas"]["FrequencyEnum"];
+            day?: number;
+            month?: number;
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date?: string | null;
+            is_active?: boolean;
         };
         RegisterRequest: {
             username: string;
@@ -2173,6 +2830,72 @@ export interface components {
         ThemeEnum: "light" | "dark" | "system";
         TokenRequest: {
             token: string;
+        };
+        Transaction: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            kind: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount: string;
+            /** Format: date */
+            date: string;
+            category: number;
+            readonly category_name: string;
+            label: string;
+            vendor: string;
+            contact: number | null;
+            readonly contact_name: string | null;
+            event: number | null;
+            readonly event_title: string | null;
+            readonly has_receipt: boolean;
+            readonly receipt_name: string;
+            readonly receipt_content_type: string;
+            readonly receipt_url: string | null;
+            payment_status: components["schemas"]["PaymentStatusEnum"];
+            paid_by_contact: number | null;
+            readonly payer: components["schemas"]["Payer"] | null;
+            to_reimburse: boolean;
+            /** Format: date */
+            reimbursed_on: string | null;
+            readonly recurring_expense: number | null;
+            readonly period_key: string;
+            readonly needs_receipt: boolean;
+            readonly is_to_reimburse: boolean;
+            readonly display_status: components["schemas"]["DisplayStatusEnum"];
+            readonly created_by: components["schemas"]["PublicUser"];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `expense` - Dépense
+         *     * `income` - Recette
+         * @enum {string}
+         */
+        TransactionKindEnum: "expense" | "income";
+        TransactionRequest: {
+            project: number;
+            kind: components["schemas"]["TransactionKindEnum"];
+            /** Format: decimal */
+            amount: string;
+            /** Format: date */
+            date: string;
+            category: number;
+            label: string;
+            vendor?: string;
+            contact?: number | null;
+            event?: number | null;
+            /** Format: binary */
+            receipt?: string | null;
+            payment_status?: components["schemas"]["PaymentStatusEnum"];
+            paid_by_username?: string | null;
+            paid_by_contact?: number | null;
+            to_reimburse?: boolean;
+            /** Format: date */
+            reimbursed_on?: string | null;
         };
         TransferOwnershipRequest: {
             username: string;
@@ -2486,6 +3209,217 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    budget_lines_list: {
+        parameters: {
+            query?: {
+                project?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetLine"][];
+                };
+            };
+        };
+    };
+    budget_lines_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetLineRequest"];
+                "multipart/form-data": components["schemas"]["BudgetLineRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetLine"];
+                };
+            };
+        };
+    };
+    budget_lines_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) budget line. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    budget_lines_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) budget line. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBudgetLineRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBudgetLineRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetLine"];
+                };
+            };
+        };
+    };
+    categories_list: {
+        parameters: {
+            query?: {
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"][];
+                };
+            };
+        };
+    };
+    categories_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryRequest"];
+                "multipart/form-data": components["schemas"]["CategoryRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    categories_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    categories_destroy: {
+        parameters: {
+            query?: {
+                /** @description Catégorie de remplacement si utilisée */
+                replace_with?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    categories_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCategoryRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCategoryRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
             };
         };
     };
@@ -2984,6 +3918,190 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Event"];
+                };
+            };
+        };
+    };
+    finance_advances_list: {
+        parameters: {
+            query?: {
+                /** @description Sous-projets inclus */
+                project?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Advance"][];
+                };
+            };
+        };
+    };
+    finance_advances_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MarkReimbursedRequest"];
+                "multipart/form-data": components["schemas"]["MarkReimbursedRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        updated?: number;
+                    };
+                };
+            };
+        };
+    };
+    finance_budget_retrieve: {
+        parameters: {
+            query: {
+                date_after?: string;
+                date_before?: string;
+                project: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budget"];
+                };
+            };
+        };
+    };
+    "finance_export_receipts.zip_retrieve": {
+        parameters: {
+            query?: {
+                date_after?: string;
+                date_before?: string;
+                include_descendants?: boolean;
+                project?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    "finance_export.pdf_retrieve": {
+        parameters: {
+            query?: {
+                date_after?: string;
+                date_before?: string;
+                include_descendants?: boolean;
+                project?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    "finance_export.xlsx_retrieve": {
+        parameters: {
+            query?: {
+                date_after?: string;
+                date_before?: string;
+                include_descendants?: boolean;
+                project?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    finance_summary_retrieve: {
+        parameters: {
+            query?: {
+                category?: number;
+                date_after?: string;
+                date_before?: string;
+                event?: number;
+                include_descendants?: boolean;
+                kind?: "expense" | "income";
+                needs_receipt?: boolean;
+                /** @description `me` ou nom d'utilisateur */
+                paid_by?: string;
+                paid_by_contact?: number;
+                payment_status?: "paid" | "to_pay";
+                project?: number;
+                reimbursed?: boolean;
+                search?: string;
+                /** @description Avances ouvertes */
+                to_reimburse?: boolean;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceSummary"];
                 };
             };
         };
@@ -3790,6 +4908,123 @@ export interface operations {
             };
         };
     };
+    recurring_expenses_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                project?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpense"][];
+                };
+            };
+        };
+    };
+    recurring_expenses_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringExpenseRequest"];
+                "multipart/form-data": components["schemas"]["RecurringExpenseRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpense"];
+                };
+            };
+        };
+    };
+    recurring_expenses_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) recurring expense. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpense"];
+                };
+            };
+        };
+    };
+    recurring_expenses_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) recurring expense. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recurring_expenses_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) recurring expense. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRecurringExpenseRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRecurringExpenseRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringExpense"];
+                };
+            };
+        };
+    };
     tags_list: {
         parameters: {
             query?: never;
@@ -4210,6 +5445,296 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BlockerCandidate"][];
+                };
+            };
+        };
+    };
+    transactions_list: {
+        parameters: {
+            query?: {
+                category?: number;
+                date_after?: string;
+                date_before?: string;
+                event?: number;
+                include_descendants?: boolean;
+                kind?: "expense" | "income";
+                needs_receipt?: boolean;
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                /** @description `me` ou nom d'utilisateur */
+                paid_by?: string;
+                paid_by_contact?: number;
+                payment_status?: "paid" | "to_pay";
+                project?: number;
+                reimbursed?: boolean;
+                search?: string;
+                /** @description Avances ouvertes */
+                to_reimburse?: boolean;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTransactionList"];
+                };
+            };
+        };
+    };
+    transactions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionRequest"];
+                "multipart/form-data": components["schemas"]["TransactionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TransactionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionRequest"];
+                "multipart/form-data": components["schemas"]["TransactionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TransactionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transactions_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTransactionRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTransactionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTransactionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_mark_paid_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_mark_reimbursed_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MarkReimbursedRequest"];
+                "multipart/form-data": components["schemas"]["MarkReimbursedRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MarkReimbursedRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_receipt_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_receipt_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    receipt?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    transactions_receipt_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
                 };
             };
         };

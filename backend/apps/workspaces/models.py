@@ -71,10 +71,13 @@ class Workspace(TimeStampedModel):
 
     def create_defaults(self):
         """Seed the per-workspace lists. Called once, right after creation."""
+        from apps.finance.models import Category  # sits above this app
+
         ProjectType.objects.bulk_create(
             ProjectType(workspace=self, name=name, position=index)
             for index, name in enumerate(DEFAULT_PROJECT_TYPES)
         )
+        Category.create_defaults(self)
 
 
 class ProjectType(TimeStampedModel):

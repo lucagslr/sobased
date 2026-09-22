@@ -6,6 +6,8 @@ defineProps<{
   label: string
   type?: string
   autocomplete?: string
+  /** Phone keyboard hint: "decimal" for amounts, "numeric", "tel"... */
+  inputmode?: 'decimal' | 'numeric' | 'tel' | 'email' | 'url' | 'search' | 'text'
   placeholder?: string
   hint?: string
   /** First error is shown; pass the DRF field errors directly. */
@@ -25,6 +27,7 @@ const id = useId()
       :id="id"
       v-model="model"
       :type="type ?? 'text'"
+      :inputmode="inputmode"
       :autocomplete="autocomplete"
       :placeholder="placeholder"
       :required="required"

@@ -1,12 +1,14 @@
 <script setup lang="ts">
 /**
  * "Espaces": my workspaces, and for the one that is opened: name and colour,
- * members, project types, then leave / transfer / delete.
+ * members, project types, bookkeeping categories, then leave / transfer /
+ * delete.
  */
 import { Plus, Trash2 } from 'lucide-vue-next'
 import { computed, reactive, ref, watch } from 'vue'
 
 import { ApiError } from '@/api/client'
+import { type Category, financeApi } from '@/api/finance'
 import { type ProjectType, type Workspace, workspacesApi } from '@/api/projects'
 import MembersPanel from '@/components/projects/MembersPanel.vue'
 import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
@@ -34,6 +36,8 @@ const isOwner = computed(() => opened.value?.my_role === 'owner')
 const general = reactive({ name: '', color: '#CBD5E1' })
 const types = ref<ProjectType[]>([])
 const newType = ref('')
+const categories = ref<Category[]>([])
+const newCategory = ref('')
 const heir = ref('')
 const deleteDialog = ref(false)
 const busy = ref(false)
@@ -50,6 +54,7 @@ watch(opened, async (workspace) => {
   if (!workspace) return
   Object.assign(general, { name: workspace.name, color: workspace.color ?? '#CBD5E1' })
   types.value = await workspaces.loadTypes(workspace.id, true)
+  categories.value = await financeApi.categories(workspace.id)
 })
 
 function toggle(workspace: Workspace) {
@@ -98,6 +103,27 @@ const removeType = (type: ProjectType) =>
     },
     'Type supprimé',
     'Ce type ne peut pas être supprimé.',
+  )
+
+const addCategory = () =>
+  run(
+    async () => {
+      await financeApi.createCategory(opened.value!.id, newCategory.value.trim())
+      newCategory.value = ''
+      categories.value = await financeApi.categories(opened.value!.id)
+    },
+    'Catégorie ajoutée',
+    "La catégorie n'a pas pu être ajoutée.",
+  )
+
+const removeCategory = (category: Category) =>
+  run(
+    async () => {
+      await financeApi.removeCategory(category.id)
+      categories.value = await financeApi.categories(opened.value!.id)
+    },
+    'Catégorie supprimée',
+    'Cette catégorie ne peut pas être supprimée.',
   )
 
 const transfer = () =>
@@ -206,6 +232,36 @@ async function remove() {
       </ul>
       <form class="flex items-end gap-3" @submit.prevent="addType">
         <div class="flex-1"><BaseInput v-model="newType" label="Nouveau type" required /></div>
+        <BaseButton type="submit" variant="secondary" :loading="busy">Ajouter</BaseButton>
+      </form>
+    </FormCard>
+
+    <FormCard
+      v-if="isAdmin"
+      :title="`${opened.name} : catégories de compta`"
+      description="Supprimer une catégorie utilisée bascule ses écritures sur « Autre »."
+    >
+      <ul class="mb-4 flex flex-wrap gap-2">
+        <li
+          v-for="category in categories"
+          :key="category.id"
+          class="inline-flex h-8 items-center gap-1 rounded-full border border-line pr-1 pl-3 text-sm"
+        >
+          {{ category.name }}
+          <button
+            type="button"
+            class="rounded-full p-1 text-muted hover:text-danger"
+            :aria-label="`Supprimer la catégorie ${category.name}`"
+            @click="removeCategory(category)"
+          >
+            <Trash2 class="size-3.5" aria-hidden="true" />
+          </button>
+        </li>
+      </ul>
+      <form class="flex items-end gap-3" @submit.prevent="addCategory">
+        <div class="flex-1">
+          <BaseInput v-model="newCategory" label="Nouvelle catégorie" required />
+        </div>
         <BaseButton type="submit" variant="secondary" :loading="busy">Ajouter</BaseButton>
       </form>
     </FormCard>

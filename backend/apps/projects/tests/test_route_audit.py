@@ -38,6 +38,14 @@ ALLOWED = {
     "ProjectOverviewView": "effective_access() then for_user() querysets",
     "ProjectCardsView": "built from the AccessMap and for_user() querysets",
     "DashboardViewViewSet": "rows of request.user only",
+    # Bookkeeping aggregations and exports: every transaction comes from
+    # Transaction.objects.for_user(request, finance="view") (finance/views.py).
+    "FinanceSummaryView": "for_user(finance=view) querysets only",
+    "FinanceBudgetView": "effective_access() + can_view_finance, then for_user()",
+    "FinanceAdvancesView": "for_user(finance=view) to read, finance=edit to write",
+    "ExportXlsxView": "for_user(finance=view) querysets only",
+    "ExportPdfView": "for_user(finance=view) querysets only",
+    "ExportReceiptsView": "for_user(finance=view) querysets only",
 }
 
 

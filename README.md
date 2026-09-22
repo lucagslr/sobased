@@ -2,7 +2,7 @@
 
 Gestion de projets multi-utilisateurs, conçue d'abord pour l'association culturelle 100SATIONS (Genève) : management d'artistes, administration de l'association, et usage personnel (cours, rendus, mandats). Chacun crée ses espaces et ses projets (arbre à 4 niveaux) et invite d'autres personnes avec des droits précis, comme sur Google Drive.
 
-> **État : phase 6 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
+> **État : phase 7 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts, compta avec justificatifs, budget, avances, frais récurrents et exports). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
 
 ## Fonctionnalités prévues
 
