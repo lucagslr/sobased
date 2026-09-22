@@ -4,7 +4,13 @@ from apps.accounts.serializers import PublicUserSerializer
 from apps.projects.models import Project
 from apps.tasks.models import Task
 
-from .models import AccountStatus, DriveLink
+from .models import (
+    AccountStatus,
+    DriveLink,
+    ExternalCalendar,
+    ExternalEvent,
+    SyncConflict,
+)
 
 
 class ProviderStateSerializer(serializers.Serializer):
@@ -83,3 +89,79 @@ class DriveFolderSerializer(serializers.Serializer):
     drive_folder_id = serializers.CharField()
     drive_folder_url = serializers.CharField(allow_blank=True)
     drive_status = serializers.CharField()
+
+
+# --- Calendars (SPEC §12) -----------------------------------------------------------
+class ExternalCalendarSerializer(serializers.ModelSerializer):
+    provider = serializers.CharField(read_only=True)
+    account_email = serializers.CharField(
+        source="account.account_email", read_only=True
+    )
+
+    class Meta:
+        model = ExternalCalendar
+        fields = [
+            "id",
+            "provider",
+            "account_email",
+            "external_id",
+            "name",
+            "color",
+            "is_primary",
+            "is_displayed",
+            "is_target",
+            "last_synced_at",
+            "last_error",
+        ]
+        read_only_fields = [
+            "id",
+            "external_id",
+            "name",
+            "color",
+            "is_primary",
+            "last_synced_at",
+            "last_error",
+        ]
+
+
+class ExternalEventSerializer(serializers.ModelSerializer):
+    calendar_name = serializers.CharField(source="calendar.name", read_only=True)
+    calendar_color = serializers.CharField(source="calendar.color", read_only=True)
+    provider = serializers.CharField(source="calendar.account.provider", read_only=True)
+
+    class Meta:
+        model = ExternalEvent
+        fields = [
+            "id",
+            "calendar",
+            "calendar_name",
+            "calendar_color",
+            "provider",
+            "title",
+            "start",
+            "end",
+            "all_day",
+            "location",
+        ]
+        read_only_fields = fields
+
+
+class SyncConflictSerializer(serializers.ModelSerializer):
+    object_type = serializers.CharField(source="mapping.object_type", read_only=True)
+    object_id = serializers.IntegerField(source="mapping.object_id", read_only=True)
+    calendar_name = serializers.CharField(
+        source="mapping.calendar.name", read_only=True
+    )
+
+    class Meta:
+        model = SyncConflict
+        fields = [
+            "id",
+            "object_type",
+            "object_id",
+            "calendar_name",
+            "winner",
+            "details",
+            "created_at",
+        ]
+        read_only_fields = fields

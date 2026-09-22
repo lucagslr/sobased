@@ -1024,6 +1024,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/integrations/calendars/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description My external calendars: which ones to display, which one receives my
+         *     SOBASED objects (one target per user).
+         */
+        get: operations["integrations_calendars_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/calendars/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description My external calendars: which ones to display, which one receives my
+         *     SOBASED objects (one target per user).
+         */
+        patch: operations["integrations_calendars_partial_update"];
+        trace?: never;
+    };
+    "/api/integrations/calendars/refresh/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reload the lists from Google and Microsoft. */
+        post: operations["integrations_calendars_refresh_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/external-events/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Events of my displayed calendars crossing [start, end[: read-only. */
+        get: operations["integrations_external_events_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations/google/": {
         parameters: {
             query?: never;
@@ -1040,6 +1114,26 @@ export interface paths {
          *     becomes null).
          */
         delete: operations["integrations_google_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/google/calendar/webhook/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Google push notification: the channel token must match the calendar's
+         *     stored hash; then a sync is queued. Always 200 (Google retries otherwise).
+         */
+        post: operations["integrations_google_calendar_webhook_create"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1093,6 +1187,91 @@ export interface paths {
         get: operations["integrations_google_picker_config_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description No revocation endpoint at Microsoft for this flow: forgetting the
+         *     tokens is the disconnection (the user may also revoke in their account).
+         */
+        delete: operations["integrations_microsoft_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft/callback/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["integrations_microsoft_callback_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/microsoft/connect/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["integrations_microsoft_connect_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/sync-conflicts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["integrations_sync_conflicts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/sync-now/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Queue a sync of my accounts (the beat does it every 5 minutes). */
+        post: operations["integrations_sync_now_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2810,6 +2989,34 @@ export interface components {
          * @enum {string}
          */
         EventTypeEnum: "meeting" | "live" | "shooting" | "release" | "release_party" | "class" | "exam" | "other";
+        ExternalCalendar: {
+            readonly id: number;
+            readonly provider: string;
+            readonly account_email: string;
+            readonly external_id: string;
+            readonly name: string;
+            readonly color: string;
+            readonly is_primary: boolean;
+            is_displayed: boolean;
+            is_target: boolean;
+            /** Format: date-time */
+            readonly last_synced_at: string | null;
+            readonly last_error: string;
+        };
+        ExternalEvent: {
+            readonly id: number;
+            readonly calendar: number;
+            readonly calendar_name: string;
+            readonly calendar_color: string;
+            readonly provider: string;
+            readonly title: string;
+            /** Format: date-time */
+            readonly start: string;
+            /** Format: date-time */
+            readonly end: string;
+            readonly all_day: boolean;
+            readonly location: string;
+        };
         FinanceSummary: {
             /** Format: decimal */
             expense: string;
@@ -3247,6 +3454,10 @@ export interface components {
             contacts?: number[];
             tags?: number[];
             rrule?: string;
+        };
+        PatchedExternalCalendarRequest: {
+            is_displayed?: boolean;
+            is_target?: boolean;
         };
         /** @description The signed-in user's own profile and preferences. */
         PatchedMeRequest: {
@@ -3850,6 +4061,16 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        SyncConflict: {
+            readonly id: number;
+            readonly object_type: string;
+            readonly object_id: number;
+            readonly calendar_name: string;
+            readonly winner: components["schemas"]["WinnerEnum"];
+            readonly details: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         Tag: {
             readonly id: number;
             workspace: number;
@@ -4101,6 +4322,12 @@ export interface components {
             tall: boolean;
             hidden: boolean;
         };
+        /**
+         * @description * `local` - SOBASED
+         *     * `external` - Calendrier externe
+         * @enum {string}
+         */
+        WinnerEnum: "local" | "external";
         /** @description Full view of a workspace, for its members. */
         Workspace: {
             readonly id: number;
@@ -6066,6 +6293,93 @@ export interface operations {
             };
         };
     };
+    integrations_calendars_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalCalendar"][];
+                };
+            };
+        };
+    };
+    integrations_calendars_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) external calendar. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedExternalCalendarRequest"];
+                "multipart/form-data": components["schemas"]["PatchedExternalCalendarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalCalendar"];
+                };
+            };
+        };
+    };
+    integrations_calendars_refresh_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalCalendar"][];
+                };
+            };
+        };
+    };
+    integrations_external_events_list: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalEvent"][];
+                };
+            };
+        };
+    };
     integrations_google_destroy: {
         parameters: {
             query?: never;
@@ -6077,6 +6391,24 @@ export interface operations {
         responses: {
             /** @description No response body */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    integrations_google_calendar_webhook_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6140,6 +6472,98 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PickerConfig"];
                 };
+            };
+        };
+    };
+    integrations_microsoft_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    integrations_microsoft_callback_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    integrations_microsoft_connect_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectUrl"];
+                };
+            };
+        };
+    };
+    integrations_sync_conflicts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncConflict"][];
+                };
+            };
+        };
+    };
+    integrations_sync_now_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

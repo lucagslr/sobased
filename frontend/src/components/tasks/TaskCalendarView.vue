@@ -25,11 +25,13 @@ import { computed } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { type Event, eventsApi } from '@/api/events'
+import type { ExternalEvent } from '@/api/integrations'
 import { type Task, tasksApi } from '@/api/tasks'
 import { useUiStore } from '@/stores/ui'
 import {
   datesAfterCalendarChange as eventDatesAfterChange,
   eventCalendarEntries,
+  externalCalendarEntries,
 } from '@/utils/events'
 import { calendarEvents, datesAfterCalendarChange } from '@/utils/taskViews'
 
@@ -37,12 +39,14 @@ const props = withDefaults(
   defineProps<{
     tasks: Task[]
     events?: Event[]
+    /** Read-only entries of the user's displayed external calendars. */
+    externalEvents?: ExternalEvent[]
     canMove: (task: Task) => boolean
     canMoveEvent?: (event: Event) => boolean
     /** Clicking an empty day proposes a new task due that day. */
     canCreate?: boolean
   }>(),
-  { events: () => [], canMoveEvent: () => false },
+  { events: () => [], externalEvents: () => [], canMoveEvent: () => false },
 )
 const emit = defineEmits<{
   open: [task: Task]
@@ -75,6 +79,7 @@ async function onMoved(info: EventDropArg | EventResizeDoneArg) {
 }
 
 function onClick(info: EventClickArg) {
+  if (info.event.extendedProps.external) return // read-only mirror
   const meeting = info.event.extendedProps.event as Event | undefined
   if (meeting) emit('openEvent', meeting)
   else emit('open', info.event.extendedProps.task as Task)
@@ -119,6 +124,7 @@ const options = computed<CalendarOptions>(() => ({
   events: [
     ...calendarEvents(props.tasks, props.canMove),
     ...eventCalendarEntries(props.events, props.canMoveEvent),
+    ...externalCalendarEntries(props.externalEvents),
   ],
 }))
 </script>

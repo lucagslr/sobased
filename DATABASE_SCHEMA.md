@@ -554,6 +554,7 @@ erDiagram
         string external_id
         string name
         string color
+        bool is_primary
         bool is_displayed "affiché en lecture dans le calendrier"
         bool is_target "reçoit les objets SOBASED"
         text sync_cursor "syncToken Google ou deltaLink Graph"
@@ -562,6 +563,7 @@ erDiagram
         string watch_token_hash
         datetime watch_expires_at
         datetime last_synced_at
+        string last_error
     }
     EXTERNAL_EVENT {
         bigint id PK
@@ -582,6 +584,7 @@ erDiagram
         string external_id
         string etag
         string pushed_hash "empreinte des champs poussés"
+        datetime pushed_at
         datetime external_updated_at
         enum state "active, detached"
     }

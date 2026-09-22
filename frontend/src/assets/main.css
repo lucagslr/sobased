@@ -180,6 +180,21 @@
   text-decoration: none;
 }
 
+/* An event of an external calendar (read-only mirror): hatched, its
+   calendar's colour as a left bar, default cursor. */
+.task-calendar .fc .calendar-external {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--c-surface-2),
+    var(--c-surface-2) 4px,
+    var(--c-surface) 4px,
+    var(--c-surface) 8px
+  );
+  color: var(--c-muted);
+  border-width: 0 0 0 3px;
+  cursor: default;
+}
+
 .task-calendar .fc .fc-list-event {
   cursor: pointer;
 }

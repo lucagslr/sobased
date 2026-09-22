@@ -3,12 +3,13 @@
 import logging
 
 from celery import shared_task
+from django.db.models import Q
 
 from apps.projects.models import Project
 
-from . import drive
+from . import drive, sync
 from .google import GoogleError
-from .models import OAuthAccount
+from .models import ExternalCalendar, OAuthAccount, Provider
 
 log = logging.getLogger(__name__)
 
@@ -37,3 +38,30 @@ def share_project_folder(project_id: int) -> None:
         drive.share_with_members(project)
     except (drive.DriveUnavailable, GoogleError) as exc:
         log.warning("Drive folder of project %s not shared: %s", project_id, exc)
+
+
+# --- Calendars (SPEC §12) -------------------------------------------------------------
+def _calendars_in_use():
+    return ExternalCalendar.objects.filter(Q(is_target=True) | Q(is_displayed=True))
+
+
+@shared_task
+def sync_calendar_account(account_id: int) -> None:
+    account = OAuthAccount.objects.filter(pk=account_id).select_related("user").first()
+    if account is not None:
+        sync.sync_account(account)
+
+
+@shared_task
+def sync_all_calendars() -> None:
+    """Beat, every 5 minutes: every account with a target or displayed calendar."""
+    for account_id in set(_calendars_in_use().values_list("account_id", flat=True)):
+        sync_calendar_account.delay(account_id)
+
+
+@shared_task
+def renew_calendar_watches() -> None:
+    """Beat, daily: Google push channels of the calendars in use."""
+    calendars = _calendars_in_use().filter(account__provider=Provider.GOOGLE)
+    for calendar in calendars.select_related("account"):
+        sync.renew_watch(calendar)

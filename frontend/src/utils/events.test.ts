@@ -5,6 +5,7 @@ import type { Event } from '@/api/events'
 import {
   datesAfterCalendarChange,
   eventCalendarEntries,
+  externalCalendarEntries,
   groupAgenda,
   isPast,
   monthLabel,
@@ -116,5 +117,44 @@ describe('dates after a calendar drag', () => {
       start: start.toISOString(),
       end: end.toISOString(),
     })
+  })
+})
+
+describe('externalCalendarEntries', () => {
+  it('builds read-only entries in the calendar colour', () => {
+    const [timed, allDay] = externalCalendarEntries([
+      {
+        id: 1,
+        calendar: 3,
+        calendar_name: 'Horaire HEG',
+        calendar_color: '#c7d2fe',
+        provider: 'google',
+        title: 'Cours BPMN',
+        start: '2026-10-06T08:15:00Z',
+        end: '2026-10-06T10:00:00Z',
+        all_day: false,
+        location: '',
+      },
+      {
+        id: 2,
+        calendar: 3,
+        calendar_name: 'Horaire HEG',
+        calendar_color: '',
+        provider: 'google',
+        title: '',
+        start: '2026-10-20T00:00:00Z',
+        end: '2026-10-20T00:00:00Z',
+        all_day: true,
+        location: '',
+      },
+    ])
+    expect(timed.id).toBe('external-1')
+    expect(timed.editable).toBe(false)
+    expect(timed.borderColor).toBe('#c7d2fe')
+    expect(timed.classNames).toContain('calendar-external')
+    expect(allDay.title).toBe('(sans titre)')
+    expect(allDay.start).toBe('2026-10-20')
+    expect(allDay.end).toBe('2026-10-21') // exclusive end for FullCalendar
+    expect(allDay.borderColor).toBe('#a8a29e')
   })
 })

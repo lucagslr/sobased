@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from apps.accounts.tests.factories import UserFactory
 from apps.files.tests.conftest import client_for  # noqa: F401  (re-exported)
-from apps.integrations import google
+from apps.integrations import google, microsoft
 from apps.integrations.models import (
     SCOPE_CALENDAR,
     SCOPE_DRIVE,
@@ -19,6 +19,8 @@ from apps.integrations.models import (
     Provider,
 )
 from apps.projects.tests.factories import Tree, grant  # noqa: F401
+
+CAL_URL = "https://www.googleapis.com/calendar/v3"
 
 
 class FakeResponse:
@@ -43,6 +45,30 @@ class FakeGoogle:
         self.unauthorized_once = False
         self.email = "demo@gmail.com"
         self.contents: dict[str, bytes] = {}
+        # Calendar: calendars and their events, a change log per calendar
+        # (what an incremental syncToken read returns), invalid tokens.
+        self.calendars: dict[str, dict] = {
+            "primary": {
+                "id": "primary",
+                "summary": "Perso",
+                "primary": True,
+                "backgroundColor": "#9fe1cf",
+                "accessRole": "owner",
+            },
+            "heg": {
+                "id": "heg",
+                "summary": "Horaire HEG",
+                "primary": False,
+                "backgroundColor": "#c7d2fe",
+                "accessRole": "reader",
+            },
+        }
+        self.events: dict[str, dict[str, dict]] = {"primary": {}, "heg": {}}
+        self.event_count = 0
+        self.token_count_cal = 0
+        self.invalid_tokens: set[str] = set()
+        self.watches: list[dict] = []
+        self.grant_calendar = False  # what the consent screen granted
 
     # --- requests-like surface -------------------------------------------------
     def post(self, url, data=None, params=None, timeout=None, **kwargs):
@@ -63,6 +89,8 @@ class FakeGoogle:
         if self.unauthorized_once:
             self.unauthorized_once = False
             return FakeResponse(401, {"error": {"message": "Invalid Credentials"}})
+        if url.startswith(CAL_URL):
+            return self._calendar(method, url[len(CAL_URL) :], params, kwargs)
         if url == google.UPLOAD_URL:
             files = kwargs["files"]
             metadata = json.loads(files["metadata"][1])
@@ -90,6 +118,110 @@ class FakeGoogle:
             return FakeResponse(200, self.files[file_id])
         return FakeResponse(404, {"error": {"message": f"unexpected {url}"}})
 
+    # --- Calendar API v3 ---------------------------------------------------------
+    def _calendar(self, method, path, params, kwargs):
+        from django.utils import timezone
+
+        if path == "/users/me/calendarList":
+            return FakeResponse(200, {"items": list(self.calendars.values())})
+        if path == "/channels/stop":
+            return FakeResponse(200, {})
+        parts = path.strip("/").split("/")  # calendars/<id>/events[/<eid>|/watch]
+        cal_id = parts[1]
+        if cal_id not in self.calendars:
+            return FakeResponse(404, {"error": {"message": "Not Found"}})
+        store = self.events.setdefault(cal_id, {})
+        tail = parts[3] if len(parts) > 3 else ""
+        now = timezone.now().isoformat()
+        if tail == "watch":
+            self.watches.append({"calendar": cal_id, **kwargs["json"]})
+            return FakeResponse(200, {"resourceId": "res-1", "expiration": "0"})
+        if method == "POST" and not tail:
+            self.event_count += 1
+            event = {
+                **kwargs["json"],
+                "id": f"g{self.event_count}",
+                "status": "confirmed",
+                "updated": now,
+                "etag": f"etag-{self.event_count}-1",
+            }
+            store[event["id"]] = event
+            return FakeResponse(200, event)
+        if method == "PATCH":
+            event = store.get(tail)
+            if event is None:
+                return FakeResponse(404, {"error": {"message": "Not Found"}})
+            event.update(kwargs["json"])
+            event["updated"] = now
+            event["etag"] = event["etag"].rsplit("-", 1)[0] + "-x"
+            return FakeResponse(200, event)
+        if method == "DELETE":
+            if tail in store:
+                store[tail]["status"] = "cancelled"
+                store[tail]["updated"] = now
+            return FakeResponse(204, {})
+        if method == "GET" and not tail:
+            token = params.get("syncToken")
+            if token and token in self.invalid_tokens:
+                return FakeResponse(
+                    410, {"error": {"message": "Sync token is no longer valid"}}
+                )
+            self.token_count_cal += 1
+            items = list(store.values())
+            if token:
+                since = int(token.split("-")[1])
+                items = [e for e in items if e.get("seq", 0) > since]
+            for event in store.values():
+                event.setdefault("seq", 0)
+            return FakeResponse(
+                200,
+                {
+                    "items": items,
+                    "nextSyncToken": f"tok-{self.mark()}-{self.token_count_cal}",
+                },
+            )
+        return FakeResponse(404, {"error": {"message": f"unexpected {path}"}})
+
+    def mark(self) -> int:
+        """Every change bumps a sequence so that incremental reads work."""
+        self._seq = getattr(self, "_seq", 0)
+        return self._seq
+
+    def change_externally(self, cal_id, event_id, **fields):
+        """Something the user did in Google (title, dates, deletion)."""
+        from django.utils import timezone
+
+        self._seq = getattr(self, "_seq", 0) + 1
+        event = self.events[cal_id][event_id]
+        event.update(fields)
+        event["updated"] = timezone.now().isoformat()
+        event["etag"] = event.get("etag", "e") + "-u"
+        event["seq"] = self._seq
+        return event
+
+    def add_external_event(
+        self, cal_id, summary, start, end, all_day=False, event_id=None
+    ):
+        from django.utils import timezone
+
+        self._seq = getattr(self, "_seq", 0) + 1
+        self.event_count += 1
+        event_id = event_id or f"x{self.event_count}"
+        if all_day:
+            body = {"start": {"date": start}, "end": {"date": end}}
+        else:
+            body = {"start": {"dateTime": start}, "end": {"dateTime": end}}
+        self.events.setdefault(cal_id, {})[event_id] = {
+            **body,
+            "id": event_id,
+            "summary": summary,
+            "status": "confirmed",
+            "updated": timezone.now().isoformat(),
+            "etag": f"etag-{event_id}",
+            "seq": self._seq,
+        }
+        return self.events[cal_id][event_id]
+
     # --- helpers -----------------------------------------------------------------
     def _token(self, data):
         if data.get("grant_type") == "refresh_token" and self.fail_refresh:
@@ -98,7 +230,10 @@ class FakeGoogle:
         payload = {
             "access_token": f"at-{self.token_count}",
             "expires_in": 3600,
-            "scope": " ".join([SCOPE_EMAIL, SCOPE_DRIVE]),
+            "scope": " ".join(
+                [SCOPE_EMAIL, SCOPE_DRIVE]
+                + ([SCOPE_CALENDAR] if self.grant_calendar else [])
+            ),
         }
         if data.get("grant_type") == "authorization_code":
             payload["refresh_token"] = "rt-1"
@@ -187,3 +322,107 @@ def editor_api(editor):
 def connected_editor(editor, fake_google):
     connect_google(editor)
     return editor
+
+
+class FakeGraph:
+    """Microsoft identity + Graph, the subset used (calendars, events, delta)."""
+
+    def __init__(self):
+        self.calls = []
+        self.token_count = 0
+        self.email = "luca@heg.ch"
+        self.calendars = {
+            "cal1": {
+                "id": "cal1",
+                "name": "Calendrier",
+                "isDefaultCalendar": True,
+                "hexColor": "#0078d4",
+            },
+        }
+        self.events: dict[str, dict] = {}
+        self.event_count = 0
+        self.removed: list[str] = []
+        self.deltas = 0
+
+    def post(self, url, data=None, params=None, timeout=None, **kwargs):
+        return self.request("POST", url, data=data, params=params, **kwargs)
+
+    def get(self, url, headers=None, params=None, timeout=None, **kwargs):
+        return self.request("GET", url, headers=headers, params=params, **kwargs)
+
+    def request(self, method, url, headers=None, params=None, **kwargs):
+        from django.utils import timezone
+
+        self.calls.append((method, url))
+        if url.endswith("/oauth2/v2.0/token"):
+            self.token_count += 1
+            return FakeResponse(
+                200,
+                {
+                    "access_token": f"ms-at-{self.token_count}",
+                    "refresh_token": "ms-rt",
+                    "expires_in": 3600,
+                    "scope": "offline_access User.Read Calendars.ReadWrite",
+                },
+            )
+        if url == f"{microsoft.GRAPH_URL}/me":
+            return FakeResponse(200, {"mail": self.email, "displayName": "Luca"})
+        if url == f"{microsoft.GRAPH_URL}/me/calendars":
+            return FakeResponse(200, {"value": list(self.calendars.values())})
+        if url.startswith(f"{microsoft.GRAPH_URL}/me/calendars/") and url.endswith(
+            "/events"
+        ):
+            self.event_count += 1
+            event = {
+                **kwargs["json"],
+                "id": f"m{self.event_count}",
+                "lastModifiedDateTime": timezone.now().isoformat(),
+                "@odata.etag": f"W/{self.event_count}",
+            }
+            self.events[event["id"]] = event
+            return FakeResponse(200, event)
+        if "/calendarView/delta" in url or url.startswith("https://delta/"):
+            self.deltas += 1
+            value = list(self.events.values()) + [
+                {"id": eid, "@removed": {"reason": "deleted"}} for eid in self.removed
+            ]
+            self.removed = []
+            return FakeResponse(
+                200,
+                {"value": value, "@odata.deltaLink": f"https://delta/{self.deltas}"},
+            )
+        if url.startswith(f"{microsoft.GRAPH_URL}/me/events/"):
+            eid = url.rsplit("/", 1)[1]
+            if method == "PATCH":
+                self.events[eid].update(kwargs["json"])
+                self.events[eid]["lastModifiedDateTime"] = timezone.now().isoformat()
+                return FakeResponse(200, self.events[eid])
+            if method == "DELETE":
+                self.events.pop(eid, None)
+                self.removed.append(eid)
+                return FakeResponse(204, {})
+        return FakeResponse(404, {"error": {"message": f"unexpected {url}"}})
+
+
+@pytest.fixture
+def fake_graph(monkeypatch, settings):
+    settings.MS_CLIENT_ID = "ms-client"
+    settings.MS_CLIENT_SECRET = "ms-secret"
+    settings.MS_ENABLED = True
+    fake = FakeGraph()
+    monkeypatch.setattr(microsoft, "transport", fake)
+    return fake
+
+
+def connect_microsoft(user, email="luca@heg.ch") -> OAuthAccount:
+    account = OAuthAccount.objects.create(
+        user=user,
+        provider=Provider.MICROSOFT,
+        account_email=email,
+        scopes=["offline_access", "User.Read", "Calendars.ReadWrite"],
+        token_expires_at=timezone.now() + timedelta(hours=1),
+    )
+    account.access_token = "ms-at-0"
+    account.refresh_token = "ms-rt-0"
+    account.save()
+    return account

@@ -141,3 +141,132 @@ class DriveLink(TimeStampedModel):
 # Importable paths for drf-spectacular's ENUM_NAME_OVERRIDES.
 PROVIDER_CHOICES = Provider.choices
 ACCOUNT_STATUS_CHOICES = AccountStatus.choices
+
+
+# --- Calendars (SPEC §12, SPECIFICATIONS §8) --------------------------------------
+class ExternalCalendar(TimeStampedModel):
+    """A calendar of a connected account. `is_displayed`: read in the
+    calendar view (owner only). `is_target`: receives the user's SOBASED
+    objects (one target per user, across providers)."""
+
+    account = models.ForeignKey(
+        OAuthAccount, on_delete=models.CASCADE, related_name="calendars"
+    )
+    external_id = models.CharField(max_length=300)
+    name = models.CharField(max_length=200)
+    color = models.CharField(max_length=7, blank=True)
+    is_primary = models.BooleanField(default=False)
+    is_displayed = models.BooleanField(default=False)
+    is_target = models.BooleanField(default=False)
+    # Google syncToken or Graph deltaLink; empty = full read on next sync.
+    sync_cursor = models.TextField(blank=True)
+    watch_channel_id = models.CharField(max_length=64, blank=True)
+    watch_resource_id = models.CharField(max_length=200, blank=True)
+    watch_token_hash = models.CharField(max_length=64, blank=True)
+    watch_expires_at = models.DateTimeField(null=True, blank=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-is_primary", "name", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "external_id"], name="externalcalendar_unique_id"
+            )
+        ]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def provider(self) -> str:
+        return self.account.provider
+
+
+class ExternalEvent(TimeStampedModel):
+    """An event of a displayed calendar, read-only, for the calendar view.
+    SOBASED's own pushed objects are not duplicated here."""
+
+    calendar = models.ForeignKey(
+        ExternalCalendar, on_delete=models.CASCADE, related_name="events"
+    )
+    external_id = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, blank=True)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    all_day = models.BooleanField(default=False)
+    location = models.CharField(max_length=300, blank=True)
+    etag = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        ordering = ["start", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["calendar", "external_id"], name="externalevent_unique_id"
+            )
+        ]
+        indexes = [models.Index(fields=["calendar", "start"])]
+
+    def __str__(self):
+        return self.title
+
+
+class MappingState(models.TextChoices):
+    ACTIVE = "active", "Synchronisé"
+    DETACHED = "detached", "Détaché"
+
+
+class SyncMapping(TimeStampedModel):
+    """Local object ↔ external event in the target calendar. `pushed_hash`
+    is the fingerprint of what was last sent: an incoming change with the
+    same fingerprint is our own echo. `detached`: deleted on the external
+    side, never pushed again (the local object survives)."""
+
+    calendar = models.ForeignKey(
+        ExternalCalendar, on_delete=models.CASCADE, related_name="mappings"
+    )
+    object_type = models.CharField(
+        max_length=10, choices=[("task", "Tâche"), ("event", "Événement")]
+    )
+    object_id = models.PositiveBigIntegerField()
+    external_id = models.CharField(max_length=300)
+    etag = models.CharField(max_length=200, blank=True)
+    pushed_hash = models.CharField(max_length=64, blank=True)
+    pushed_at = models.DateTimeField(null=True, blank=True)
+    external_updated_at = models.DateTimeField(null=True, blank=True)
+    state = models.CharField(
+        max_length=10, choices=MappingState.choices, default=MappingState.ACTIVE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["calendar", "object_type", "object_id"],
+                name="syncmapping_unique_object",
+            )
+        ]
+        indexes = [models.Index(fields=["calendar", "external_id"])]
+
+    def __str__(self):
+        return f"{self.object_type} {self.object_id} ↔ {self.external_id}"
+
+
+class SyncConflict(models.Model):
+    """Both sides changed since the last sync: the most recent won, the
+    other values are kept here for the user to see."""
+
+    mapping = models.ForeignKey(
+        SyncMapping, on_delete=models.CASCADE, related_name="conflicts"
+    )
+    winner = models.CharField(
+        max_length=10,
+        choices=[("local", "SOBASED"), ("external", "Calendrier externe")],
+    )
+    details = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+
+MAPPING_STATE_CHOICES = MappingState.choices

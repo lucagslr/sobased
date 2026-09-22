@@ -164,6 +164,15 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.finance.tasks.generate_recurring_expenses",
         "schedule": 60 * 60 * 24,
     },
+    # Calendar sync (SPEC §12): polling every 5 minutes, push channels daily.
+    "sync-calendars": {
+        "task": "apps.integrations.tasks.sync_all_calendars",
+        "schedule": 60 * 5,
+    },
+    "renew-calendar-watches": {
+        "task": "apps.integrations.tasks.renew_calendar_watches",
+        "schedule": 60 * 60 * 24,
+    },
 }
 
 # --- Files ---------------------------------------------------------------------
@@ -272,6 +281,7 @@ REST_FRAMEWORK = {
         "invitation_lookup": "30/min",
         "share_page": "60/min",
         "share_unlock": "30/min",
+        "sync_now": "6/min",
     },
     # One proxy (Caddy) sits in front: trust the last X-Forwarded-For entry.
     "NUM_PROXIES": 1,
@@ -305,6 +315,7 @@ SPECTACULAR_SETTINGS = {
         "ShareEventEnum": "apps.sharing.models.SHARE_EVENT_CHOICES",
         "ProviderEnum": "apps.integrations.models.PROVIDER_CHOICES",
         "AccountStatusEnum": "apps.integrations.models.ACCOUNT_STATUS_CHOICES",
+        "MappingStateEnum": "apps.integrations.models.MAPPING_STATE_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

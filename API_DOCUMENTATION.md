@@ -187,15 +187,16 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 | GET | `/api/integrations/` | connecté | État des connexions Google / Microsoft, fonctionnalités disponibles |
 | GET | `/api/integrations/google/connect/?features=drive,calendar` | connecté | URL d'autorisation OAuth (scopes incrémentaux, `state` signé) |
 | GET | `/api/integrations/google/callback/` | connecté | Retour OAuth, stockage chiffré des jetons |
-| GET | `/api/integrations/microsoft/connect/` · `/callback/` | connecté | Idem via MSAL |
+| GET | `/api/integrations/microsoft/connect/` · `/callback/` | connecté | Idem (OAuth v2.0 en REST, scopes `offline_access User.Read Calendars.ReadWrite`) ; retour vers `/parametres/integrations?microsoft=ok\|refus\|erreur` |
 | DELETE | `/api/integrations/{provider}/` | connecté | Déconnexion : révocation, suppression des jetons et des correspondances |
 | GET | `/api/integrations/google/picker-config/` | connecté | Clé API, client id, app id et jeton d'accès court pour Google Picker |
-| GET | `/api/integrations/calendars/` | connecté | Mes calendriers externes |
-| POST | `/api/integrations/calendars/refresh/` | connecté | Recharge la liste depuis Google / Graph |
-| PATCH | `/api/integrations/calendars/{id}/` | connecté | `is_displayed`, `is_target` |
-| POST | `/api/integrations/sync-now/` | connecté, limité | Déclenche une synchro |
-| GET | `/api/integrations/sync-conflicts/` | connecté | Conflits journalisés |
-| POST | `/api/integrations/google/calendar/webhook/` | public, vérifié par `X-Goog-Channel-Token` | Notification push Google → tâche Celery de synchro |
+| GET | `/api/integrations/calendars/` | connecté | Mes calendriers externes (`provider`, `account_email`, `name`, `color`, `is_primary`, `is_displayed`, `is_target`, `last_synced_at`, `last_error`) |
+| POST | `/api/integrations/calendars/refresh/` | connecté | Recharge les listes depuis Google et Graph (400 avec la liste si un fournisseur a échoué) |
+| PATCH | `/api/integrations/calendars/{id}/` | connecté | `is_displayed`, `is_target` (un seul cible par utilisateur : les autres sont désélectionnés) |
+| POST | `/api/integrations/sync-now/` | connecté, 6 / min | File une synchro de mes comptes (202) |
+| GET | `/api/integrations/sync-conflicts/` | connecté | 50 derniers conflits : objet, calendrier, gagnant, valeurs des deux côtés |
+| GET | `/api/integrations/external-events/?start&end` | connecté | Événements de mes calendriers affichés qui croisent la fenêtre (lecture seule, avec nom et couleur du calendrier) |
+| POST | `/api/integrations/google/calendar/webhook/` | public, vérifié par `X-Goog-Channel-ID` + hash de `X-Goog-Channel-Token` | Notification push Google → tâche Celery de synchro ; toujours 200 |
 | POST | `/api/projects/{id}/drive/create-folder/` | Éditeur | Crée le dossier Drive a posteriori : racine avec les sous-dossiers types (compte de l'acteur), sous-projet dans le dossier du parent (compte propriétaire de l'arbre, D8). 400 avec message si le parent n'a pas de dossier, si le propriétaire est déconnecté ou si le dossier existe |
 | POST | `/api/projects/{id}/drive/upload/` | Éditeur | `multipart` `file` : envoi vers le dossier Drive du projet avec le compte propriétaire ; le résultat est attaché comme `DriveLink` (201) |
 | POST | `/api/projects/{id}/drive/share/` | Éditeur | Réapplique le partage du dossier racine avec les membres ayant connecté Google (`shared_with` = nombre partagé) |

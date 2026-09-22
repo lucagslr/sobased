@@ -2397,6 +2397,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/IntegrationsState'
           description: ''
+  /api/integrations/calendars/:
+    get:
+      operationId: integrations_calendars_list
+      description: |-
+        My external calendars: which ones to display, which one receives my
+        SOBASED objects (one target per user).
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalCalendar'
+          description: ''
+  /api/integrations/calendars/{id}/:
+    patch:
+      operationId: integrations_calendars_partial_update
+      description: |-
+        My external calendars: which ones to display, which one receives my
+        SOBASED objects (one target per user).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) external
+          calendar.
+        required: true
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedExternalCalendarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedExternalCalendarRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalCalendar'
+          description: ''
+  /api/integrations/calendars/refresh/:
+    post:
+      operationId: integrations_calendars_refresh_create
+      description: Reload the lists from Google and Microsoft.
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalCalendar'
+          description: ''
+  /api/integrations/external-events/:
+    get:
+      operationId: integrations_external_events_list
+      description: 'Events of my displayed calendars crossing [start, end[: read-only.'
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+      - in: query
+        name: start
+        schema:
+          type: string
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalEvent'
+          description: ''
   /api/integrations/google/:
     delete:
       operationId: integrations_google_destroy
@@ -2410,6 +2505,19 @@ paths:
       - cookieAuth: []
       responses:
         '204':
+          description: No response body
+  /api/integrations/google/calendar/webhook/:
+    post:
+      operationId: integrations_google_calendar_webhook_create
+      description: |-
+        Google push notification: the channel token must match the calendar's
+        stored hash; then a sync is queued. Always 200 (Google retries otherwise).
+      tags:
+      - integrations
+      security:
+      - {}
+      responses:
+        '200':
           description: No response body
   /api/integrations/google/callback/:
     get:
@@ -2460,6 +2568,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/PickerConfig'
           description: ''
+  /api/integrations/microsoft/:
+    delete:
+      operationId: integrations_microsoft_destroy
+      description: |-
+        No revocation endpoint at Microsoft for this flow: forgetting the
+        tokens is the disconnection (the user may also revoke in their account).
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/integrations/microsoft/callback/:
+    get:
+      operationId: integrations_microsoft_callback_retrieve
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '302':
+          description: No response body
+  /api/integrations/microsoft/connect/:
+    get:
+      operationId: integrations_microsoft_connect_retrieve
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectUrl'
+          description: ''
+  /api/integrations/sync-conflicts/:
+    get:
+      operationId: integrations_sync_conflicts_list
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SyncConflict'
+          description: ''
+  /api/integrations/sync-now/:
+    post:
+      operationId: integrations_sync_now_create
+      description: Queue a sync of my accounts (the beat does it every 5 minutes).
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          description: No response body
   /api/invitations/:
     get:
       operationId: invitations_list
@@ -6583,6 +6755,100 @@ components:
         * `class` - Cours
         * `exam` - Examen
         * `other` - Autre
+    ExternalCalendar:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        provider:
+          type: string
+          readOnly: true
+        account_email:
+          type: string
+          readOnly: true
+        external_id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        color:
+          type: string
+          readOnly: true
+        is_primary:
+          type: boolean
+          readOnly: true
+        is_displayed:
+          type: boolean
+        is_target:
+          type: boolean
+        last_synced_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_error:
+          type: string
+          readOnly: true
+      required:
+      - account_email
+      - color
+      - external_id
+      - id
+      - is_displayed
+      - is_primary
+      - is_target
+      - last_error
+      - last_synced_at
+      - name
+      - provider
+    ExternalEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        calendar:
+          type: integer
+          readOnly: true
+        calendar_name:
+          type: string
+          readOnly: true
+        calendar_color:
+          type: string
+          readOnly: true
+        provider:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        start:
+          type: string
+          format: date-time
+          readOnly: true
+        end:
+          type: string
+          format: date-time
+          readOnly: true
+        all_day:
+          type: boolean
+          readOnly: true
+        location:
+          type: string
+          readOnly: true
+      required:
+      - all_day
+      - calendar
+      - calendar_color
+      - calendar_name
+      - end
+      - id
+      - location
+      - provider
+      - start
+      - title
     FinanceSummary:
       type: object
       properties:
@@ -7590,6 +7856,13 @@ components:
         rrule:
           type: string
           writeOnly: true
+    PatchedExternalCalendarRequest:
+      type: object
+      properties:
+        is_displayed:
+          type: boolean
+        is_target:
+          type: boolean
     PatchedMeRequest:
       type: object
       description: The signed-in user's own profile and preferences.
@@ -9189,6 +9462,39 @@ components:
       - id
       - note
       - to_status
+    SyncConflict:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        object_type:
+          type: string
+          readOnly: true
+        object_id:
+          type: integer
+          readOnly: true
+        calendar_name:
+          type: string
+          readOnly: true
+        winner:
+          allOf:
+          - $ref: '#/components/schemas/WinnerEnum'
+          readOnly: true
+        details:
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - calendar_name
+      - created_at
+      - details
+      - id
+      - object_id
+      - object_type
+      - winner
     Tag:
       type: object
       properties:
@@ -9890,6 +10196,14 @@ components:
       - key
       - size
       - tall
+    WinnerEnum:
+      enum:
+      - local
+      - external
+      type: string
+      description: |-
+        * `local` - SOBASED
+        * `external` - Calendrier externe
     Workspace:
       type: object
       description: Full view of a workspace, for its members.

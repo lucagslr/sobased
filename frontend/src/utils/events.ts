@@ -1,5 +1,6 @@
 /** Labels and helpers for events and meetings (SPEC §8). */
 import type { Event, EventType } from '@/api/events'
+import type { ExternalEvent } from '@/api/integrations'
 import type { Task } from '@/api/tasks'
 
 import type { CalendarEvent } from './taskViews'
@@ -75,6 +76,31 @@ export function eventCalendarEntries(
     editable: canMove(event),
     classNames: ['task-event', 'calendar-meeting', ...(isPast(event) ? ['task-event-closed'] : [])],
     extendedProps: { event },
+  }))
+}
+
+/**
+ * Read-only entries of the external calendars a user chose to display
+ * (SPEC §12): grey background with the calendar's colour as a left bar,
+ * never draggable, never opening a panel.
+ */
+export interface ExternalCalendarEntry extends Omit<CalendarEvent, 'extendedProps'> {
+  extendedProps: { external: ExternalEvent }
+}
+
+export function externalCalendarEntries(events: ExternalEvent[]): ExternalCalendarEntry[] {
+  return events.map((event) => ({
+    id: `external-${event.id}`,
+    title: event.title || '(sans titre)',
+    start: event.all_day ? dateKey(event.start, true) : event.start,
+    end: event.all_day ? shiftDateKey(dateKey(event.end, true), 1) : event.end,
+    allDay: event.all_day,
+    backgroundColor: 'transparent',
+    borderColor: event.calendar_color || '#a8a29e',
+    textColor: 'inherit',
+    editable: false,
+    classNames: ['task-event', 'calendar-external'],
+    extendedProps: { external: event },
   }))
 }
 

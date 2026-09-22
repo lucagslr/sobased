@@ -13,7 +13,7 @@ from __future__ import annotations
 from apps.projects.access import Role, effective_access, member_user_ids
 from apps.projects.models import Project
 
-from . import google
+from . import google, microsoft
 from .google import DriveClient, GoogleError
 from .models import DriveLink, OAuthAccount, Provider
 
@@ -180,6 +180,7 @@ def attach_picked_file(project: Project, file_id: str, actor, task=None) -> Driv
 def integration_state(user) -> dict:
     """What the front needs to show the Intégrations settings."""
     account = google_account(user)
+    ms = OAuthAccount.objects.filter(user=user, provider=Provider.MICROSOFT).first()
     return {
         "google": {
             "enabled": google.enabled(),
@@ -192,10 +193,11 @@ def integration_state(user) -> dict:
             ),
         },
         "microsoft": {
-            "enabled": False,  # phase 11
-            "connected": False,
-            "email": "",
-            "features": [],
-            "status": "",
+            "enabled": microsoft.enabled(),
+            "connected": ms is not None,
+            "email": ms.account_email if ms else "",
+            "features": ["calendar"] if ms else [],
+            "status": ms.status if ms else "",
+            "picker": False,
         },
     }

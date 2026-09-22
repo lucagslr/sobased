@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
  * Global calendar (SPEC §15, page 4): month, week, day, agenda.
- * Tasks and events (RDV) of the selected workspace, or of all of them;
- * external calendars join in phase 11, in the same TaskCalendarView.
+ * Tasks and events (RDV) of the selected workspace, or of all of them, plus
+ * the user's displayed external calendars (read-only, SPEC §12).
  *
  * Only the period on screen is loaded (`window_start` / `window_end`): a
  * calendar shows EVERY occurrence of recurring tasks, which adds up quickly.
@@ -11,6 +11,7 @@ import { computed, ref, watch } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { type Event, eventsApi } from '@/api/events'
+import { type ExternalEvent, integrationsApi } from '@/api/integrations'
 import { type Task, tasksApi } from '@/api/tasks'
 import EventPanel from '@/components/events/EventPanel.vue'
 import WorkspaceSwitcher from '@/components/layout/WorkspaceSwitcher.vue'
@@ -36,6 +37,7 @@ const { eventId, openEvent, closeEvent } = useEventPanel()
 
 const tasks = ref<Task[]>([])
 const events = ref<Event[]>([])
+const externalEvents = ref<ExternalEvent[]>([])
 const taskFromEvent = ref<Event | null>(null)
 const period = ref<{ start: Date; end: Date } | null>(null)
 const onlyMine = ref(readOnlyMine())
@@ -69,12 +71,14 @@ async function load() {
   }
   try {
     // "Only mine": tasks assigned to me, events I take part in.
-    ;[tasks.value, events.value] = await Promise.all([
+    ;[tasks.value, events.value, externalEvents.value] = await Promise.all([
       tasksApi.listAll({ ...window, assignee: onlyMine.value ? 'me' : undefined }, request.signal),
       eventsApi.listAll(
         { ...window, participant: onlyMine.value ? 'me' : undefined },
         request.signal,
       ),
+      // My external calendars (displayed ones only): never filtered by workspace.
+      integrationsApi.externalEvents(window.window_start, window.window_end, request.signal),
     ])
   } catch (error) {
     if ((error as Error).name === 'AbortError') return // replaced by a newer request
@@ -136,6 +140,7 @@ const eventPanelOpen = computed({
   <TaskCalendarView
     :tasks="tasks"
     :events="events"
+    :external-events="externalEvents"
     :can-move="canReschedule"
     :can-move-event="canReschedule"
     @open="openTask($event.id)"

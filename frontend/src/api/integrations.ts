@@ -10,6 +10,9 @@ export type ProviderState = Schemas['ProviderState']
 export type PickerConfig = Schemas['PickerConfig']
 export type DriveLink = Schemas['DriveLink']
 export type DriveStatus = Schemas['DriveStatusEnum']
+export type ExternalCalendar = Schemas['ExternalCalendar']
+export type ExternalEvent = Schemas['ExternalEvent']
+export type SyncConflict = Schemas['SyncConflict']
 
 export const integrationsApi = {
   state: () => api<IntegrationsState>('/api/integrations/'),
@@ -20,6 +23,23 @@ export const integrationsApi = {
     ).then((data) => data.url),
   googleDisconnect: () => api('/api/integrations/google/', { method: 'DELETE' }),
   pickerConfig: () => api<PickerConfig>('/api/integrations/google/picker-config/'),
+  microsoftConnectUrl: () =>
+    api<Schemas['ConnectUrl']>('/api/integrations/microsoft/connect/').then((data) => data.url),
+  microsoftDisconnect: () => api('/api/integrations/microsoft/', { method: 'DELETE' }),
+
+  /** Calendars (SPEC §12). */
+  calendars: () => api<ExternalCalendar[]>('/api/integrations/calendars/'),
+  refreshCalendars: () =>
+    api<ExternalCalendar[]>('/api/integrations/calendars/refresh/', { method: 'POST' }),
+  updateCalendar: (id: number, body: { is_displayed?: boolean; is_target?: boolean }) =>
+    api<ExternalCalendar>(`/api/integrations/calendars/${id}/`, { method: 'PATCH', body }),
+  syncNow: () => api('/api/integrations/sync-now/', { method: 'POST' }),
+  syncConflicts: () => api<SyncConflict[]>('/api/integrations/sync-conflicts/'),
+  externalEvents: (start: string, end: string, signal?: AbortSignal) =>
+    api<ExternalEvent[]>(
+      `/api/integrations/external-events/?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,
+      { signal },
+    ),
 
   driveLinks: (filters: { project?: number; task?: number }) => {
     const params = new URLSearchParams()
