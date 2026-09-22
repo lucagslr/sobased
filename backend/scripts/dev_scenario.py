@@ -175,3 +175,80 @@ task(
     due_at=noon + timedelta(days=1, hours=1),
 )
 print("TASKS", Task.objects.count())
+
+# --- Phase 6: contacts and events (RDV) ----------------------------------------
+from apps.contacts.models import Contact, ProjectContact  # noqa: E402
+from apps.events.models import Event  # noqa: E402
+
+
+def contact(workspace, last_name, **fields):
+    return Contact.objects.create(
+        workspace=workspace, last_name=last_name, created_by=demo, **fields
+    )
+
+
+realisateur = contact(
+    asso,
+    "Morel",
+    first_name="Sam",
+    job="Realisateur",
+    email="sam@example.org",
+    phone="+41 79 000 00 00",
+    instagram="sam.cuts",
+)
+booker = contact(
+    asso, "Duarte", first_name="Ana", job="Programmatrice", organization="L'Usine"
+)
+contact(
+    asso,
+    "",
+    organization="Studio Les Forges",
+    job="Studio",
+    website="https://example.org",
+)
+contact(heg, "Muller", first_name="Prof", job="Enseignant", email="prof@example.org")
+ProjectContact.objects.create(
+    project=clip, contact=realisateur, role_label="Realisateur du clip"
+)
+ProjectContact.objects.create(project=shorty, contact=booker, role_label="Booking")
+
+
+def event(project_, title, start_offset, hour=None, days=0, **fields):
+    if hour is None:
+        start = all_day(start_offset)
+        end = all_day(start_offset + days)
+        fields.setdefault("all_day", True)
+    else:
+        start = noon.replace(hour=hour) + timedelta(days=start_offset)
+        end = start + timedelta(hours=1)
+    created = Event.objects.create(
+        project=project_, title=title, start=start, end=end, created_by=demo, **fields
+    )
+    created.participants.add(demo)
+    return created
+
+
+brief = event(
+    clip,
+    "Brief avec le realisateur",
+    -2,
+    hour=10,
+    location="Studio Les Forges",
+    report="Brief fait. Tournage confirme sur deux jours.",
+    decisions=["Deux jours de tournage", "Budget figurants : 400 CHF"],
+)
+brief.contacts.add(realisateur)
+brief.participants.add(helder)
+tournage_event = event(
+    clip, "Tournage", 4, days=2, type="shooting", location="Vieille ville"
+)
+tournage_event.contacts.add(realisateur)
+event(album, "Ecoute du master", 1, hour=15, location="Studio")
+event(shorty, "Date live L'Usine", 21, type="live", location="L'Usine").contacts.add(
+    booker
+)
+event(ecole, "Examen BPMN", 12, hour=8, type="exam", location="HEG, salle 3")
+event(album, "Release party", 45, type="release_party")
+montage.source_event = brief
+montage.save(update_fields=["source_event"])
+print("EVENTS", Event.objects.count(), "CONTACTS", Contact.objects.count())

@@ -23,6 +23,7 @@ from apps.core.localtime import (
     local_today,
     user_zone,
 )
+from apps.events.models import Event
 from apps.projects.access import get_access_map
 from apps.projects.models import Project
 from apps.tasks.models import ChecklistItem, Task
@@ -30,6 +31,8 @@ from apps.tasks.models import ChecklistItem, Task
 # A widget is a glance, not a report: it lists the first items and the total.
 WIDGET_LIMIT = 50
 MILESTONE_LIMIT = 8
+# "RDV à venir" looks two weeks ahead: far enough to prepare a meeting.
+MEETINGS_DAYS = 14
 
 
 @dataclass
@@ -83,7 +86,7 @@ def _tasks(request, scope: Scope, *, mine: bool | None = None):
         queryset = queryset.filter(assignees=request.user)
     return (
         queryset.distinct()
-        .select_related("project", "series")
+        .select_related("project", "series", "source_event")
         .prefetch_related("assignees", "tags", "checklist", "blocked_by__project")
         .annotate(comments_total=Count("comments", distinct=True))
     )
@@ -155,6 +158,37 @@ def pinned_items(request, scope: Scope):
     )
 
 
+def upcoming_events(request, scope: Scope, days: int = MEETINGS_DAYS):
+    """Events that are not over yet and start within `days` ("RDV à venir").
+
+    "Only mine" keeps the events I take part in.
+    """
+    last_day = scope.today + timedelta(days=days)
+    _, window_end = local_day_bounds(request.user, last_day)
+    queryset = (
+        Event.objects.for_user(request)
+        .filter(project_id__in=scope.project_ids)
+        .filter(
+            Q(
+                all_day=True,
+                end__gte=all_day_moment(scope.today),
+                start__lte=all_day_moment(last_day),
+            )
+            | Q(all_day=False, end__gte=timezone.now(), start__lt=window_end)
+        )
+    )
+    if scope.tag_ids:
+        queryset = queryset.filter(tags__in=scope.tag_ids)
+    if scope.only_mine:
+        queryset = queryset.filter(participants=request.user)
+    return (
+        queryset.distinct()
+        .select_related("project", "series")
+        .prefetch_related("participants", "contacts", "tags", "tasks")
+        .order_by("start", "id")
+    )
+
+
 def to_validate_items(request, scope: Scope) -> list[dict]:
     """Everything waiting for a validation: tasks and projects "À valider".
 
@@ -194,8 +228,8 @@ def to_validate_items(request, scope: Scope) -> list[dict]:
 
 
 def milestones(request, scope: Scope, root_project_id: int) -> list[dict]:
-    """The next dated things of a project: task deadlines, and the start and
-    end dates of its sub-projects. Shown in the project overview."""
+    """The next dated things of a project: task deadlines, events, and the
+    start and end dates of its sub-projects. Shown in the project overview."""
     zone = user_zone(request.user)
     upcoming = (
         _tasks(request, scope, mine=False)
@@ -216,6 +250,21 @@ def milestones(request, scope: Scope, root_project_id: int) -> list[dict]:
             "color": task.project.color,
         }
         for task in upcoming
+    ]
+    found += [
+        {
+            "kind": "event",
+            "id": event.pk,
+            "date": (
+                event.start.date()
+                if event.all_day
+                else event.start.astimezone(zone).date()
+            ),
+            "title": event.title,
+            "project": event.project_id,
+            "color": event.project.color,
+        }
+        for event in upcoming_events(request, scope, days=365)[:MILESTONE_LIMIT]
     ]
     children = (
         Project.objects.for_user(request)

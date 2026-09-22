@@ -14,6 +14,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.events.serializers import EventSerializer
 from apps.projects.access import Role, effective_access, get_access_map
 from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
@@ -89,6 +90,7 @@ class DashboardSummaryView(APIView):
         context = _task_context(request, scope)
         pinned = services.pinned_items(request, scope)
         to_validate = services.to_validate_items(request, scope)
+        meetings = services.upcoming_events(request, scope)
         # Features of later phases: the front hides a widget that is not
         # available, and existing layouts already have a slot for it.
         pending = {"available": False, "count": 0}
@@ -117,7 +119,15 @@ class DashboardSummaryView(APIView):
                         "count": len(to_validate),
                         "items": to_validate,
                     },
-                    "meetings": pending,
+                    "meetings": {
+                        "available": True,
+                        "count": meetings.count(),
+                        "items": EventSerializer(
+                            meetings[: services.WIDGET_LIMIT],
+                            many=True,
+                            context=context,
+                        ).data,
+                    },
                     "expenses_to_pay": pending,
                     "missing_receipts": pending,
                 },

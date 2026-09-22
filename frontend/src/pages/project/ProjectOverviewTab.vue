@@ -5,7 +5,7 @@
  * Passé / En cours / À venir. Everything covers the project AND its
  * sub-projects. The budget block joins in phase 7.
  */
-import { CircleCheckBig, Flag, FlagOff } from 'lucide-vue-next'
+import { CalendarClock, CircleCheckBig, Flag, FlagOff } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -14,10 +14,12 @@ import { dashboardApi, type Milestone, type ProjectOverview } from '@/api/dashbo
 import type { Project, Temporal } from '@/api/projects'
 import { type Task, tasksApi } from '@/api/tasks'
 import StatusBadge from '@/components/projects/StatusBadge.vue'
+import EventPanel from '@/components/events/EventPanel.vue'
 import TaskPanel from '@/components/tasks/TaskPanel.vue'
 import TaskRow from '@/components/tasks/TaskRow.vue'
 import ColorDot from '@/components/ui/ColorDot.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
+import { useEventPanel } from '@/composables/useEventPanel'
 import { useTaskPanel } from '@/composables/useTaskPanel'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
@@ -30,6 +32,7 @@ const projects = useProjectsStore()
 const auth = useAuthStore()
 const ui = useUiStore()
 const { taskId, openTask, closeTask } = useTaskPanel()
+const { eventId, openEvent, closeEvent } = useEventPanel()
 
 const overview = ref<ProjectOverview | null>(null)
 
@@ -46,11 +49,24 @@ const byTemporal = computed(() =>
   ),
 )
 
-const MILESTONE_ICONS = { task: CircleCheckBig, project_start: Flag, project_end: FlagOff }
-const MILESTONE_LABELS = { task: 'Échéance', project_start: 'Début', project_end: 'Fin' }
+const MILESTONE_ICONS = {
+  task: CircleCheckBig,
+  event: CalendarClock,
+  project_start: Flag,
+  project_end: FlagOff,
+}
+const MILESTONE_LABELS = {
+  task: 'Échéance',
+  event: 'RDV',
+  project_start: 'Début',
+  project_end: 'Fin',
+}
+// Tasks and events open their panel; project dates lead to the project.
+const opensPanel = (kind: Milestone['kind']) => kind === 'task' || kind === 'event'
 
 function openMilestone(milestone: Milestone) {
   if (milestone.kind === 'task') openTask(milestone.id)
+  else if (milestone.kind === 'event') openEvent(milestone.id)
 }
 
 function canComplete(task: Task): boolean {
@@ -72,6 +88,10 @@ async function toggleDone(task: Task) {
 const panelOpen = computed({
   get: () => taskId.value !== null,
   set: (value) => !value && closeTask(),
+})
+const eventPanelOpen = computed({
+  get: () => eventId.value !== null,
+  set: (value) => !value && closeEvent(),
 })
 </script>
 
@@ -134,9 +154,9 @@ const panelOpen = computed({
         <ul v-if="overview.milestones.length" class="space-y-2.5">
           <li v-for="milestone in overview.milestones" :key="`${milestone.kind}-${milestone.id}`">
             <component
-              :is="milestone.kind === 'task' ? 'button' : RouterLink"
-              :type="milestone.kind === 'task' ? 'button' : undefined"
-              :to="milestone.kind === 'task' ? undefined : `/projets/${milestone.project}`"
+              :is="opensPanel(milestone.kind) ? 'button' : RouterLink"
+              :type="opensPanel(milestone.kind) ? 'button' : undefined"
+              :to="opensPanel(milestone.kind) ? undefined : `/projets/${milestone.project}`"
               class="flex w-full items-start gap-2.5 text-left"
               @click="openMilestone(milestone)"
             >
@@ -196,5 +216,11 @@ const panelOpen = computed({
     </section>
   </div>
 
-  <TaskPanel v-model:open="panelOpen" :task-id="taskId" @changed="load" />
+  <TaskPanel v-model:open="panelOpen" :task-id="taskId" @changed="load" @open-event="openEvent" />
+  <EventPanel
+    v-model:open="eventPanelOpen"
+    :event-id="eventId"
+    @changed="load"
+    @open-task="openTask"
+  />
 </template>

@@ -248,11 +248,11 @@ erDiagram
     EVENT_SERIES {
         bigint id PK
         bigint project_id FK
-        text rrule
+        text rrule "la fin (UNTIL) vit dedans"
         datetime dtstart
         string timezone
-        date until
-        date generated_until
+        bool all_day
+        datetime generated_until
         json template
     }
     EVENT {
@@ -261,14 +261,14 @@ erDiagram
         enum type "meeting, live, shooting, release, release_party, class, exam, other"
         string title
         datetime start
-        datetime end
+        datetime end "CHECK end >= start ; inclusive en journée entière"
         bool all_day
         string location
         text prep_notes "notes de RDV, avant"
         text report "compte rendu, après"
         json decisions "liste de chaînes"
         bigint series_id FK
-        date occurrence_date
+        datetime occurrence_at
         bool is_exception
         bigint created_by_id FK
     }
@@ -287,8 +287,10 @@ erDiagram
 ```
 
 - `task_blocked_by` : M2M asymétrique. Validation à l'écriture : les deux tâches partagent le même projet racine, et l'ajout ne crée pas de cycle (parcours en profondeur du graphe des bloqueurs).
-- Unicité `(series, occurrence_at)` pour rendre la matérialisation idempotente. La fin d'une série vit dans son RRULE (`UNTIL`), pas dans une colonne. `source_event_id` sera ajouté avec l'app `events` (phase 6).
+- Unicité `(series, occurrence_at)` pour rendre la matérialisation idempotente, pour les tâches comme pour les événements. La fin d'une série vit dans son RRULE (`UNTIL`), pas dans une colonne.
+- `task.source_event_id` (phase 6) : posé à la création de la tâche, jamais modifié, `SET_NULL` si le RDV est supprimé. Référence par chaîne `"events.Event"` : `apps.events` importe `apps.tasks`, pas l'inverse.
 - La couleur d'un événement n'est pas stockée : elle est héritée du projet à la lecture.
+- Une occurrence d'événement qui porte un compte rendu ou des décisions n'est jamais supprimée par une scission de série (`apps/events/services.py`).
 
 ## 4. Contacts
 
@@ -306,7 +308,7 @@ erDiagram
         string instagram
         string website
         text notes
-        bigint created_by_id FK
+        bigint created_by_id FK "SET_NULL ; le créateur peut modifier"
     }
     PROJECT_CONTACT {
         bigint id PK
@@ -319,7 +321,7 @@ erDiagram
     CONTACT }o--o{ TAG : "contact_tags"
 ```
 
-Unique `(project, contact)`.
+Unique `(project, contact)`. Index `(workspace, last_name, first_name)`. Visibilité : membre de l'espace = tout le carnet ; invité d'un projet = contacts liés à ses projets (`ContactQuerySet.for_user`).
 
 ## 5. Fichiers, versions, partage
 
@@ -615,7 +617,7 @@ erDiagram
 
 | Table | Index | Usage |
 |---|---|---|
-| `task` | `(project, status)`, `(due_at)`, `(series, occurrence_date)` unique | listes, retard, matérialisation |
+| `task` | `(project, status)`, `(due_at)`, `(series, occurrence_at)` unique | listes, retard, matérialisation |
 | `task_assignees` | `(user)` | Mes tâches, dashboard |
 | `event` | `(project, start)`, `(start)` | calendrier |
 | `project` | `(workspace, parent)`, `(end_date)` | arbre, modale de fin dépassée |

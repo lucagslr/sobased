@@ -110,6 +110,16 @@ class Task(TimeStampedModel):
     # Edited on its own ("cette occurrence"): later series edits skip it.
     is_exception = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
+    # "Créer une tâche depuis ce RDV" (SPEC §8): the task keeps the link, the
+    # meeting lists the tasks it produced. A string reference: apps.events
+    # imports this app, not the other way round.
+    source_event = models.ForeignKey(
+        "events.Event",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tasks",
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
     )

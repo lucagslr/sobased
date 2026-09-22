@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 5 terminées. Prochaine étape : phase 6 (événements et RDV avec récurrence, participants, notes et compte rendu ; contacts ; widget « RDV à venir » ; onglets Calendrier et RDV du projet).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 6 terminées. Prochaine étape : phase 7 (compta complète : catégories, transactions, budget avec cumuls, avances de frais, justificatifs, frais récurrents, exports Excel et PDF ; widgets « Frais à payer » et « Justificatifs manquants » ; budget dans l'aperçu et les cartes).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -16,7 +16,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ✅ terminé · [doc](docs/phases/phase-03-taches.md) |
 | 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ✅ terminé · [doc](docs/phases/phase-04-dashboards.md) |
 | 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ✅ terminé · [doc](docs/phases/phase-05-vues-et-navigation.md) |
-| 6 | Événements et RDV, contacts | ⏳ |
+| 6 | Événements et RDV, contacts | ✅ terminé · [doc](docs/phases/phase-06-evenements-rdv-contacts.md) |
 | 7 | Compta complète et exports | ⏳ |
 | 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ⏳ |
 | 9 | Liens protégés, filigranes, streaming, journal d'accès | ⏳ |
@@ -144,6 +144,19 @@ Détail dans `docs/phases/phase-05-vues-et-navigation.md`. Kanban, calendrier (F
 - Le statut par défaut d'un projet est « Planifié » : sans date de début il est classé **À venir**. Les tests qui veulent un arbre « en cours » doivent le dire.
 - Thème dans le navigateur de test : `resize_window` avec `colorScheme`, pas `localStorage` (le thème « système » du profil l'emporte).
 
+## Phase 6 : ce qui a été produit
+
+Détail dans `docs/phases/phase-06-evenements-rdv-contacts.md`. Apps `contacts` et `events` (récurrence sur le moteur partagé, protection des occurrences qui ont un compte rendu), `Task.source_event`, widget « RDV à venir », RDV dans les jalons ; front : panneau RDV piloté par `?rdv=`, onglets RDV / Calendrier / Contacts du projet, RDV dans les calendriers, page Contacts. 1'042 tests backend, 77 tests front. Migrations : `contacts.0001`, `events.0001`, `tasks.0002`.
+
+À retenir pour la suite :
+
+- **Un seul panneau à la fois** : `openTask()` retire `?rdv=` et `openEvent()` retire `?tache=` dans la même navigation. Un futur panneau piloté par l'URL (fichiers, phase 8) doit faire pareil, sinon deux panneaux s'ouvrent l'un sur l'autre (constaté, corrigé).
+- `TaskCalendarView.vue` accepte `tasks` **et** `events` ; les calendriers externes (phase 11) s'y ajoutent comme une troisième source, avec un id préfixé (`event-42`, `external-…`) pour ne jamais entrer en collision.
+- Modèle rattaché à un espace avec règle de visibilité propre (contacts) : `WorkspaceScopedViewSet` + un `for_user()` maison dans `get_queryset`, et surcharge de `check_object_permissions` en sautant celle du mixin (`super(WorkspaceScopedViewSet, self)`). Documenté dans `apps/contacts/views.py`.
+- Dépendance entre apps : `apps.events` importe `apps.tasks` (sérialiseurs) ; la clé `Task.source_event` est donc déclarée par chaîne `"events.Event"`. Ne pas importer `apps.events` depuis `apps/tasks/models.py`.
+- Les scripts ponctuels de patch (scratchpad) : `text.count(old) != 1` → arrêt. Ça a évité un double patch cette phase. Toujours des remplacements exacts, jamais de regex sur du `.vue`.
+- Le résumé quotidien (phase 12) trouvera « RDV du jour » dans `apps/dashboard/services.upcoming_events` (paramètre `days`).
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -164,6 +177,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 6 : pas de notification à l'invitation à un RDV (résumé quotidien en phase 12, synchro calendrier en phase 11) ; pas d'import / export du carnet ; le glisser d'un RDV dans le calendrier vérifié par événements synthétiques seulement.
 - Phase 5 : **le Gantt ne se manipule pas au doigt** (frappe-gantt n'écoute que la souris ; sur téléphone on ouvre la tâche pour changer ses dates) ; Gantt en lecture seule « en bloc » (un glisser refusé par le serveur est annulé) ; dans un kanban qui inclut les sous-projets, l'ordre n'est exact qu'à l'intérieur d'un même projet ; le calendrier global ne crée pas de tâche ; pas de glisser-déposer dans l'arbre des projets (liste de destinations à la place) ; glisser du kanban, du calendrier et du Gantt vérifiés par événements synthétiques : **à essayer une fois à la main**.
 - Phase 4 : le glisser-déposer des widgets n'a été vérifié qu'avec des événements pointeur synthétiques (ordre changé, enregistré, « En retard » resté premier) : **à essayer une fois à la souris et au doigt par Luca** ; pas de réordonnancement des onglets de vues ; le dashboard ne se rafraîchit pas tout seul (rechargé à l'ouverture et après chaque action) ; trois widgets attendent les phases 6 et 7.
 - Phase 3 : heures saisies dans le fuseau du navigateur (pas celui du profil) ; checklist non réordonnable à la souris ; une règle avec `COUNT` repart de zéro après une scission ; une tâche quotidienne ignorée laisse une tâche en retard par jour (conséquence voulue de « jamais de report automatique »).

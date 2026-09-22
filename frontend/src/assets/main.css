@@ -161,6 +161,19 @@
   text-decoration: line-through;
 }
 
+/* A meeting (event) next to tasks: same project colour, a dot before the title. */
+.task-calendar .fc .calendar-meeting .fc-event-title::before,
+.task-calendar .fc .calendar-meeting .fc-list-event-title a::before {
+  content: '●';
+  margin-right: 0.3em;
+  font-size: 0.6em;
+  vertical-align: 0.15em;
+}
+
+.task-calendar .fc .calendar-meeting.task-event-closed {
+  text-decoration: none;
+}
+
 .task-calendar .fc .fc-list-event {
   cursor: pointer;
 }

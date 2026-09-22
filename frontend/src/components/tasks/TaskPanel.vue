@@ -9,7 +9,7 @@
  * - the assignee with the Commenter role: the status and ticking the checklist;
  * - commenter: comments; viewer: nothing.
  */
-import { Repeat, Trash2 } from 'lucide-vue-next'
+import { CalendarClock, Repeat, Trash2 } from 'lucide-vue-next'
 import { computed, reactive, ref, watch } from 'vue'
 
 import type { PublicUser } from '@/api/auth'
@@ -43,6 +43,7 @@ import { atLeast } from '@/utils/roles'
 import {
   buildRrule,
   describeRrule,
+  formatTaskDate,
   fromIso,
   NO_RECURRENCE,
   parseRrule,
@@ -65,8 +66,10 @@ const props = defineProps<{
   createIn?: number | null
   /** Creation from a calendar: the day that was clicked (YYYY-MM-DD). */
   createDue?: string | null
+  /** "Créer une tâche depuis ce RDV": the meeting the new task comes from. */
+  createFromEvent?: { id: number; title: string } | null
 }>()
-const emit = defineEmits<{ changed: []; created: [task: Task] }>()
+const emit = defineEmits<{ changed: []; created: [task: Task]; openEvent: [id: number] }>()
 const open = defineModel<boolean>('open', { required: true })
 
 const auth = useAuthStore()
@@ -213,6 +216,7 @@ async function save(scope: RecurrenceScope) {
           ...payload(),
           project: props.createIn!,
           title: form.title.trim(),
+          ...(props.createFromEvent ? { source_event: props.createFromEvent.id } : {}),
         })
   })
   if (!ok || !saved) return
@@ -279,6 +283,28 @@ function onScopeChosen(scope: RecurrenceScope) {
         >
           Cette tâche est encore bloquée par une autre. Tu peux quand même l'avancer.
         </div>
+
+        <!-- Where the task comes from (SPEC §8): a meeting. -->
+        <button
+          v-if="task?.source_event_detail"
+          type="button"
+          class="flex w-full items-center gap-2 rounded-lg bg-surface-2 px-3 py-2 text-left text-sm hover:bg-line/60"
+          @click="emit('openEvent', task.source_event_detail.id)"
+        >
+          <CalendarClock class="size-4 shrink-0 text-muted" aria-hidden="true" />
+          <span class="min-w-0 flex-1 truncate">
+            Issue du RDV du
+            {{ formatTaskDate(task.source_event_detail.start, task.source_event_detail.all_day) }}
+            · {{ task.source_event_detail.title }}
+          </span>
+        </button>
+        <p
+          v-else-if="!task && createFromEvent"
+          class="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted"
+        >
+          <CalendarClock class="size-4 shrink-0" aria-hidden="true" />
+          <span class="min-w-0 truncate">Issue du RDV « {{ createFromEvent.title }} »</span>
+        </p>
 
         <BaseInput
           v-model="form.title"

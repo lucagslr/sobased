@@ -66,8 +66,9 @@ def test_response_matches_its_documented_shape(api):
 def test_widgets_of_later_phases_are_flagged_unavailable(api):
     widgets = summary(api)
 
-    for key in ("meetings", "expenses_to_pay", "missing_receipts"):
+    for key in ("expenses_to_pay", "missing_receipts"):  # phase 7
         assert widgets[key] == {"available": False, "count": 0}
+    assert widgets["meetings"] == {"available": True, "count": 0, "items": []}
 
 
 # --- Widgets ------------------------------------------------------------------------

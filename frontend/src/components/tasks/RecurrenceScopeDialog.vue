@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * Editing or deleting one occurrence of a recurring task: only this one, or
- * this one and all the following? (Past and finished ones are never touched.)
+ * Editing or deleting one occurrence of a recurring task or event: only this
+ * one, or this one and all the following? (Past and finished ones are never
+ * touched.)
  */
 import {
   DialogContent,
@@ -15,7 +16,9 @@ import {
 import type { RecurrenceScope } from '@/api/tasks'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
-defineProps<{ action: 'save' | 'delete'; followingOnly?: boolean }>()
+withDefaults(defineProps<{ action: 'save' | 'delete'; followingOnly?: boolean; noun?: string }>(), {
+  noun: 'Tâche récurrente',
+})
 const emit = defineEmits<{ choose: [scope: RecurrenceScope] }>()
 const open = defineModel<boolean>('open', { required: true })
 </script>
@@ -27,7 +30,7 @@ const open = defineModel<boolean>('open', { required: true })
       <DialogContent
         class="fixed top-1/2 left-1/2 z-[60] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-line bg-surface p-6 shadow-2xl outline-none"
       >
-        <DialogTitle class="text-lg font-semibold">Tâche récurrente</DialogTitle>
+        <DialogTitle class="text-lg font-semibold">{{ noun }}</DialogTitle>
         <DialogDescription class="mt-2 text-sm text-muted">
           {{ action === 'save' ? 'Appliquer la modification à :' : 'Supprimer :' }}
         </DialogDescription>

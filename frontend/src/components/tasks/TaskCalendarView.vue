@@ -1,13 +1,13 @@
 <script setup lang="ts">
 /**
- * Tasks on a calendar (FullCalendar): month, week, day and agenda.
- * Used by the "Calendrier" view of a project and by the global calendar page;
- * events and external calendars join the same component in phases 6 and 11.
+ * Tasks and events (meetings) on a calendar (FullCalendar): month, week, day
+ * and agenda. Used by the "Calendrier" view of a project and by the global
+ * calendar page; external calendars join the same component in phase 11.
  *
  * The parent owns the data: this component tells it which period is on screen
- * (`range`), and reports what the user did (`open`, `create`, `changed`).
- * Dragging or stretching an event changes the task dates (editors only);
- * on a recurring task that means "this occurrence".
+ * (`range`), and reports what the user did (`open`, `openEvent`, `create`,
+ * `changed`). Dragging or stretching an entry changes the dates (editors
+ * only); on a recurring task or event that means "this occurrence".
  *
  * Titles are rendered by FullCalendar as text, never as HTML.
  */
@@ -24,18 +24,29 @@ import FullCalendar from '@fullcalendar/vue3'
 import { computed } from 'vue'
 
 import { ApiError } from '@/api/client'
+import { type Event, eventsApi } from '@/api/events'
 import { type Task, tasksApi } from '@/api/tasks'
 import { useUiStore } from '@/stores/ui'
+import {
+  datesAfterCalendarChange as eventDatesAfterChange,
+  eventCalendarEntries,
+} from '@/utils/events'
 import { calendarEvents, datesAfterCalendarChange } from '@/utils/taskViews'
 
-const props = defineProps<{
-  tasks: Task[]
-  canMove: (task: Task) => boolean
-  /** Clicking an empty day proposes a new task due that day. */
-  canCreate?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    tasks: Task[]
+    events?: Event[]
+    canMove: (task: Task) => boolean
+    canMoveEvent?: (event: Event) => boolean
+    /** Clicking an empty day proposes a new task due that day. */
+    canCreate?: boolean
+  }>(),
+  { events: () => [], canMoveEvent: () => false },
+)
 const emit = defineEmits<{
   open: [task: Task]
+  openEvent: [event: Event]
   create: [dateKey: string]
   changed: []
   range: [start: Date, end: Date]
@@ -47,19 +58,26 @@ const ui = useUiStore()
 const narrow = window.matchMedia('(max-width: 639px)').matches
 
 async function onMoved(info: EventDropArg | EventResizeDoneArg) {
-  const task = info.event.extendedProps.task as Task
-  const dates = datesAfterCalendarChange(task, {
-    allDay: info.event.allDay,
-    start: info.event.start!,
-    end: info.event.end,
-  })
+  const change = { allDay: info.event.allDay, start: info.event.start!, end: info.event.end }
+  const meeting = info.event.extendedProps.event as Event | undefined
   try {
-    await tasksApi.update(task.id, dates)
+    if (meeting) {
+      await eventsApi.update(meeting.id, eventDatesAfterChange(change))
+    } else {
+      const task = info.event.extendedProps.task as Task
+      await tasksApi.update(task.id, datesAfterCalendarChange(task, change))
+    }
     emit('changed')
   } catch (error) {
     info.revert()
     ui.toast(error instanceof ApiError ? error.message : "La date n'a pas été changée.", 'error')
   }
+}
+
+function onClick(info: EventClickArg) {
+  const meeting = info.event.extendedProps.event as Event | undefined
+  if (meeting) emit('openEvent', meeting)
+  else emit('open', info.event.extendedProps.task as Task)
 }
 
 // Built once: only `events` changes afterwards, so FullCalendar never resets
@@ -87,7 +105,7 @@ const base: CalendarOptions = {
   editable: true,
   eventDurationEditable: true,
   longPressDelay: 400,
-  eventClick: (info: EventClickArg) => emit('open', info.event.extendedProps.task as Task),
+  eventClick: onClick,
   eventDrop: onMoved,
   eventResize: onMoved,
   dateClick: (info: DateClickArg) => {
@@ -98,7 +116,10 @@ const base: CalendarOptions = {
 
 const options = computed<CalendarOptions>(() => ({
   ...base,
-  events: calendarEvents(props.tasks, props.canMove),
+  events: [
+    ...calendarEvents(props.tasks, props.canMove),
+    ...eventCalendarEntries(props.events, props.canMoveEvent),
+  ],
 }))
 </script>
 

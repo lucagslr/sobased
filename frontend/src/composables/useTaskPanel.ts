@@ -1,9 +1,12 @@
 /**
  * The task panel is driven by the URL (?tache=42), so a task can be linked
  * (e-mails point to it), survives a reload, and the Back button closes it.
+ *
+ * One panel at a time (SPEC §15: no stacked modals): opening a task closes
+ * the event panel (?rdv=) in the same navigation, and vice versa.
  */
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
 
 export function useTaskPanel() {
   const route = useRoute()
@@ -15,7 +18,9 @@ export function useTaskPanel() {
   })
 
   function openTask(id: number) {
-    router.push({ query: { ...route.query, tache: String(id) } })
+    const query: LocationQueryRaw = { ...route.query, tache: String(id) }
+    delete query.rdv
+    router.push({ query })
   }
 
   function closeTask() {

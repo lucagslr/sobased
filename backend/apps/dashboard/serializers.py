@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from apps.events.serializers import EventSerializer
 from apps.projects import tree
 from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
@@ -90,6 +91,12 @@ class ValidateWidgetSerializer(serializers.Serializer):
     items = ValidateItemSerializer(many=True)
 
 
+class MeetingsWidgetSerializer(serializers.Serializer):
+    available = serializers.BooleanField()
+    count = serializers.IntegerField()
+    items = EventSerializer(many=True)
+
+
 class PendingWidgetSerializer(serializers.Serializer):
     """A widget whose feature is not built yet: the front hides it."""
 
@@ -103,7 +110,7 @@ class DashboardWidgetsSerializer(serializers.Serializer):
     pinned = PinnedWidgetSerializer()
     next7 = TaskWidgetSerializer()
     to_validate = ValidateWidgetSerializer()
-    meetings = PendingWidgetSerializer()
+    meetings = MeetingsWidgetSerializer()
     expenses_to_pay = PendingWidgetSerializer()
     missing_receipts = PendingWidgetSerializer()
 
@@ -114,7 +121,9 @@ class DashboardSummarySerializer(serializers.Serializer):
 
 
 class MilestoneSerializer(serializers.Serializer):
-    kind = serializers.ChoiceField(choices=["task", "project_start", "project_end"])
+    kind = serializers.ChoiceField(
+        choices=["task", "event", "project_start", "project_end"]
+    )
     id = serializers.IntegerField()
     date = serializers.DateField()
     title = serializers.CharField()

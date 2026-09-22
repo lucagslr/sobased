@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from apps.accounts.serializers import PublicUserSerializer
 from apps.core import recurrence
+from apps.events.models import Event
 from apps.projects.access import member_user_ids
 from apps.projects.models import Project
 from apps.workspaces.models import Tag
@@ -59,6 +60,16 @@ class RecurrenceSerializer(serializers.Serializer):
     is_exception = serializers.BooleanField()
 
 
+class SourceEventSerializer(serializers.Serializer):
+    """The meeting a task comes from: « Issue du RDV du 12.10 »."""
+
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    start = serializers.DateTimeField()
+    all_day = serializers.BooleanField()
+    project = serializers.IntegerField(source="project_id")
+
+
 class TaskSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
     project_name = serializers.CharField(source="project.name", read_only=True)
@@ -82,6 +93,11 @@ class TaskSerializer(serializers.ModelSerializer):
     # Write: an RRULE ("" stops the recurrence). Read: see `recurrence`.
     rrule = serializers.CharField(write_only=True, required=False, allow_blank=True)
     recurrence = serializers.SerializerMethodField()
+    # "Créer une tâche depuis ce RDV": set once, at creation.
+    source_event = serializers.PrimaryKeyRelatedField(
+        queryset=Event.objects.all(), required=False, allow_null=True, write_only=True
+    )
+    source_event_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -109,6 +125,8 @@ class TaskSerializer(serializers.ModelSerializer):
             "comments_count",
             "rrule",
             "recurrence",
+            "source_event",
+            "source_event_detail",
             "completed_at",
             "created_at",
             "updated_at",
@@ -170,6 +188,17 @@ class TaskSerializer(serializers.ModelSerializer):
             "is_exception": task.is_exception,
         }
 
+    @extend_schema_field(SourceEventSerializer(allow_null=True))
+    def get_source_event_detail(self, task) -> dict | None:
+        event = task.source_event
+        # Normally the same project as the task; checked anyway, so that a
+        # meeting of a project I cannot open never shows through a task.
+        if event is None or event.project_id not in set(
+            self.context["access_map"].project_ids()
+        ):
+            return None
+        return SourceEventSerializer(event).data
+
     # --- Validation ------------------------------------------------------------------
     def validate_priority(self, value):
         if not 1 <= value <= 5:
@@ -187,7 +216,15 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if self.instance is not None:
             attrs.pop("project", None)  # a task never changes project
+            attrs.pop("source_event", None)  # nor the meeting it comes from
         project = attrs.get("project") or self.instance.project
+
+        event = attrs.get("source_event")
+        if event is not None and (
+            event.project_id != project.pk
+            or event.project_id not in set(self.context["access_map"].project_ids())
+        ):
+            raise serializers.ValidationError({"source_event": "RDV introuvable."})
 
         start = attrs.get("start_at", getattr(self.instance, "start_at", None))
         due = attrs.get("due_at", getattr(self.instance, "due_at", None))

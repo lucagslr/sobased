@@ -2,7 +2,7 @@
 /**
  * Project page: the SAME component at every level of the tree (SPEC §15).
  * Header (breadcrumb, status, dates, colour, tags) + tabs. Tabs are added as
- * phases deliver them; today: Vue d'ensemble and Paramètres.
+ * phases deliver them: Fichiers (8), Compta (7), Activité (13) still to come.
  * A project seen as a shell gets a minimal page instead.
  */
 import { Pencil, Plus } from 'lucide-vue-next'
@@ -21,6 +21,9 @@ import { useWorkspacesStore } from '@/stores/workspaces'
 import { formatDateRange, MAX_DEPTH } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
+import ProjectCalendarTab from './ProjectCalendarTab.vue'
+import ProjectContactsTab from './ProjectContactsTab.vue'
+import ProjectEventsTab from './ProjectEventsTab.vue'
 import ProjectOverviewTab from './ProjectOverviewTab.vue'
 import ProjectSettingsTab from './ProjectSettingsTab.vue'
 import ProjectTasksTab from './ProjectTasksTab.vue'
@@ -46,6 +49,9 @@ const canEdit = computed(() => atLeast(full.value?.my_role, 'editor'))
 const TABS = [
   { slug: 'apercu', label: "Vue d'ensemble" },
   { slug: 'taches', label: 'Tâches' },
+  { slug: 'calendrier', label: 'Calendrier' },
+  { slug: 'rdv', label: 'RDV' },
+  { slug: 'contacts', label: 'Contacts' },
   { slug: 'parametres', label: 'Paramètres' },
 ]
 const currentTab = computed(() =>
@@ -162,6 +168,9 @@ watch(projectId, load, { immediate: true })
 
     <ProjectOverviewTab v-if="currentTab === 'apercu'" :project="full" />
     <ProjectTasksTab v-else-if="currentTab === 'taches'" :project="full" />
+    <ProjectCalendarTab v-else-if="currentTab === 'calendrier'" :project="full" />
+    <ProjectEventsTab v-else-if="currentTab === 'rdv'" :project="full" />
+    <ProjectContactsTab v-else-if="currentTab === 'contacts'" :project="full" />
     <ProjectSettingsTab
       v-else
       :project="full"

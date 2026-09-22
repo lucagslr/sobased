@@ -71,6 +71,27 @@ export function formatTaskDate(iso: string | null, allDay: boolean): string {
   return allDay ? formatDate(date) : `${formatDate(date)} ${time}`
 }
 
+/**
+ * A period, as short as possible: "12.10.2026", "12.10.2026 → 13.10.2026",
+ * "12.10.2026 14:00 – 15:00" or "12.10.2026 22:00 → 13.10.2026 01:00".
+ * `end` is inclusive for all-day periods (the events convention).
+ */
+export function formatPeriod(start: string, end: string, allDay: boolean): string {
+  const from = fromIso(start, allDay)
+  const to = fromIso(end, allDay)
+  if (allDay) {
+    return from.date === to.date
+      ? formatDate(from.date)
+      : `${formatDate(from.date)} → ${formatDate(to.date)}`
+  }
+  if (from.date === to.date) {
+    return from.time === to.time
+      ? `${formatDate(from.date)} ${from.time}`
+      : `${formatDate(from.date)} ${from.time} – ${to.time}`
+  }
+  return `${formatDate(from.date)} ${from.time} → ${formatDate(to.date)} ${to.time}`
+}
+
 // --- "Mes tâches" groups (SPEC §15) ---------------------------------------------
 
 export type TaskGroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'undated'

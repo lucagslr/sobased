@@ -230,6 +230,68 @@ export interface paths {
         patch: operations["checklist_items_partial_update"];
         trace?: never;
     };
+    "/api/contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Same idea for objects that belong to a workspace (types, tags...).
+         *
+         *     Reading only needs *any* presence in the workspace, shell included: a
+         *     guest of one sub-project still needs the tag names shown on its tasks.
+         */
+        get: operations["contacts_list"];
+        put?: never;
+        /**
+         * @description Same idea for objects that belong to a workspace (types, tags...).
+         *
+         *     Reading only needs *any* presence in the workspace, shell included: a
+         *     guest of one sub-project still needs the tag names shown on its tasks.
+         */
+        post: operations["contacts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Same idea for objects that belong to a workspace (types, tags...).
+         *
+         *     Reading only needs *any* presence in the workspace, shell included: a
+         *     guest of one sub-project still needs the tag names shown on its tasks.
+         */
+        get: operations["contacts_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Same idea for objects that belong to a workspace (types, tags...).
+         *
+         *     Reading only needs *any* presence in the workspace, shell included: a
+         *     guest of one sub-project still needs the tag names shown on its tasks.
+         */
+        delete: operations["contacts_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Same idea for objects that belong to a workspace (types, tags...).
+         *
+         *     Reading only needs *any* presence in the workspace, shell included: a
+         *     guest of one sub-project still needs the tag names shown on its tasks.
+         */
+        patch: operations["contacts_partial_update"];
+        trace?: never;
+    };
     "/api/dashboard/summary/": {
         parameters: {
             query?: never;
@@ -307,6 +369,98 @@ export interface paths {
          *     "Mon dashboard", so that the layout can be saved before any view is named.
          */
         patch: operations["dashboard_views_partial_update"];
+        trace?: never;
+    };
+    "/api/events/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        get: operations["events_list"];
+        put?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        post: operations["events_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        get: operations["events_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        delete: operations["events_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        patch: operations["events_partial_update"];
         trace?: never;
     };
     "/api/health/": {
@@ -509,6 +663,42 @@ export interface paths {
          *     - anyone may delete their own membership, except the owner.
          */
         patch: operations["memberships_partial_update"];
+        trace?: never;
+    };
+    "/api/project-contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Contacts of a project (`?project=`), each with its role there. */
+        get: operations["project_contacts_list"];
+        put?: never;
+        /** @description Contacts of a project (`?project=`), each with its role there. */
+        post: operations["project_contacts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/project-contacts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Contacts of a project (`?project=`), each with its role there. */
+        delete: operations["project_contacts_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Contacts of a project (`?project=`), each with its role there. */
+        patch: operations["project_contacts_partial_update"];
         trace?: never;
     };
     "/api/project-types/": {
@@ -1145,6 +1335,51 @@ export interface components {
             pinned?: boolean;
             position?: number;
         };
+        Contact: {
+            readonly id: number;
+            workspace: number;
+            first_name: string;
+            last_name: string;
+            readonly display_name: string;
+            organization: string;
+            job: string;
+            email: string;
+            phone: string;
+            instagram: string;
+            website: string;
+            notes: string;
+            tags: number[];
+            readonly links: components["schemas"]["ContactLink"][];
+            readonly can_edit: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /** @description A project the contact is linked to (only projects I can open). */
+        ContactLink: {
+            /** @description Id of the link, for PATCH / DELETE */
+            id: number;
+            project: number;
+            project_name: string;
+            project_color: string;
+            role_label: string;
+        };
+        ContactRequest: {
+            workspace?: number;
+            project?: number;
+            role_label?: string;
+            first_name?: string;
+            last_name?: string;
+            organization?: string;
+            job?: string;
+            email?: string;
+            phone?: string;
+            instagram?: string;
+            website?: string;
+            notes?: string;
+            tags?: number[];
+        };
         DashboardSummary: {
             /**
              * Format: date
@@ -1174,7 +1409,7 @@ export interface components {
             pinned: components["schemas"]["PinnedWidget"];
             next7: components["schemas"]["TaskWidget"];
             to_validate: components["schemas"]["ValidateWidget"];
-            meetings: components["schemas"]["PendingWidget"];
+            meetings: components["schemas"]["MeetingsWidget"];
             expenses_to_pay: components["schemas"]["PendingWidget"];
             missing_receipts: components["schemas"]["PendingWidget"];
         };
@@ -1197,6 +1432,79 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        Event: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            type: components["schemas"]["EventTypeEnum"];
+            title: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            all_day: boolean;
+            location: string;
+            prep_notes: string;
+            report: string;
+            decisions: string[];
+            readonly participants: components["schemas"]["PublicUser"][];
+            contacts: number[];
+            readonly contact_details: components["schemas"]["EventContact"][];
+            tags: number[];
+            readonly tasks: components["schemas"]["EventTask"][];
+            readonly recurrence: components["schemas"]["Recurrence"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description A contact taking part in an event. Part of the event's content: shown
+         *     to whoever can see the event, even without access to the address book.
+         */
+        EventContact: {
+            id: number;
+            display_name: string;
+            organization: string;
+            job: string;
+        };
+        EventRequest: {
+            project: number;
+            type?: components["schemas"]["EventTypeEnum"];
+            title: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end?: string;
+            all_day?: boolean;
+            location?: string;
+            prep_notes?: string;
+            report?: string;
+            decisions?: string[];
+            participant_usernames?: string[];
+            contacts?: number[];
+            tags?: number[];
+            rrule?: string;
+        };
+        /** @description A task created from this meeting. */
+        EventTask: {
+            id: number;
+            title: string;
+            status: components["schemas"]["TaskStatusEnum"];
+        };
+        /**
+         * @description * `meeting` - RDV
+         *     * `live` - Date live
+         *     * `shooting` - Tournage
+         *     * `release` - Release
+         *     * `release_party` - Release party
+         *     * `class` - Cours
+         *     * `exam` - Examen
+         *     * `other` - Autre
+         * @enum {string}
+         */
+        EventTypeEnum: "meeting" | "live" | "shooting" | "release" | "release_party" | "class" | "exam" | "other";
         /**
          * @description * `viewer` - Lecteur
          *     * `commenter` - Commentateur
@@ -1280,6 +1588,11 @@ export interface components {
             email_on_mention: boolean;
             email_on_assignment: boolean;
         };
+        MeetingsWidget: {
+            available: boolean;
+            count: number;
+            items: components["schemas"]["Event"][];
+        };
         /** @description Invite by username (existing account) or by e-mail. */
         MembershipCreateRequest: {
             workspace?: number;
@@ -1307,11 +1620,12 @@ export interface components {
         };
         /**
          * @description * `task` - task
+         *     * `event` - event
          *     * `project_start` - project_start
          *     * `project_end` - project_end
          * @enum {string}
          */
-        MilestoneKindEnum: "task" | "project_start" | "project_end";
+        MilestoneKindEnum: "task" | "event" | "project_start" | "project_end";
         MoveProjectRequest: {
             parent: number | null;
         };
@@ -1340,6 +1654,21 @@ export interface components {
             /** Format: date */
             readonly end_date: string | null;
             readonly status: components["schemas"]["ProjectStatusEnum"];
+        };
+        PaginatedEventList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["Event"][];
         };
         PaginatedTaskList: {
             /** @example 123 */
@@ -1371,12 +1700,45 @@ export interface components {
             pinned?: boolean;
             position?: number;
         };
+        PatchedContactRequest: {
+            workspace?: number;
+            project?: number;
+            role_label?: string;
+            first_name?: string;
+            last_name?: string;
+            organization?: string;
+            job?: string;
+            email?: string;
+            phone?: string;
+            instagram?: string;
+            website?: string;
+            notes?: string;
+            tags?: number[];
+        };
         PatchedDashboardViewRequest: {
             name?: string;
             filters?: components["schemas"]["ViewFiltersRequest"];
             layout?: components["schemas"]["WidgetLayoutRequest"][];
             is_default?: boolean;
             position?: number;
+        };
+        PatchedEventRequest: {
+            project?: number;
+            type?: components["schemas"]["EventTypeEnum"];
+            title?: string;
+            /** Format: date-time */
+            start?: string;
+            /** Format: date-time */
+            end?: string;
+            all_day?: boolean;
+            location?: string;
+            prep_notes?: string;
+            report?: string;
+            decisions?: string[];
+            participant_usernames?: string[];
+            contacts?: number[];
+            tags?: number[];
+            rrule?: string;
         };
         /** @description The signed-in user's own profile and preferences. */
         PatchedMeRequest: {
@@ -1407,6 +1769,11 @@ export interface components {
         /** @description PATCH /api/projects/{id}/my-state/: my own preferences on a project. */
         PatchedMyProjectStateRequest: {
             tasks_view?: components["schemas"]["TasksViewEnum"];
+        };
+        PatchedProjectContactRequest: {
+            project?: number;
+            contact?: number;
+            role_label?: string;
         };
         /** @description Create / read / update a project the user has a real role on. */
         PatchedProjectRequest: {
@@ -1452,6 +1819,7 @@ export interface components {
             tags?: number[];
             blocked_by?: number[];
             rrule?: string;
+            source_event?: number | null;
         };
         /** @description Full view of a workspace, for its members. */
         PatchedWorkspaceRequest: {
@@ -1540,6 +1908,18 @@ export interface components {
             past: components["schemas"]["CardEntry"][];
             current: components["schemas"]["CardEntry"][];
             upcoming: components["schemas"]["CardEntry"][];
+        };
+        ProjectContact: {
+            readonly id: number;
+            project: number;
+            contact: number;
+            readonly contact_detail: components["schemas"]["Contact"];
+            role_label: string;
+        };
+        ProjectContactRequest: {
+            project: number;
+            contact: number;
+            role_label?: string;
         };
         /**
          * @description One node of GET /api/projects/tree/ (a flat list; the front nests it).
@@ -1671,6 +2051,15 @@ export interface components {
         Session: {
             user: components["schemas"]["Me"] | null;
         };
+        /** @description The meeting a task comes from: « Issue du RDV du 12.10 ». */
+        SourceEvent: {
+            id: number;
+            title: string;
+            /** Format: date-time */
+            start: string;
+            all_day: boolean;
+            project: number;
+        };
         Tag: {
             readonly id: number;
             workspace: number;
@@ -1706,6 +2095,7 @@ export interface components {
             readonly checklist: components["schemas"]["ChecklistItem"][];
             readonly comments_count: number;
             readonly recurrence: components["schemas"]["Recurrence"] | null;
+            readonly source_event_detail: components["schemas"]["SourceEvent"] | null;
             /** Format: date-time */
             readonly completed_at: string | null;
             /** Format: date-time */
@@ -1742,6 +2132,7 @@ export interface components {
             tags?: number[];
             blocked_by?: number[];
             rrule?: string;
+            source_event?: number | null;
         };
         /**
          * @description * `todo` - À faire
@@ -2191,6 +2582,126 @@ export interface operations {
             };
         };
     };
+    contacts_list: {
+        parameters: {
+            query?: {
+                job?: string;
+                /** @description Sous-projets inclus */
+                project?: number;
+                search?: string;
+                tag?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"][];
+                };
+            };
+        };
+    };
+    contacts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ContactRequest"];
+                "multipart/form-data": components["schemas"]["ContactRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    contacts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    contacts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    contacts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContactRequest"];
+                "multipart/form-data": components["schemas"]["PatchedContactRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
     dashboard_summary_retrieve: {
         parameters: {
             query?: {
@@ -2327,6 +2838,152 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardView"];
+                };
+            };
+        };
+    };
+    events_list: {
+        parameters: {
+            query?: {
+                contact?: number;
+                include_descendants?: boolean;
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                participant?: string;
+                project?: number;
+                search?: string;
+                tag?: number;
+                /**
+                 * @description * `meeting` - RDV
+                 *     * `live` - Date live
+                 *     * `shooting` - Tournage
+                 *     * `release` - Release
+                 *     * `release_party` - Release party
+                 *     * `class` - Cours
+                 *     * `exam` - Examen
+                 *     * `other` - Autre
+                 */
+                type?: ("class" | "exam" | "live" | "meeting" | "other" | "release" | "release_party" | "shooting")[];
+                window_end?: string;
+                window_start?: string;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedEventList"];
+                };
+            };
+        };
+    };
+    events_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRequest"];
+                "multipart/form-data": components["schemas"]["EventRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+        };
+    };
+    events_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) event. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+        };
+    };
+    events_destroy: {
+        parameters: {
+            query?: {
+                /** @description Récurrence : cette occurrence, ou toutes les suivantes */
+                scope?: "following" | "this";
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) event. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    events_partial_update: {
+        parameters: {
+            query?: {
+                /** @description Récurrence : cette occurrence, ou toutes les suivantes */
+                scope?: "following" | "this";
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) event. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEventRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEventRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
                 };
             };
         };
@@ -2640,6 +3297,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembershipUpdate"];
+                };
+            };
+        };
+    };
+    project_contacts_list: {
+        parameters: {
+            query?: {
+                contact?: number;
+                include_descendants?: boolean;
+                project?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectContact"][];
+                };
+            };
+        };
+    };
+    project_contacts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectContactRequest"];
+                "multipart/form-data": components["schemas"]["ProjectContactRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectContact"];
+                };
+            };
+        };
+    };
+    project_contacts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    project_contacts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProjectContactRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProjectContactRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectContact"];
                 };
             };
         };

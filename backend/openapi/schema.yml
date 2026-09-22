@@ -299,6 +299,155 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/contacts/:
+    get:
+      operationId: contacts_list
+      description: |-
+        Same idea for objects that belong to a workspace (types, tags...).
+
+        Reading only needs *any* presence in the workspace, shell included: a
+        guest of one sub-project still needs the tag names shown on its tasks.
+      parameters:
+      - in: query
+        name: job
+        schema:
+          type: string
+      - in: query
+        name: project
+        schema:
+          type: integer
+        description: Sous-projets inclus
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - contacts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+          description: ''
+    post:
+      operationId: contacts_create
+      description: |-
+        Same idea for objects that belong to a workspace (types, tags...).
+
+        Reading only needs *any* presence in the workspace, shell included: a
+        guest of one sub-project still needs the tag names shown on its tasks.
+      tags:
+      - contacts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+  /api/contacts/{id}/:
+    get:
+      operationId: contacts_retrieve
+      description: |-
+        Same idea for objects that belong to a workspace (types, tags...).
+
+        Reading only needs *any* presence in the workspace, shell included: a
+        guest of one sub-project still needs the tag names shown on its tasks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) contact.
+        required: true
+      tags:
+      - contacts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+    patch:
+      operationId: contacts_partial_update
+      description: |-
+        Same idea for objects that belong to a workspace (types, tags...).
+
+        Reading only needs *any* presence in the workspace, shell included: a
+        guest of one sub-project still needs the tag names shown on its tasks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) contact.
+        required: true
+      tags:
+      - contacts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContactRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+    delete:
+      operationId: contacts_destroy
+      description: |-
+        Same idea for objects that belong to a workspace (types, tags...).
+
+        Reading only needs *any* presence in the workspace, shell included: a
+        guest of one sub-project still needs the tag names shown on its tasks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) contact.
+        required: true
+      tags:
+      - contacts
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/dashboard/summary/:
     get:
       operationId: dashboard_summary_retrieve
@@ -470,6 +619,261 @@ paths:
         required: true
       tags:
       - dashboard
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/:
+    get:
+      operationId: events_list
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: query
+        name: contact
+        schema:
+          type: integer
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: participant
+        schema:
+          type: string
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: type
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - class
+            - exam
+            - live
+            - meeting
+            - other
+            - release
+            - release_party
+            - shooting
+        description: |-
+          * `meeting` - RDV
+          * `live` - Date live
+          * `shooting` - Tournage
+          * `release` - Release
+          * `release_party` - Release party
+          * `class` - Cours
+          * `exam` - Examen
+          * `other` - Autre
+        explode: true
+        style: form
+      - in: query
+        name: window_end
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: window_start
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - events
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventList'
+          description: ''
+    post:
+      operationId: events_create
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /api/events/{id}/:
+    get:
+      operationId: events_retrieve
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) event.
+        required: true
+      tags:
+      - events
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    patch:
+      operationId: events_partial_update
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) event.
+        required: true
+      - in: query
+        name: scope
+        schema:
+          type: string
+          enum:
+          - following
+          - this
+        description: 'Récurrence : cette occurrence, ou toutes les suivantes'
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+    delete:
+      operationId: events_destroy
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) event.
+        required: true
+      - in: query
+        name: scope
+        schema:
+          type: string
+          enum:
+          - following
+          - this
+        description: 'Récurrence : cette occurrence, ou toutes les suivantes'
+      tags:
+      - events
       security:
       - cookieAuth: []
       responses:
@@ -789,6 +1193,106 @@ paths:
         required: true
       tags:
       - memberships
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project-contacts/:
+    get:
+      operationId: project_contacts_list
+      description: Contacts of a project (`?project=`), each with its role there.
+      parameters:
+      - in: query
+        name: contact
+        schema:
+          type: integer
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: project
+        schema:
+          type: integer
+      tags:
+      - project-contacts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectContact'
+          description: ''
+    post:
+      operationId: project_contacts_create
+      description: Contacts of a project (`?project=`), each with its role there.
+      tags:
+      - project-contacts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectContactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectContactRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectContact'
+          description: ''
+  /api/project-contacts/{id}/:
+    patch:
+      operationId: project_contacts_partial_update
+      description: Contacts of a project (`?project=`), each with its role there.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project contact.
+        required: true
+      tags:
+      - project-contacts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectContactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectContactRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectContact'
+          description: ''
+    delete:
+      operationId: project_contacts_destroy
+      description: Contacts of a project (`?project=`), each with its role there.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project contact.
+        required: true
+      tags:
+      - project-contacts
       security:
       - cookieAuth: []
       responses:
@@ -2216,6 +2720,160 @@ components:
           minimum: 0
       required:
       - title
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        workspace:
+          type: integer
+        first_name:
+          type: string
+          maxLength: 80
+        last_name:
+          type: string
+          maxLength: 80
+        display_name:
+          type: string
+          readOnly: true
+        organization:
+          type: string
+          maxLength: 120
+        job:
+          type: string
+          maxLength: 80
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        instagram:
+          type: string
+          maxLength: 60
+        website:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: integer
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactLink'
+          readOnly: true
+        can_edit:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - can_edit
+      - created_at
+      - display_name
+      - email
+      - first_name
+      - id
+      - instagram
+      - job
+      - last_name
+      - links
+      - notes
+      - organization
+      - phone
+      - tags
+      - updated_at
+      - website
+      - workspace
+    ContactLink:
+      type: object
+      description: A project the contact is linked to (only projects I can open).
+      properties:
+        id:
+          type: integer
+          description: Id of the link, for PATCH / DELETE
+        project:
+          type: integer
+        project_name:
+          type: string
+        project_color:
+          type: string
+        role_label:
+          type: string
+      required:
+      - id
+      - project
+      - project_color
+      - project_name
+      - role_label
+    ContactRequest:
+      type: object
+      properties:
+        workspace:
+          type: integer
+        project:
+          type: integer
+          writeOnly: true
+        role_label:
+          type: string
+          writeOnly: true
+          maxLength: 80
+        first_name:
+          type: string
+          maxLength: 80
+        last_name:
+          type: string
+          maxLength: 80
+        organization:
+          type: string
+          maxLength: 120
+        job:
+          type: string
+          maxLength: 80
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        instagram:
+          type: string
+          maxLength: 60
+        website:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: integer
     DashboardSummary:
       type: object
       properties:
@@ -2291,7 +2949,7 @@ components:
         to_validate:
           $ref: '#/components/schemas/ValidateWidget'
         meetings:
-          $ref: '#/components/schemas/PendingWidget'
+          $ref: '#/components/schemas/MeetingsWidget'
         expenses_to_pay:
           $ref: '#/components/schemas/PendingWidget'
         missing_receipts:
@@ -2359,6 +3017,210 @@ components:
           minLength: 1
       required:
       - email
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        title:
+          type: string
+          maxLength: 240
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        all_day:
+          type: boolean
+        location:
+          type: string
+          maxLength: 240
+        prep_notes:
+          type: string
+        report:
+          type: string
+        decisions:
+          type: array
+          items:
+            type: string
+            maxLength: 500
+          maxItems: 50
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+        contacts:
+          type: array
+          items:
+            type: integer
+        contact_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventContact'
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: integer
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventTask'
+          readOnly: true
+        recurrence:
+          allOf:
+          - $ref: '#/components/schemas/Recurrence'
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - all_day
+      - contact_details
+      - contacts
+      - created_at
+      - decisions
+      - end
+      - id
+      - location
+      - participants
+      - prep_notes
+      - project
+      - project_color
+      - project_name
+      - recurrence
+      - report
+      - start
+      - tags
+      - tasks
+      - title
+      - type
+      - updated_at
+    EventContact:
+      type: object
+      description: |-
+        A contact taking part in an event. Part of the event's content: shown
+        to whoever can see the event, even without access to the address book.
+      properties:
+        id:
+          type: integer
+        display_name:
+          type: string
+        organization:
+          type: string
+        job:
+          type: string
+      required:
+      - display_name
+      - id
+      - job
+      - organization
+    EventRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        all_day:
+          type: boolean
+        location:
+          type: string
+          maxLength: 240
+        prep_notes:
+          type: string
+        report:
+          type: string
+        decisions:
+          type: array
+          items:
+            type: string
+            maxLength: 500
+          maxItems: 50
+        participant_usernames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          writeOnly: true
+        contacts:
+          type: array
+          items:
+            type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+        rrule:
+          type: string
+          writeOnly: true
+      required:
+      - project
+      - start
+      - title
+    EventTask:
+      type: object
+      description: A task created from this meeting.
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+      required:
+      - id
+      - status
+      - title
+    EventTypeEnum:
+      enum:
+      - meeting
+      - live
+      - shooting
+      - release
+      - release_party
+      - class
+      - exam
+      - other
+      type: string
+      description: |-
+        * `meeting` - RDV
+        * `live` - Date live
+        * `shooting` - Tournage
+        * `release` - Release
+        * `release_party` - Release party
+        * `class` - Cours
+        * `exam` - Examen
+        * `other` - Autre
     GrantableRoleEnum:
       enum:
       - viewer
@@ -2573,6 +3435,21 @@ components:
       - theme
       - timezone
       - username
+    MeetingsWidget:
+      type: object
+      properties:
+        available:
+          type: boolean
+        count:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+      required:
+      - available
+      - count
+      - items
     MembershipCreateRequest:
       type: object
       description: Invite by username (existing account) or by e-mail.
@@ -2642,11 +3519,13 @@ components:
     MilestoneKindEnum:
       enum:
       - task
+      - event
       - project_start
       - project_end
       type: string
       description: |-
         * `task` - task
+        * `event` - event
         * `project_start` - project_start
         * `project_end` - project_end
     MoveProjectRequest:
@@ -2725,6 +3604,31 @@ components:
       - id
       - name
       - status
+    PaginatedEventList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
     PaginatedTaskList:
       type: object
       required:
@@ -2796,6 +3700,56 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+    PatchedContactRequest:
+      type: object
+      properties:
+        workspace:
+          type: integer
+        project:
+          type: integer
+          writeOnly: true
+        role_label:
+          type: string
+          writeOnly: true
+          maxLength: 80
+        first_name:
+          type: string
+          maxLength: 80
+        last_name:
+          type: string
+          maxLength: 80
+        organization:
+          type: string
+          maxLength: 120
+        job:
+          type: string
+          maxLength: 80
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        instagram:
+          type: string
+          maxLength: 60
+        website:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: integer
     PatchedDashboardViewRequest:
       type: object
       properties:
@@ -2815,6 +3769,55 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+    PatchedEventRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 240
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        all_day:
+          type: boolean
+        location:
+          type: string
+          maxLength: 240
+        prep_notes:
+          type: string
+        report:
+          type: string
+        decisions:
+          type: array
+          items:
+            type: string
+            maxLength: 500
+          maxItems: 50
+        participant_usernames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          writeOnly: true
+        contacts:
+          type: array
+          items:
+            type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+        rrule:
+          type: string
+          writeOnly: true
     PatchedMeRequest:
       type: object
       description: The signed-in user's own profile and preferences.
@@ -2870,6 +3873,16 @@ components:
       properties:
         tasks_view:
           $ref: '#/components/schemas/TasksViewEnum'
+    PatchedProjectContactRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        contact:
+          type: integer
+        role_label:
+          type: string
+          maxLength: 80
     PatchedProjectRequest:
       type: object
       description: Create / read / update a project the user has a real role on.
@@ -2987,6 +4000,10 @@ components:
         rrule:
           type: string
           writeOnly: true
+        source_event:
+          type: integer
+          writeOnly: true
+          nullable: true
     PatchedWorkspaceRequest:
       type: object
       description: Full view of a workspace, for its members.
@@ -3268,6 +4285,42 @@ components:
       - type_name
       - upcoming
       - workspace
+    ProjectContact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        contact:
+          type: integer
+        contact_detail:
+          allOf:
+          - $ref: '#/components/schemas/Contact'
+          readOnly: true
+        role_label:
+          type: string
+          maxLength: 80
+      required:
+      - contact
+      - contact_detail
+      - id
+      - project
+      - role_label
+    ProjectContactRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        contact:
+          type: integer
+        role_label:
+          type: string
+          maxLength: 80
+      required:
+      - contact
+      - project
     ProjectNode:
       type: object
       description: |-
@@ -3583,6 +4636,27 @@ components:
           nullable: true
       required:
       - user
+    SourceEvent:
+      type: object
+      description: 'The meeting a task comes from: « Issue du RDV du 12.10 ».'
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        all_day:
+          type: boolean
+        project:
+          type: integer
+      required:
+      - all_day
+      - id
+      - project
+      - start
+      - title
     Tag:
       type: object
       properties:
@@ -3695,6 +4769,11 @@ components:
           - $ref: '#/components/schemas/Recurrence'
           nullable: true
           readOnly: true
+        source_event_detail:
+          allOf:
+          - $ref: '#/components/schemas/SourceEvent'
+          nullable: true
+          readOnly: true
         completed_at:
           type: string
           format: date-time
@@ -3728,6 +4807,7 @@ components:
       - project_color
       - project_name
       - recurrence
+      - source_event_detail
       - start_at
       - status
       - tags
@@ -3820,6 +4900,10 @@ components:
         rrule:
           type: string
           writeOnly: true
+        source_event:
+          type: integer
+          writeOnly: true
+          nullable: true
       required:
       - project
       - title

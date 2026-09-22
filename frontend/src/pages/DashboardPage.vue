@@ -17,16 +17,20 @@ import draggable from 'vuedraggable'
 
 import { ApiError } from '@/api/client'
 import type { DashboardView, ValidateItem, WidgetLayout } from '@/api/dashboard'
+import type { Event } from '@/api/events'
 import { type PinnedItem, type Task, tasksApi } from '@/api/tasks'
 import DashboardViewPanel from '@/components/dashboard/DashboardViewPanel.vue'
+import MeetingsWidget from '@/components/dashboard/MeetingsWidget.vue'
 import PinnedTodosWidget from '@/components/dashboard/PinnedTodosWidget.vue'
 import TaskListWidget from '@/components/dashboard/TaskListWidget.vue'
 import ToValidateWidget from '@/components/dashboard/ToValidateWidget.vue'
 import WidgetFrame from '@/components/dashboard/WidgetFrame.vue'
+import EventPanel from '@/components/events/EventPanel.vue'
 import TaskPanel from '@/components/tasks/TaskPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
+import { useEventPanel } from '@/composables/useEventPanel'
 import { useTaskPanel } from '@/composables/useTaskPanel'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -38,8 +42,11 @@ const dashboard = useDashboardStore()
 const ui = useUiStore()
 const router = useRouter()
 const { taskId, openTask, closeTask } = useTaskPanel()
+const { eventId, openEvent, closeEvent } = useEventPanel()
 
 const editing = ref(false)
+// "Créer une tâche depuis ce RDV", from the meetings widget.
+const taskFromEvent = ref<Event | null>(null)
 const viewPanel = ref(false)
 const viewBeingEdited = ref<DashboardView | null>(null)
 
@@ -99,9 +106,22 @@ function openValidation(item: ValidateItem) {
 }
 
 const panelOpen = computed({
-  get: () => taskId.value !== null,
-  set: (value) => !value && closeTask(),
+  get: () => taskId.value !== null || taskFromEvent.value !== null,
+  set: (value) => {
+    if (value) return
+    taskFromEvent.value = null
+    if (taskId.value !== null) closeTask()
+  },
 })
+const eventPanelOpen = computed({
+  get: () => eventId.value !== null,
+  set: (value) => !value && closeEvent(),
+})
+
+function createTaskFrom(event: Event) {
+  taskFromEvent.value = event
+  closeEvent()
+}
 </script>
 
 <template>
@@ -222,11 +242,32 @@ const panelOpen = computed({
             :items="widgets.to_validate.items"
             @open="openValidation"
           />
+          <MeetingsWidget
+            v-else-if="element.key === 'meetings'"
+            :events="widgets.meetings.items"
+            :total="widgets.meetings.count"
+            @open="openEvent($event.id)"
+          />
         </template>
       </WidgetFrame>
     </template>
   </draggable>
 
   <DashboardViewPanel v-model:open="viewPanel" :view="viewBeingEdited" />
-  <TaskPanel v-model:open="panelOpen" :task-id="taskId" @changed="dashboard.loadSummary()" />
+  <TaskPanel
+    v-model:open="panelOpen"
+    :task-id="taskId"
+    :create-in="taskFromEvent ? taskFromEvent.project : null"
+    :create-from-event="taskFromEvent"
+    @changed="dashboard.loadSummary()"
+    @created="((taskFromEvent = null), openTask($event.id))"
+    @open-event="openEvent"
+  />
+  <EventPanel
+    v-model:open="eventPanelOpen"
+    :event-id="eventId"
+    @changed="dashboard.loadSummary()"
+    @create-task="createTaskFrom"
+    @open-task="openTask"
+  />
 </template>

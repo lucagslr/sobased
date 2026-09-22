@@ -59,8 +59,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'contacts',
         name: 'contacts',
-        component: comingSoon,
-        meta: { title: 'Contacts', phase: 6 },
+        component: () => import('@/pages/ContactsPage.vue'),
+        meta: { title: 'Contacts' },
       },
       {
         path: 'compta',

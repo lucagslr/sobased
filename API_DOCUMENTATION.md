@@ -65,7 +65,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | DELETE | `/api/projects/{id}/` | sous-projet : Éditeur sur le parent · racine : Propriétaire | Suppression avec tout le contenu (confirmation par saisie du nom) |
 | POST | `/api/projects/{id}/move/` | Admin sur le projet + Éditeur sur la cible | Change de parent dans le même espace (contrôle profondeur et cycle) |
 | POST | `/api/projects/{id}/transfer-ownership/` | Propriétaire | Projets racine uniquement |
-| GET | `/api/projects/{id}/overview/` | Lecteur (coquille : 404) | Mini-dashboard du projet et de ses sous-projets : `{date, overdue, today, milestones}`. `overdue` et `today` ont la forme d'un widget (`available, count, items`). `milestones` : les 8 prochains éléments datés (`kind` = `task`, `project_start` ou `project_end`). Le bloc budget arrive en phase 7 |
+| GET | `/api/projects/{id}/overview/` | Lecteur (coquille : 404) | Mini-dashboard du projet et de ses sous-projets : `{date, overdue, today, milestones}`. `overdue` et `today` ont la forme d'un widget (`available, count, items`). `milestones` : les 8 prochains éléments datés (`kind` = `task`, `event`, `project_start` ou `project_end`). Le bloc budget arrive en phase 7 |
 | GET | `/api/projects/overdue/` | — | File de la modale « fin dépassée », du plus ancien au plus récent : projets où j'ai Éditeur+, `end_date` passée **dans mon fuseau**, statut ouvert, non reportés pour moi |
 | POST | `/api/projects/{id}/snooze-overdue/` | Éditeur | « Me rappeler demain » (par utilisateur, expire le lendemain). `204` |
 | PATCH | `/api/projects/{id}/my-state/` | Lecteur | Mémorise **ma** vue des tâches sur ce projet : `{tasks_view}` = `list`, `kanban`, `calendar` ou `gantt`. Relue dans `my_tasks_view` du détail du projet. Coquille : 404 |
@@ -100,15 +100,16 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 
 | Méthode | Chemin | Rôle min. | Description |
 |---|---|---|---|
-| GET | `/api/events/` | Lecteur | Filtres : `project`, `include_descendants`, `workspace`, `type`, `start_after`, `start_before`, `participant`, `tag` |
-| POST | `/api/events/` | Éditeur | Création, `rrule` optionnel |
-| GET, PATCH, DELETE | `/api/events/{id}/` | Lecteur / Éditeur | `?scope=` pour les occurrences. Notes, compte rendu, décisions |
-| POST | `/api/events/{id}/create-task/` | Éditeur | « Créer une tâche depuis ce RDV » (`source_event` renseigné) |
-| GET | `/api/calendar/?start=&end=` | — | Flux unifié pour FullCalendar : tâches (début / échéance), événements, événements externes en lecture seule. Filtres `workspace`, `project`, `tag`, `kinds`. Chaque élément : `kind, id, title, start, end, all_day, color, project, editable` |
-| GET, POST | `/api/contacts/?workspace=` | membre de l'espace : tous · invité d'un projet : contacts liés à ses projets · écriture : Éditeur | Filtres `project`, `tag`, `job`, `search` |
-| GET, PATCH, DELETE | `/api/contacts/{id}/` | idem | |
-| GET, POST | `/api/project-contacts/?project=` | Lecteur / Éditeur | Lien contact ↔ projet avec `role_label` |
-| PATCH, DELETE | `/api/project-contacts/{id}/` | Éditeur | |
+| GET | `/api/events/` | Lecteur | Filtres : `project`, `include_descendants`, `workspace`, `type` (répétable), `participant` (`me` ou nom d'utilisateur), `contact`, `tag`, `window_start` / `window_end` (période, comme pour les tâches), `search`, `ordering`. Paginé, du plus ancien au plus récent. Chaque événement : dates, `all_day` (fin **inclusive**), `location`, `prep_notes`, `report`, `decisions`, `participants`, `contact_details`, `tags`, `tasks` (tâches issues du RDV), `recurrence`, couleur du projet |
+| POST | `/api/events/` | Éditeur | `end` optionnel (début + 1 h ; même jour si journée entière), `rrule` optionnel, `participant_usernames` (membres du projet), `contacts` (contacts visibles de l'espace) |
+| GET, PATCH, DELETE | `/api/events/{id}/` | Lecteur / Éditeur | `?scope=this` (défaut) ou `following` pour une occurrence récurrente. Déplacer `start` seul conserve la durée. Une occurrence avec compte rendu ou décisions n'est jamais supprimée par une opération de série |
+| POST | `/api/tasks/` avec `source_event` | Éditeur | « Créer une tâche depuis ce RDV » : RDV du même projet, lien posé à la création et jamais modifié (`source_event_detail` en lecture). Pas d'endpoint dédié |
+| GET, POST | `/api/contacts/` | membre de l'espace : tout le carnet · invité d'un projet : contacts liés à ses projets · création : Éditeur de l'espace (`workspace`) ou Éditeur d'un projet (`project` + `role_label` : contact créé dans l'espace du projet et lié) | Filtres `workspace`, `project` (sous-projets inclus), `tag`, `job`, `search`. Lecture : `display_name`, `links` (liens vers mes projets seulement), `can_edit` |
+| GET, PATCH, DELETE | `/api/contacts/{id}/` | Éditeur de l'espace, ou créateur du contact | Un contact ne change jamais d'espace |
+| GET, POST | `/api/project-contacts/` | Lecteur / Éditeur du projet | `?project=` (+ `include_descendants`), `?contact=`. Corps : `project`, `contact` (visible, du même espace, pas déjà lié), `role_label` |
+| PATCH, DELETE | `/api/project-contacts/{id}/` | Éditeur | Rôle ; délier (le contact reste) |
+
+Pas de flux `/api/calendar/` unifié : le front interroge `/api/tasks/` et `/api/events/` avec la même période (`window_start` / `window_end`) ; les calendriers externes (phase 11) auront leur propre endpoint en lecture seule.
 
 ## 6. Compta (`finance`)
 
@@ -202,7 +203,7 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 | GET | `/api/notifications/unread-count/` | connecté | Compteur de la cloche (interrogé toutes les 60 s, pas de WebSocket) |
 | POST | `/api/notifications/{id}/read/` · `/api/notifications/read-all/` | connecté | |
 | GET | `/api/activity/?project=` | Éditeur | Journal du projet, `include_descendants`, filtres `actor`, `verb` |
-| GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel. Paramètres : `view` (filtres d'une de mes vues ; celle d'un autre = 404) **ou** `workspace`, `project` (sous-projets inclus), `tag` (répétables) et `only_mine`. Réponse : `{date, widgets}` où `widgets` a une entrée par clé : `overdue`, `today`, `pinned`, `next7`, `to_validate`, `meetings`, `expenses_to_pay`, `missing_receipts`. Chaque entrée : `{available, count, items}` (50 éléments au plus, `count` = total). `available: false` = fonctionnalité d'une phase à venir, le front masque le widget. « Aujourd'hui » est évalué dans le fuseau du profil |
+| GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel. Paramètres : `view` (filtres d'une de mes vues ; celle d'un autre = 404) **ou** `workspace`, `project` (sous-projets inclus), `tag` (répétables) et `only_mine`. Réponse : `{date, widgets}` où `widgets` a une entrée par clé : `overdue`, `today`, `pinned`, `next7`, `to_validate`, `meetings` (RDV en cours ou dans les 14 jours ; `only_mine` = RDV où je participe), `expenses_to_pay`, `missing_receipts`. Chaque entrée : `{available, count, items}` (50 éléments au plus, `count` = total). `available: false` = fonctionnalité d'une phase à venir, le front masque le widget. « Aujourd'hui » est évalué dans le fuseau du profil |
 | GET, POST | `/api/dashboard/views/` | connecté | Mes vues enregistrées, jamais partagées. Le premier `GET` crée « Mon dashboard ». Champs : `name`, `filters` `{workspaces, projects, tags, only_mine}`, `layout` `[{key, size 1-3, tall, hidden}]`, `is_default`, `position` |
 | PATCH, DELETE | `/api/dashboard/views/{id}/` | connecté | La disposition est nettoyée par le serveur (« En retard » toujours premier et visible, tailles bornées, widgets manquants ajoutés). Une seule vue par défaut ; supprimer la vue par défaut en promeut une autre |
 

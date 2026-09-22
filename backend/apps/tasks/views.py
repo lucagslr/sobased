@@ -56,7 +56,7 @@ def _renumber(project_id: int, column: str, moved: Task | None = None, index: in
 
 class TaskViewSet(ProjectScopedViewSet, viewsets.ModelViewSet):
     queryset = (
-        Task.objects.select_related("project", "series")
+        Task.objects.select_related("project", "series", "source_event")
         .prefetch_related("assignees", "tags", "checklist", "blocked_by__project")
         .annotate(comments_total=Count("comments", distinct=True))
     )

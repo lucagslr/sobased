@@ -18,6 +18,7 @@ export type PinnedItem = ChecklistItem & {
 export type TaskComment = Schemas['TaskComment']
 export type Blocker = Schemas['Blocker']
 export type BlockerCandidate = Schemas['BlockerCandidate']
+export type SourceEvent = Schemas['SourceEvent']
 
 export interface Paginated<T> {
   count: number
@@ -40,6 +41,8 @@ export interface TaskPayload {
   blocked_by?: number[]
   /** RRULE. "" stops the recurrence (with scope "following"). */
   rrule?: string
+  /** The meeting the task comes from (creation only). */
+  source_event?: number | null
 }
 
 /** "this" occurrence only, or this one and all the "following" (recurring tasks). */
