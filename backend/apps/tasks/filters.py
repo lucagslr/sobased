@@ -6,6 +6,7 @@ the user can read (ProjectScopedViewSet.get_queryset).
 
 import django_filters
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 
 from apps.projects.access import get_access_map
 
@@ -29,12 +30,33 @@ class TaskFilter(django_filters.FilterSet):
     due_before = django_filters.IsoDateTimeFilter(field_name="due_at", lookup_expr="lt")
     no_date = django_filters.BooleanFilter(method="by_no_date")
     search = django_filters.CharFilter(field_name="title", lookup_expr="icontains")
+    # Calendar and Gantt: tasks whose span [start, due] crosses the window
+    # [window_start, window_end[. Applied in filter_queryset() below, because
+    # the two bounds work together.
+    window_start = django_filters.IsoDateTimeFilter(method="noop")
+    window_end = django_filters.IsoDateTimeFilter(method="noop")
 
     class Meta:
         model = Task
         fields: list[str] = []
 
     def noop(self, queryset, name, value):
+        return queryset
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        start = self.form.cleaned_data.get("window_start")
+        end = self.form.cleaned_data.get("window_end")
+        if start or end:
+            # A task with a single date is a point: both ends fall on it.
+            queryset = queryset.annotate(
+                span_start=Coalesce("start_at", "due_at"),
+                span_end=Coalesce("due_at", "start_at"),
+            )
+        if start:
+            queryset = queryset.filter(span_end__gte=start)
+        if end:
+            queryset = queryset.filter(span_start__lt=end)
         return queryset
 
     def by_project(self, queryset, name, value):

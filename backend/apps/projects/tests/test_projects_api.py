@@ -188,6 +188,21 @@ def test_tree_hides_archived_projects_unless_asked(tree, owner_api):
     assert "B" not in default and "B" in full
 
 
+def test_an_archived_project_hides_its_whole_branch(tree, owner_api):
+    # Without this, A1, A1x and A2 would show up as roots (parent missing).
+    tree["A"].status = "archived"
+    tree["A"].save()
+
+    default = {n["name"] for n in owner_api.get("/api/projects/tree/").data}
+    full = {
+        n["name"]
+        for n in owner_api.get("/api/projects/tree/?include_archived=true").data
+    }
+
+    assert default == {"R", "B", "R2"}
+    assert full == {"R", "A", "A1", "A1x", "A2", "B", "R2"}
+
+
 def test_tree_can_be_limited_to_one_workspace(tree, member, member_api):
     grant(member, tree.workspace, "viewer")
     grant(member, tree.other_workspace, "viewer")

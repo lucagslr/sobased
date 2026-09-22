@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 22.09.2026 · Phases 0 à 4 terminées. Prochaine étape : phase 5 (vues Liste / Kanban / Calendrier / Gantt mémorisées par projet, navigation Arbre / Cartes, Passé / En cours / À venir, déplacement de projet).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 5 terminées. Prochaine étape : phase 6 (événements et RDV avec récurrence, participants, notes et compte rendu ; contacts ; widget « RDV à venir » ; onglets Calendrier et RDV du projet).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -15,7 +15,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 2 | Espaces, projets (arbre 4 niveaux), permissions, invitations, tests en matrice | ✅ terminé · [doc](docs/phases/phase-02-espaces-projets-droits.md) |
 | 3 | Tâches, checklist, priorités, dépendances, récurrences, tags, commentaires et mentions | ✅ terminé · [doc](docs/phases/phase-03-taches.md) |
 | 4 | Dashboard global et projet, widgets, vues enregistrées, modale de fin dépassée | ✅ terminé · [doc](docs/phases/phase-04-dashboards.md) |
-| 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ⏳ |
+| 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ✅ terminé · [doc](docs/phases/phase-05-vues-et-navigation.md) |
 | 6 | Événements et RDV, contacts | ⏳ |
 | 7 | Compta complète et exports | ⏳ |
 | 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ⏳ |
@@ -121,11 +121,28 @@ Détail dans `docs/phases/phase-04-dashboards.md`. App `dashboard` (vues enregis
 - **Allumer un widget d'une phase suivante** (`meetings` en phase 6, `expenses_to_pay` et `missing_receipts` en phase 7) : remplacer `pending` dans `DashboardSummaryView` par `{available: True, count, items}`, ajouter le composant dans `DashboardPage.vue`, typer `items` dans `apps/dashboard/serializers.py`. Aucune migration : les dispositions enregistrées ont déjà la case. Les montants exigent `can_view_finance` projet par projet.
 - Vue transverse (plusieurs projets) : pas de `ProjectScopedViewSet`, donc inscription **avec justification** dans `test_route_audit.py`, et données tirées uniquement de querysets `for_user(request)`.
 - Colonne JSON exposée par l'API : sous-classe de `JSONField` + `@extend_schema_field(UnSerializer)`, sinon TypeScript reçoit `unknown`.
-- **Bundle tiers et CSP** : `vuedraggable` est aliasé vers sa source ESM dans `vite.config.ts` (son bundle webpack appelle `new Function`). Pour toute nouvelle bibliothèque front (FullCalendar, frappe-gantt, wavesurfer, pdf.js) : vérifier la console **et** chercher `new Function` / `eval(` dans `dist/`. Pour trouver le fautif : écouteur temporaire `securitypolicyviolation`. Ne jamais assouplir la CSP.
+- **Bundle tiers et CSP** : `vuedraggable` est aliasé vers sa source ESM dans `vite.config.ts` (son bundle webpack appelle `new Function`). Pour toute nouvelle bibliothèque front (FullCalendar, frappe-gantt, wavesurfer, pdf.js) : vérifier la console **et** chercher `new Function` / `eval(` dans `dist/`. Pour trouver le fautif : écouteur temporaire `securitypolicyviolation`. Ne jamais assouplir `script-src` (seule exception admise à ce jour, en phase 5 : `font-src data:`).
 - Glisser-déposer : `:force-fallback="true"` (événements pointeur, identique souris / tactile). Mes outils ne savent pas faire un vrai glisser : je vérifie avec des `PointerEvent` synthétiques (`pointerdown` sur la poignée, `pointermove` ×N, puis `pointerup` + `mouseup` sur `document`) et je le note comme limite.
 - `ProjectUserState.tasks_view` existe déjà en base : la phase 5 n'a plus qu'à exposer `PUT /api/projects/{id}/my-state/`.
 - Docker Desktop n'est pas toujours lancé à la reprise : `C:\Program Files\Docker\Docker\Docker Desktop.exe`, attendre le démon, puis `docker compose up -d`.
 - Les 48 tests « skipped » de pytest sont normaux (cas en double des matrices de droits).
+
+## Phase 5 : ce qui a été produit
+
+Détail dans `docs/phases/phase-05-vues-et-navigation.md`. Kanban, calendrier (FullCalendar), Gantt (frappe-gantt), vue mémorisée par projet et par utilisateur, calendrier global, mode Cartes (`apps/dashboard/cards.py`), déplacement de projet. 994 tests backend, 71 tests front. Aucune migration (le champ `tasks_view` existait depuis la phase 4).
+
+À retenir pour la suite :
+
+- **Toute bibliothèque qui dessine son propre DOM est suspecte** : chercher `innerHTML` dans ses sources avant de lui donner un texte saisi par un utilisateur. frappe-gantt le fait (noms de tâches) : on échappe (`escapeHtml` dans `utils/taskViews.ts`) et son popup est désactivé. FullCalendar, lui, rend les titres comme du texte.
+- **CSP : `font-src 'self' data:`** depuis cette phase (police d'icônes de FullCalendar, chargée dès l'insertion de sa règle `@font-face`). C'est le seul assouplissement accepté, parce qu'une police embarquée ne peut rien faire sortir. `script-src` et `connect-src` ne se négocient pas. **À reporter dans le Caddyfile de prod (phase 14).**
+- Feuille de style d'un paquet absente de ses `exports` : alias dans `vite.config.ts` (cas de frappe-gantt).
+- `TaskCalendarView.vue` est prévu pour recevoir les événements (phase 6) et les calendriers externes (phase 11) : lui passer des sources supplémentaires plutôt que d'écrire un second calendrier. `window_start` / `window_end` est le modèle de filtre de période à reprendre pour `/api/events/`.
+- La logique des vues vit dans `utils/taskViews.ts` (pure, testée) ; les composants ne font que brancher la bibliothèque.
+- Composants lourds : `defineAsyncComponent`, pour ne pas les faire télécharger à qui n'ouvre que la liste.
+- **Ordre des `include()` dans `config/urls.py`** : une route fixe sous `/api/projects/…` servie par une autre app doit passer avant le routeur des projets (sinon `cards` est lu comme un identifiant).
+- Glisser vérifiés par événements synthétiques : SortableJS = `PointerEvent` ; FullCalendar et frappe-gantt = `MouseEvent` (`mousedown` sur l'élément, `mousemove` ×N, `mouseup` sur `document`).
+- Le statut par défaut d'un projet est « Planifié » : sans date de début il est classé **À venir**. Les tests qui veulent un arbre « en cours » doivent le dire.
+- Thème dans le navigateur de test : `resize_window` avec `colorScheme`, pas `localStorage` (le thème « système » du profil l'emporte).
 
 ## Dépendances ajoutées hors SPEC §3
 
@@ -138,7 +155,7 @@ Détail dans `docs/phases/phase-04-dashboards.md`. App `dashboard` (vues enregis
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
 | `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -147,9 +164,10 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 5 : **le Gantt ne se manipule pas au doigt** (frappe-gantt n'écoute que la souris ; sur téléphone on ouvre la tâche pour changer ses dates) ; Gantt en lecture seule « en bloc » (un glisser refusé par le serveur est annulé) ; dans un kanban qui inclut les sous-projets, l'ordre n'est exact qu'à l'intérieur d'un même projet ; le calendrier global ne crée pas de tâche ; pas de glisser-déposer dans l'arbre des projets (liste de destinations à la place) ; glisser du kanban, du calendrier et du Gantt vérifiés par événements synthétiques : **à essayer une fois à la main**.
 - Phase 4 : le glisser-déposer des widgets n'a été vérifié qu'avec des événements pointeur synthétiques (ordre changé, enregistré, « En retard » resté premier) : **à essayer une fois à la souris et au doigt par Luca** ; pas de réordonnancement des onglets de vues ; le dashboard ne se rafraîchit pas tout seul (rechargé à l'ouverture et après chaque action) ; trois widgets attendent les phases 6 et 7.
 - Phase 3 : heures saisies dans le fuseau du navigateur (pas celui du profil) ; checklist non réordonnable à la souris ; une règle avec `COUNT` repart de zéro après une scission ; une tâche quotidienne ignorée laisse une tâche en retard par jour (conséquence voulue de « jamais de report automatique »).
-- Phase 2 : pas de glisser-déposer pour déplacer un projet (API prête, interface en phase 5) ; transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
+- Phase 2 : transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
 
 Limites **anticipées**, à confirmer par test le moment venu :
 
@@ -158,7 +176,6 @@ Limites **anticipées**, à confirmer par test le moment venu :
 - Une version Drive ne peut pas être partagée par lien sans import préalable dans le stockage interne.
 - Pas de reprise d'upload après coupure.
 - Le calendrier Microsoft de la HEG peut être bloqué par la politique de consentement du tenant de l'école.
-- Glisser-déposer tactile du Gantt à vérifier sur mobile.
 
 ## À fournir par Luca (SPEC §20)
 

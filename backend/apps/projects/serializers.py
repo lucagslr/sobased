@@ -6,7 +6,7 @@ from apps.accounts.serializers import PublicUserSerializer
 from apps.workspaces.models import FALLBACK_PROJECT_TYPE, ProjectType, Tag, Workspace
 
 from . import tree
-from .models import Invitation, Membership, Project
+from .models import Invitation, Membership, Project, ProjectUserState
 from .models import Role as StoredRole
 
 # Roles that can be granted through an invitation. "owner" only changes hands
@@ -116,6 +116,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     can_view_finance = serializers.SerializerMethodField()
     can_edit_finance = serializers.SerializerMethodField()
     is_shell = serializers.SerializerMethodField()
+    my_tasks_view = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -141,6 +142,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "can_view_finance",
             "can_edit_finance",
             "is_shell",
+            "my_tasks_view",
             "created_at",
             "updated_at",
         ]
@@ -150,13 +152,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     def _access(self, project):
         return self.context["access_map"].for_project(project.pk)
 
-    @extend_schema_field(
-        serializers.ChoiceField(choices=[tree.PAST, tree.CURRENT, tree.UPCOMING])
-    )
     def _today(self):
         # The view passes the user's local date; the server date is a fallback.
         return self.context.get("today") or timezone.localdate()
 
+    @extend_schema_field(
+        serializers.ChoiceField(choices=[tree.PAST, tree.CURRENT, tree.UPCOMING])
+    )
     def get_temporal(self, project) -> str:
         return tree.temporal(project.status, project.start_date, self._today())
 
@@ -191,6 +193,22 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_is_shell(self, project) -> bool:
         return False
+
+    @extend_schema_field(
+        serializers.ChoiceField(choices=ProjectUserState.TasksView.choices)
+    )
+    def get_my_tasks_view(self, project) -> str:
+        """The task view I used last on this project (SPEC §15: remembered
+        per project, and per user: it follows me across devices)."""
+        request = self.context.get("request")
+        saved = (
+            ProjectUserState.objects.filter(user=request.user, project=project)
+            .values_list("tasks_view", flat=True)
+            .first()
+            if request is not None
+            else None
+        )
+        return saved or ProjectUserState.TasksView.LIST
 
     # --- Validation ------------------------------------------------------------------
     def validate(self, attrs):
@@ -253,6 +271,14 @@ class OverdueProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ["id", "name", "color", "end_date", "status"]
         read_only_fields = fields
+
+
+class MyProjectStateSerializer(serializers.ModelSerializer):
+    """PATCH /api/projects/{id}/my-state/: my own preferences on a project."""
+
+    class Meta:
+        model = ProjectUserState
+        fields = ["tasks_view"]
 
 
 class ShellProjectSerializer(serializers.Serializer):

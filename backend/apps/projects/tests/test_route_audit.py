@@ -36,6 +36,7 @@ ALLOWED = {
     # starts from for_user(request); saved filters only narrow it.
     "DashboardSummaryView": "for_user() querysets only",
     "ProjectOverviewView": "effective_access() then for_user() querysets",
+    "ProjectCardsView": "built from the AccessMap and for_user() querysets",
     "DashboardViewViewSet": "rows of request.user only",
 }
 

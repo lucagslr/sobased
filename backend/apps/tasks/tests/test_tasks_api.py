@@ -272,6 +272,45 @@ def test_filtering_on_a_project_i_cannot_see_returns_nothing(tree, make_member):
     assert response.data["count"] == 0
 
 
+def test_window_filter_keeps_tasks_whose_span_crosses_the_window(tree, editor_api):
+    """Calendar and Gantt ask for a period: [window_start, window_end[."""
+    project = tree["A"]
+    TaskFactory(project=project, title="before", due_at=day(-10))
+    TaskFactory(project=project, title="ends-inside", start_at=day(-10), due_at=day(1))
+    TaskFactory(project=project, title="inside", due_at=day(3))
+    TaskFactory(project=project, title="start-only", start_at=day(4))
+    TaskFactory(project=project, title="covers", start_at=day(-20), due_at=day(40))
+    TaskFactory(project=project, title="starts-inside", start_at=day(6), due_at=day(30))
+    TaskFactory(project=project, title="on-the-end-bound", due_at=day(7))
+    TaskFactory(project=project, title="after", start_at=day(8), due_at=day(9))
+    TaskFactory(project=project, title="undated")
+
+    window = f"window_start={iso(day(0))}&window_end={iso(day(7))}"
+    response = editor_api.get(f"/api/tasks/?{window}".replace("+", "%2B"))
+
+    assert titles(response) == [
+        "covers",
+        "ends-inside",
+        "inside",
+        "start-only",
+        "starts-inside",
+    ]
+
+
+def test_window_filter_accepts_a_single_bound(tree, editor_api):
+    TaskFactory(project=tree["A"], title="past", due_at=day(-3))
+    TaskFactory(project=tree["A"], title="future", due_at=day(3))
+
+    assert titles(editor_api.get(f"/api/tasks/?window_start={iso(day(0))}")) == [
+        "future"
+    ]
+    assert titles(editor_api.get(f"/api/tasks/?window_end={iso(day(0))}")) == ["past"]
+
+
+def test_window_filter_rejects_garbage(tree, editor_api):
+    assert editor_api.get("/api/tasks/?window_start=hier").status_code == 400
+
+
 # --- Kanban -------------------------------------------------------------------------
 
 

@@ -48,12 +48,21 @@ export type RecurrenceScope = 'this' | 'following'
 export interface TaskFilters {
   project?: number
   include_descendants?: boolean
+  workspace?: number
   assignee?: string
   open?: boolean
   overdue?: boolean
+  /** Calendar and Gantt: tasks whose span crosses [window_start, window_end[. */
+  window_start?: string
+  window_end?: string
+  page?: number
   page_size?: number
   ordering?: string
 }
+
+/** Boards and timelines need every task, not the first page. 20 pages of 200
+ * is far above what a project holds; the cap only stops a runaway loop. */
+const MAX_PAGES = 20
 
 function query(filters: TaskFilters): string {
   const params = new URLSearchParams()
@@ -69,6 +78,19 @@ export type MovedTask = Task & { warning?: string }
 export const tasksApi = {
   list: (filters: TaskFilters = {}) =>
     api<Paginated<Task>>(`/api/tasks/${query({ page_size: 200, ...filters })}`),
+  /** Every page of `list`, in order (kanban, calendar, Gantt). */
+  async listAll(filters: TaskFilters = {}, signal?: AbortSignal): Promise<Task[]> {
+    const tasks: Task[] = []
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const chunk = await api<Paginated<Task>>(
+        `/api/tasks/${query({ page_size: 200, ...filters, page })}`,
+        { signal },
+      )
+      tasks.push(...chunk.results)
+      if (!chunk.next) break
+    }
+    return tasks
+  },
   get: (id: number) => api<Task>(`/api/tasks/${id}/`),
   create: (body: TaskPayload & { project: number; title: string }) =>
     api<Task>('/api/tasks/', { method: 'POST', body }),

@@ -169,6 +169,6 @@ Précisions :
 - Argon2, validateurs de mot de passe Django (10 caractères min.).
 - Cookies `Secure`, `HttpOnly` (session), `SameSite=Lax` ; CSRF sur toute écriture ; rotation de session à la connexion.
 - Limites : connexion 5 / min par IP et 10 / h par username ; inscription et réinitialisation 5 / h par IP ; recherche d'utilisateurs 30 / min.
-- En-têtes posés par Caddy : HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin`, `Permissions-Policy`, CSP `default-src 'self'` ; exceptions minimales et documentées (`style-src 'unsafe-inline'` pour FullCalendar ; domaines Google chargés uniquement quand l'utilisateur ouvre le Picker ou un aperçu Drive).
+- En-têtes posés par Caddy : HSTS, `X-Content-Type-Options`, `Referrer-Policy: same-origin`, `Permissions-Policy`, CSP `default-src 'self'` ; exceptions minimales et documentées (`style-src 'unsafe-inline'` et `font-src data:` pour FullCalendar, qui injecte ses styles et embarque sa police d'icônes ; domaines Google chargés uniquement quand l'utilisateur ouvre le Picker ou un aperçu Drive).
 - Aucun traceur, aucune police ni script distant (hors Picker Google, à la demande).
 - Uploads : nom de fichier régénéré, type vérifié, jamais exécutés ni servis depuis le domaine sans `Content-Disposition` et `X-Content-Type-Options: nosniff`.

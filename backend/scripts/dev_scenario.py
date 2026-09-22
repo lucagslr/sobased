@@ -131,12 +131,9 @@ def all_day(offset):
 
 
 def task(project_, title, due=None, **fields):
+    fields.setdefault("due_at", all_day(due) if due is not None else None)
     created = Task.objects.create(
-        project=project_,
-        title=title,
-        due_at=all_day(due) if due is not None else None,
-        created_by=demo,
-        **fields,
+        project=project_, title=title, created_by=demo, **fields
     )
     created.assignees.add(demo)
     return created
@@ -155,4 +152,26 @@ montage.blocked_by.add(late)
 ChecklistItem.objects.create(task=montage, title="Recuperer les rushs", pinned=True)
 ChecklistItem.objects.create(task=montage, title="Valider la musique", pinned=True)
 ChecklistItem.objects.create(task=montage, title="Exporter en 9:16")
+
+# --- Phase 5: spans (Gantt), a timed task (calendar), every kanban column ----
+tournage = task(
+    clip, "Tournage du clip", due=6, start_at=all_day(4), status="in_progress"
+)
+tournage.blocked_by.add(late)
+montage.start_at = all_day(7)
+montage.save()
+montage.blocked_by.add(tournage)
+etalonnage = task(clip, "Etalonnage", due=13, start_at=all_day(11))
+etalonnage.blocked_by.add(montage)
+task(clip, "Reperages", due=-10, start_at=all_day(-14), status="done")
+task(clip, "Casting figurants", due=-6, status="cancelled")
+task(clip, "<b>Titre piege</b> <img src=x onerror=alert(1)>", due=3)
+noon = datetime.now(UTC).replace(hour=12, minute=0, second=0, microsecond=0)
+task(
+    album,
+    "Appel avec le distributeur",
+    all_day=False,
+    start_at=noon + timedelta(days=1),
+    due_at=noon + timedelta(days=1, hours=1),
+)
 print("TASKS", Task.objects.count())

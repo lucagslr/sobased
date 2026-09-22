@@ -60,7 +60,12 @@ import RecurrenceScopeDialog from './RecurrenceScopeDialog.vue'
 import TaskChecklist from './TaskChecklist.vue'
 import TaskComments from './TaskComments.vue'
 
-const props = defineProps<{ taskId?: number | null; createIn?: number | null }>()
+const props = defineProps<{
+  taskId?: number | null
+  createIn?: number | null
+  /** Creation from a calendar: the day that was clicked (YYYY-MM-DD). */
+  createDue?: string | null
+}>()
 const emit = defineEmits<{ changed: []; created: [task: Task] }>()
 const open = defineModel<boolean>('open', { required: true })
 
@@ -124,7 +129,7 @@ function fill(source: Task | null) {
     all_day: source?.all_day ?? true,
     start_date: start.date,
     start_time: start.time,
-    due_date: due.date,
+    due_date: source ? due.date : (props.createDue ?? ''),
     due_time: due.time,
     assignees: source?.assignees.map((user) => user.username) ?? [],
     tags: [...(source?.tags ?? [])],

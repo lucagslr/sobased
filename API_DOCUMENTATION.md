@@ -57,8 +57,8 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 
 | Méthode | Chemin | Rôle min. | Description |
 |---|---|---|---|
-| GET | `/api/projects/tree/?workspace=&include_archived=` | — | Liste à plat de tous les nœuds visibles (le front construit l'arbre). Chaque nœud : `id, parent, depth, name, color, is_shell` et, hors coquille : `type, status, dates, temporal, tags, my_role, can_view_finance, can_edit_finance, open_tasks, overdue_tasks` |
-| GET | `/api/projects/cards/?workspace=` | — | Mode Cartes : par projet racine, sous-projets classés Passé / En cours / À venir, prochaine échéance, avancement, budget si `finance:voir` |
+| GET | `/api/projects/tree/?workspace=&include_archived=` | — | Liste à plat de tous les nœuds visibles (le front construit l'arbre). Chaque nœud : `id, parent, depth, name, color, is_shell, position` et, hors coquille : `type, type_name, status, dates, temporal, end_overdue, tags, my_role, can_view_finance, can_edit_finance`. Sans `include_archived`, un projet archivé est omis **avec toute sa branche**. Les compteurs de tâches sont dans `/api/projects/cards/` |
+| GET | `/api/projects/cards/?workspace=` | — | Mode Cartes : une carte par projet racine visible (tous mes espaces sans paramètre). Carte : `id, workspace, name, color, is_shell`, puis `type_name, status, start_date, end_date, temporal, end_overdue` (nuls si coquille), `tasks_total, tasks_done, tasks_overdue` (cumulés sur la branche que je vois ; annulées et occurrences futures de séries exclues), `next_due` `{task, title, date, project}` ou `null`, et trois listes `past`, `current`, `upcoming` de sous-projets (`id, name, color, type_name, status, dates, end_overdue, children_count`, mêmes compteurs). Racine en coquille : les listes contiennent les premiers projets que je peux ouvrir. Branches archivées exclues. Budget si `finance:voir` : phase 7 |
 | POST | `/api/projects/` | Éditeur sur le parent (ou sur l'espace pour un projet racine) | Création. Refus si `depth > 4`. Option `create_drive_folder` |
 | GET | `/api/projects/{id}/` | Lecteur (coquille : champs réduits) | Détail + fil d'Ariane |
 | PATCH | `/api/projects/{id}/` | Éditeur | Champs, statut, dates, tags |
@@ -68,7 +68,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | GET | `/api/projects/{id}/overview/` | Lecteur (coquille : 404) | Mini-dashboard du projet et de ses sous-projets : `{date, overdue, today, milestones}`. `overdue` et `today` ont la forme d'un widget (`available, count, items`). `milestones` : les 8 prochains éléments datés (`kind` = `task`, `project_start` ou `project_end`). Le bloc budget arrive en phase 7 |
 | GET | `/api/projects/overdue/` | — | File de la modale « fin dépassée », du plus ancien au plus récent : projets où j'ai Éditeur+, `end_date` passée **dans mon fuseau**, statut ouvert, non reportés pour moi |
 | POST | `/api/projects/{id}/snooze-overdue/` | Éditeur | « Me rappeler demain » (par utilisateur, expire le lendemain). `204` |
-| PUT | `/api/projects/{id}/my-state/` | Lecteur | Mémorise ma vue des tâches (liste / kanban / calendrier / gantt) · *phase 5* |
+| PATCH | `/api/projects/{id}/my-state/` | Lecteur | Mémorise **ma** vue des tâches sur ce projet : `{tasks_view}` = `list`, `kanban`, `calendar` ou `gantt`. Relue dans `my_tasks_view` du détail du projet. Coquille : 404 |
 | GET | `/api/memberships/?workspace=` ou `?project=` | Lecteur | Membres **effectifs** : accès direct et hérité, avec `source` (espace, projet ancêtre) |
 | POST | `/api/memberships/` | Admin sur la portée | Invite par `username` (adhésion immédiate + notification, `201`) ou par `email` (si compte vérifié : adhésion ; sinon invitation en attente, `202`). Corps : portée, rôle, options finance |
 | PATCH | `/api/memberships/{id}/` | Admin sur la portée | Rôle et options finance. Jamais la ligne du propriétaire ; impossible d'attribuer `owner` |
@@ -83,7 +83,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 
 | Méthode | Chemin | Rôle min. | Description |
 |---|---|---|---|
-| GET | `/api/tasks/` | Lecteur | Filtres : `project`, `include_descendants`, `workspace`, `assignee` (`me` ou id), `status`, `priority`, `tag`, `overdue`, `due_after`, `due_before`, `no_date`, `blocked`, `search`, `ordering` |
+| GET | `/api/tasks/` | Lecteur | Filtres : `project`, `include_descendants`, `workspace`, `assignee` (`me` ou nom d'utilisateur), `status` (répétable), `priority`, `tag`, `overdue`, `open`, `due_after`, `due_before`, `no_date`, `search`, `ordering`. Calendrier et Gantt : `window_start` et `window_end` (ISO, chacun facultatif) gardent les tâches dont l'intervalle [début, échéance] croise la période ; une tâche à une seule date est un point. Paginé : `page`, `page_size` (200 au plus) |
 | POST | `/api/tasks/` | Éditeur | Création, avec `rrule` optionnel (crée la série) |
 | GET | `/api/tasks/{id}/` | Lecteur | Détail : checklist, bloqueurs (`is_blocked`), liens Drive, RDV source |
 | PATCH | `/api/tasks/{id}/` | Éditeur (assigné : statut seulement, voir SPECIFICATIONS §1.3) | `?scope=this\|following` pour une occurrence |

@@ -11,11 +11,16 @@
 	# shows up during development, not after deployment. Two dev-only additions
 	# for Vite: the HMR WebSocket (connect-src ws:) and its ping worker
 	# (worker-src blob:). Neither exists in the production Caddyfile.
+	#
+	# font-src data: (production too): FullCalendar embeds its small icon font
+	# as a data: URI, and browsers fetch a data: font as soon as its @font-face
+	# rule exists, used or not. An embedded font cannot call out, so nothing
+	# can leak through it; scripts, connections and frames stay locked down.
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
 		Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' ws://localhost:8080; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ws://localhost:8080; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 		-Server
 	}
 

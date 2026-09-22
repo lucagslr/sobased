@@ -13,6 +13,9 @@ export type Role = Schemas['RoleEnum']
 export type GrantableRole = Schemas['GrantableRoleEnum']
 export type ProjectStatus = Schemas['ProjectStatusEnum']
 export type Temporal = Schemas['TemporalEnum']
+export type TasksView = Schemas['TasksViewEnum']
+export type ProjectCard = Schemas['ProjectCard']
+export type CardEntry = Schemas['CardEntry']
 export type EffectiveMember = Schemas['EffectiveMember']
 export type Invitation = Schemas['Invitation']
 export type InvitationLookup = Schemas['InvitationLookup']
@@ -98,6 +101,15 @@ export const projectsApi = {
   remove: (id: number) => api(`/api/projects/${id}/`, { method: 'DELETE' }),
   move: (id: number, parent: number | null) =>
     api<Project>(`/api/projects/${id}/move/`, { method: 'POST', body: { parent } }),
+  /** "Cartes" mode: one card per root project (all workspaces if omitted). */
+  cards: (workspace?: number) =>
+    api<ProjectCard[]>(`/api/projects/cards/${workspace ? `?workspace=${workspace}` : ''}`),
+  /** Remembers the task view I use on this project (follows me across devices). */
+  setMyState: (id: number, tasksView: TasksView) =>
+    api<{ tasks_view: TasksView }>(`/api/projects/${id}/my-state/`, {
+      method: 'PATCH',
+      body: { tasks_view: tasksView },
+    }),
   transferOwnership: (id: number, username: string) =>
     api<Project>(`/api/projects/${id}/transfer-ownership/`, {
       method: 'POST',

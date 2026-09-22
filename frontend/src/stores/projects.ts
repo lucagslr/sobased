@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { type ProjectNode, projectsApi } from '@/api/projects'
+import { type ProjectNode, projectsApi, type TasksView } from '@/api/projects'
 import { buildTree, type TreeNode } from '@/utils/projects'
 
 import { useWorkspacesStore } from './workspaces'
@@ -14,6 +14,9 @@ export const useProjectsStore = defineStore('projects', () => {
   const nodes = ref<ProjectNode[]>([])
   const loaded = ref(false)
   const showArchived = ref(false)
+  /** Task view chosen on a project during this visit (the server has it too;
+   * this only covers the time until the project is fetched again). */
+  const tasksViews = new Map<number, TasksView>()
 
   const byId = computed(() => new Map(nodes.value.map((node) => [node.id, node])))
 
@@ -39,7 +42,8 @@ export const useProjectsStore = defineStore('projects', () => {
   function reset() {
     nodes.value = []
     loaded.value = false
+    tasksViews.clear()
   }
 
-  return { nodes, loaded, showArchived, byId, tree, load, childrenOf, reset }
+  return { nodes, loaded, showArchived, tasksViews, byId, tree, load, childrenOf, reset }
 })

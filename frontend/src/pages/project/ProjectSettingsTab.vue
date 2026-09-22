@@ -1,19 +1,22 @@
 <script setup lang="ts">
 /**
- * Project settings: members and rights, then the irreversible actions.
- * The Drive folder section is added in phase 10.
+ * Project settings: members and rights, moving the project in the tree, then
+ * the irreversible actions. The Drive folder section is added in phase 10.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { type Project, projectsApi, type Role } from '@/api/projects'
 import MembersPanel from '@/components/projects/MembersPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
+import { useWorkspacesStore } from '@/stores/workspaces'
+import { moveTargets } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
 const props = defineProps<{
@@ -24,7 +27,51 @@ const props = defineProps<{
 const emit = defineEmits<{ deleted: []; changed: [] }>()
 
 const projects = useProjectsStore()
+const workspaces = useWorkspacesStore()
 const ui = useUiStore()
+
+// --- Move (admin of the project + editor of the destination) -----------------
+const ROOT = 'root'
+const destination = ref('')
+const moving = ref(false)
+const canMove = computed(() => atLeast(props.project.my_role, 'admin'))
+const moveOptions = computed(() => {
+  const options = moveTargets(projects.nodes, props.project.id).map((target) => ({
+    value: String(target.id),
+    label: target.path,
+  }))
+  const workspaceRole = workspaces.byId.get(props.project.workspace)?.my_role
+  if (props.project.parent !== null && atLeast(workspaceRole, 'editor')) {
+    options.unshift({ value: ROOT, label: "— À la racine de l'espace —" })
+  }
+  return [{ value: '', label: 'Choisir une destination…' }, ...options]
+})
+watch(
+  () => props.project.id,
+  () => (destination.value = ''),
+)
+
+async function move() {
+  if (!destination.value) return
+  moving.value = true
+  try {
+    await projectsApi.move(
+      props.project.id,
+      destination.value === ROOT ? null : Number(destination.value),
+    )
+    await projects.load()
+    destination.value = ''
+    ui.toast('Projet déplacé', 'success', 'Ses sous-projets ont suivi.')
+    emit('changed')
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? (error.fieldErrors.parent?.[0] ?? error.message) : ''
+    ui.toast(message || "Le projet n'a pas été déplacé.", 'error')
+  } finally {
+    moving.value = false
+  }
+}
+
 const deleteDialog = ref(false)
 const deleting = ref(false)
 const heir = ref('')
@@ -88,6 +135,29 @@ async function transfer() {
         :can-edit-finance="project.can_edit_finance"
         @changed="emit('changed')"
       />
+    </FormCard>
+
+    <FormCard
+      v-if="canMove"
+      title="Déplacer le projet"
+      description="Change le parent du projet, dans le même espace. Ses sous-projets le suivent, sans jamais dépasser 4 niveaux. Les accès hérités de l'ancien parent sont remplacés par ceux du nouveau."
+    >
+      <form
+        v-if="moveOptions.length > 1"
+        class="flex flex-wrap items-end gap-3"
+        @submit.prevent="move"
+      >
+        <div class="min-w-48 flex-1">
+          <BaseSelect v-model="destination" label="Destination" :options="moveOptions" />
+        </div>
+        <BaseButton type="submit" variant="secondary" :loading="moving" :disabled="!destination">
+          Déplacer
+        </BaseButton>
+      </form>
+      <p v-else class="text-sm text-muted">
+        Aucune destination possible : il faut être éditeur du projet d'accueil, et que la branche y
+        tienne en 4 niveaux.
+      </p>
     </FormCard>
 
     <FormCard

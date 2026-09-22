@@ -221,6 +221,7 @@ SPECTACULAR_SETTINGS = {
         "GrantableRoleEnum": "apps.projects.serializers.GRANTABLE_ROLES",
         "ProjectStatusEnum": "apps.projects.models.PROJECT_STATUS_CHOICES",
         "TaskStatusEnum": "apps.tasks.models.TASK_STATUS_CHOICES",
+        "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },
 }

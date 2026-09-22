@@ -316,3 +316,7 @@ class ProjectUserState(TimeStampedModel):
                 fields=["user", "project"], name="projectuserstate_unique_user_project"
             )
         ]
+
+
+# Importable path for drf-spectacular's ENUM_NAME_OVERRIDES.
+TASKS_VIEW_CHOICES = ProjectUserState.TasksView.choices

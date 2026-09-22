@@ -40,9 +40,13 @@ export function localDateKey(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-/** YYYY-MM-DD of a task date: the UTC date if all-day, the local date otherwise. */
+/**
+ * YYYY-MM-DD of a task date: the UTC date if all-day, the local date otherwise.
+ * The UTC date is computed, not cut out of the string: the API writes
+ * midnight UTC in the server's zone ("2026-10-12T02:00:00+02:00").
+ */
 export function dateKey(iso: string, allDay: boolean): string {
-  return allDay ? iso.slice(0, 10) : localDateKey(new Date(iso))
+  return allDay ? new Date(iso).toISOString().slice(0, 10) : localDateKey(new Date(iso))
 }
 
 /** Form values -> ISO string for the API ("" means no date). */
@@ -55,7 +59,7 @@ export function toIso(date: string, time: string, allDay: boolean): string | nul
 /** ISO string from the API -> form values. */
 export function fromIso(iso: string | null, allDay: boolean): { date: string; time: string } {
   if (!iso) return { date: '', time: '' }
-  if (allDay) return { date: iso.slice(0, 10), time: '' }
+  if (allDay) return { date: dateKey(iso, true), time: '' }
   const local = new Date(iso)
   return { date: localDateKey(local), time: `${pad(local.getHours())}:${pad(local.getMinutes())}` }
 }

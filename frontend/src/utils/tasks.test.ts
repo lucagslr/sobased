@@ -27,6 +27,12 @@ describe('all-day dates', () => {
     expect(dateKey('2026-10-12T00:00:00Z', true)).toBe('2026-10-12')
   })
 
+  it('reads the UTC date whatever zone the API wrote midnight UTC in', () => {
+    expect(dateKey('2026-10-12T02:00:00+02:00', true)).toBe('2026-10-12')
+    expect(dateKey('2026-10-11T19:00:00-05:00', true)).toBe('2026-10-12')
+    expect(fromIso('2026-10-11T19:00:00-05:00', true)).toEqual({ date: '2026-10-12', time: '' })
+  })
+
   it('keeps timed dates as real instants', () => {
     const iso = toIso('2026-10-12', '14:30', false)!
     expect(fromIso(iso, false)).toEqual({ date: '2026-10-12', time: '14:30' })

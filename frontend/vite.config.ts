@@ -17,6 +17,11 @@ export default defineConfig({
       vuedraggable: fileURLToPath(
         new URL('./node_modules/vuedraggable/src/vuedraggable.js', import.meta.url),
       ),
+      // frappe-gantt ships its stylesheet but forgets to list it in the
+      // "exports" of its package.json, so the bare import cannot be resolved.
+      'frappe-gantt/dist/frappe-gantt.css': fileURLToPath(
+        new URL('./node_modules/frappe-gantt/dist/frappe-gantt.css', import.meta.url),
+      ),
     },
   },
   server: {

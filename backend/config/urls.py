@@ -12,7 +12,9 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/", include("apps.accounts.urls")),
     path("api/", include("apps.workspaces.urls")),
+    # Before apps.projects: /api/projects/cards/ would otherwise be read by the
+    # projects router as the detail of a project whose id is "cards".
+    path("api/", include("apps.dashboard.urls")),
     path("api/", include("apps.projects.urls")),
     path("api/", include("apps.tasks.urls")),
-    path("api/", include("apps.dashboard.urls")),
 ]

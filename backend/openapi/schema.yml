@@ -1025,6 +1025,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/Project'
           description: ''
+  /api/projects/{id}/my-state/:
+    patch:
+      operationId: projects_my_state_partial_update
+      description: |-
+        Remember MY task view (list / kanban / calendar / gantt) on this
+        project. Stored on the server so that it follows me across devices.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project.
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMyProjectStateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMyProjectStateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProjectState'
+          description: ''
   /api/projects/{id}/overview/:
     get:
       operationId: projects_overview_retrieve
@@ -1095,6 +1127,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/cards/:
+    get:
+      operationId: projects_cards_list
+      description: 'Cards mode of the Projects page: one card per root project (cards.py).'
+      parameters:
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+        description: Un seul espace
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectCard'
           description: ''
   /api/projects/overdue/:
     get:
@@ -1484,6 +1539,16 @@ paths:
         explode: true
         style: form
       - in: query
+        name: window_end
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: window_start
+        schema:
+          type: string
+          format: date-time
+      - in: query
         name: workspace
         schema:
           type: number
@@ -1759,6 +1824,16 @@ paths:
         name: task
         schema:
           type: integer
+      - in: query
+        name: window_end
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: window_start
+        schema:
+          type: string
+          format: date-time
       - in: query
         name: workspace
         schema:
@@ -2045,6 +2120,52 @@ components:
       - id
       - is_shell
       - name
+    CardEntry:
+      type: object
+      description: A sub-project inside one of the three columns of a card.
+      properties:
+        tasks_total:
+          type: integer
+          description: Cancelled tasks and future repetitions excluded
+        tasks_done:
+          type: integer
+        tasks_overdue:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        type_name:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProjectStatusEnum'
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        end_overdue:
+          type: boolean
+        children_count:
+          type: integer
+      required:
+      - children_count
+      - color
+      - end_date
+      - end_overdue
+      - id
+      - name
+      - start_date
+      - status
+      - tasks_done
+      - tasks_overdue
+      - tasks_total
+      - type_name
     ChecklistItem:
       type: object
       properties:
@@ -2547,6 +2668,31 @@ components:
       required:
       - position
       - status
+    MyProjectState:
+      type: object
+      description: 'PATCH /api/projects/{id}/my-state/: my own preferences on a project.'
+      properties:
+        tasks_view:
+          $ref: '#/components/schemas/TasksViewEnum'
+      required:
+      - tasks_view
+    NextDue:
+      type: object
+      properties:
+        task:
+          type: integer
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        project:
+          type: integer
+      required:
+      - date
+      - project
+      - task
+      - title
     NullEnum:
       enum:
       - null
@@ -2718,6 +2864,12 @@ components:
           type: boolean
         can_edit_finance:
           type: boolean
+    PatchedMyProjectStateRequest:
+      type: object
+      description: 'PATCH /api/projects/{id}/my-state/: my own preferences on a project.'
+      properties:
+        tasks_view:
+          $ref: '#/components/schemas/TasksViewEnum'
     PatchedProjectRequest:
       type: object
       description: Create / read / update a project the user has a real role on.
@@ -2972,7 +3124,8 @@ components:
           maximum: 2147483647
           minimum: 0
         temporal:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/TemporalEnum'
           readOnly: true
         end_overdue:
           type: boolean
@@ -2997,6 +3150,10 @@ components:
         is_shell:
           type: boolean
           readOnly: true
+        my_tasks_view:
+          allOf:
+          - $ref: '#/components/schemas/TasksViewEnum'
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -3018,6 +3175,7 @@ components:
       - id
       - is_shell
       - my_role
+      - my_tasks_view
       - name
       - parent
       - position
@@ -3028,6 +3186,87 @@ components:
       - type
       - type_name
       - updated_at
+      - workspace
+    ProjectCard:
+      type: object
+      description: |-
+        One root project. When the root is a SHELL for me, only its id,
+        workspace, name and colour are filled; the rest covers my branches.
+      properties:
+        tasks_total:
+          type: integer
+          description: Cancelled tasks and future repetitions excluded
+        tasks_done:
+          type: integer
+        tasks_overdue:
+          type: integer
+        id:
+          type: integer
+        workspace:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        is_shell:
+          type: boolean
+        type_name:
+          type: string
+          nullable: true
+        status:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/ProjectStatusEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        temporal:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/TemporalEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        end_overdue:
+          type: boolean
+        next_due:
+          allOf:
+          - $ref: '#/components/schemas/NextDue'
+          nullable: true
+        past:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardEntry'
+        current:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardEntry'
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardEntry'
+      required:
+      - color
+      - current
+      - end_date
+      - end_overdue
+      - id
+      - is_shell
+      - name
+      - next_due
+      - past
+      - start_date
+      - status
+      - tasks_done
+      - tasks_overdue
+      - tasks_total
+      - temporal
+      - type_name
+      - upcoming
       - workspace
     ProjectNode:
       type: object
@@ -3614,6 +3853,18 @@ components:
       - available
       - count
       - items
+    TasksViewEnum:
+      enum:
+      - list
+      - kanban
+      - calendar
+      - gantt
+      type: string
+      description: |-
+        * `list` - Liste
+        * `kanban` - Kanban
+        * `calendar` - Calendrier
+        * `gantt` - Gantt
     TemporalEnum:
       enum:
       - past

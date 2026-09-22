@@ -601,6 +601,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{id}/my-state/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Remember MY task view (list / kanban / calendar / gantt) on this
+         *     project. Stored on the server so that it follows me across devices.
+         */
+        patch: operations["projects_my_state_partial_update"];
+        trace?: never;
+    };
     "/api/projects/{id}/overview/": {
         parameters: {
             query?: never;
@@ -646,6 +666,23 @@ export interface paths {
         put?: never;
         /** @description Root projects only: hand ownership to someone with direct access. */
         post: operations["projects_transfer_ownership_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/cards/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cards mode of the Projects page: one card per root project (cards.py). */
+        get: operations["projects_cards_list"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1074,6 +1111,24 @@ export interface components {
             color: string;
             is_shell: boolean;
         };
+        /** @description A sub-project inside one of the three columns of a card. */
+        CardEntry: {
+            /** @description Cancelled tasks and future repetitions excluded */
+            tasks_total: number;
+            tasks_done: number;
+            tasks_overdue: number;
+            id: number;
+            name: string;
+            color: string;
+            type_name: string;
+            status: components["schemas"]["ProjectStatusEnum"];
+            /** Format: date */
+            start_date: string | null;
+            /** Format: date */
+            end_date: string | null;
+            end_overdue: boolean;
+            children_count: number;
+        };
         ChecklistItem: {
             readonly id: number;
             readonly task: number;
@@ -1264,6 +1319,17 @@ export interface components {
             status: components["schemas"]["TaskStatusEnum"];
             position: number;
         };
+        /** @description PATCH /api/projects/{id}/my-state/: my own preferences on a project. */
+        MyProjectState: {
+            tasks_view: components["schemas"]["TasksViewEnum"];
+        };
+        NextDue: {
+            task: number;
+            title: string;
+            /** Format: date */
+            date: string;
+            project: number;
+        };
         /** @enum {unknown} */
         NullEnum: null;
         /** @description What the "fin dépassée" modal needs: « MARCHIOLY devait se terminer le … ». */
@@ -1337,6 +1403,10 @@ export interface components {
             role?: components["schemas"]["GrantableRoleEnum"];
             can_view_finance?: boolean;
             can_edit_finance?: boolean;
+        };
+        /** @description PATCH /api/projects/{id}/my-state/: my own preferences on a project. */
+        PatchedMyProjectStateRequest: {
+            tasks_view?: components["schemas"]["TasksViewEnum"];
         };
         /** @description Create / read / update a project the user has a real role on. */
         PatchedProjectRequest: {
@@ -1431,17 +1501,45 @@ export interface components {
             color: string;
             tags: number[];
             position: number;
-            readonly temporal: string;
+            readonly temporal: components["schemas"]["TemporalEnum"];
             readonly end_overdue: boolean;
             readonly breadcrumb: components["schemas"]["Breadcrumb"][];
             readonly my_role: (components["schemas"]["RoleEnum"] | components["schemas"]["NullEnum"]) | null;
             readonly can_view_finance: boolean;
             readonly can_edit_finance: boolean;
             readonly is_shell: boolean;
+            readonly my_tasks_view: components["schemas"]["TasksViewEnum"];
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        /**
+         * @description One root project. When the root is a SHELL for me, only its id,
+         *     workspace, name and colour are filled; the rest covers my branches.
+         */
+        ProjectCard: {
+            /** @description Cancelled tasks and future repetitions excluded */
+            tasks_total: number;
+            tasks_done: number;
+            tasks_overdue: number;
+            id: number;
+            workspace: number;
+            name: string;
+            color: string;
+            is_shell: boolean;
+            type_name: string | null;
+            status: (components["schemas"]["ProjectStatusEnum"] | components["schemas"]["NullEnum"]) | null;
+            /** Format: date */
+            start_date: string | null;
+            /** Format: date */
+            end_date: string | null;
+            temporal: (components["schemas"]["TemporalEnum"] | components["schemas"]["NullEnum"]) | null;
+            end_overdue: boolean;
+            next_due: components["schemas"]["NextDue"] | null;
+            past: components["schemas"]["CardEntry"][];
+            current: components["schemas"]["CardEntry"][];
+            upcoming: components["schemas"]["CardEntry"][];
         };
         /**
          * @description One node of GET /api/projects/tree/ (a flat list; the front nests it).
@@ -1660,6 +1758,14 @@ export interface components {
             count: number;
             items: components["schemas"]["Task"][];
         };
+        /**
+         * @description * `list` - Liste
+         *     * `kanban` - Kanban
+         *     * `calendar` - Calendrier
+         *     * `gantt` - Gantt
+         * @enum {string}
+         */
+        TasksViewEnum: "list" | "kanban" | "calendar" | "gantt";
         /**
          * @description * `past` - past
          *     * `current` - current
@@ -2772,6 +2878,33 @@ export interface operations {
             };
         };
     };
+    projects_my_state_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedMyProjectStateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedMyProjectStateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyProjectState"];
+                };
+            };
+        };
+    };
     projects_overview_retrieve: {
         parameters: {
             query?: never;
@@ -2837,6 +2970,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_cards_list: {
+        parameters: {
+            query?: {
+                /** @description Un seul espace */
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectCard"][];
                 };
             };
         };
@@ -3117,6 +3272,8 @@ export interface operations {
                  */
                 status?: ("cancelled" | "done" | "in_progress" | "to_validate" | "todo")[];
                 tag?: number[];
+                window_end?: string;
+                window_start?: string;
                 workspace?: number;
             };
             header?: never;
@@ -3285,6 +3442,8 @@ export interface operations {
                 status?: ("cancelled" | "done" | "in_progress" | "to_validate" | "todo")[];
                 tag?: number[];
                 task?: number;
+                window_end?: string;
+                window_start?: string;
                 workspace?: number;
             };
             header?: never;

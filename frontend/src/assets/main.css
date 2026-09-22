@@ -69,6 +69,154 @@
   }
 }
 
+/*
+ * Third-party widgets. Both draw their own DOM, so they are themed from here
+ * with OUR tokens: they follow the light / dark switch like everything else.
+ * Task and project colours are pastels: text on them is dark in both themes.
+ */
+
+/* FullCalendar (components/tasks/TaskCalendarView.vue) */
+.task-calendar {
+  --fc-border-color: var(--c-line);
+  --fc-page-bg-color: var(--c-surface);
+  --fc-neutral-bg-color: var(--c-surface-2);
+  --fc-neutral-text-color: var(--c-muted);
+  --fc-today-bg-color: color-mix(in srgb, var(--c-fg) 7%, transparent);
+  --fc-now-indicator-color: var(--c-danger);
+  --fc-highlight-color: color-mix(in srgb, var(--c-fg) 10%, transparent);
+  --fc-list-event-hover-bg-color: var(--c-surface-2);
+  --fc-button-text-color: var(--c-fg);
+  --fc-button-bg-color: var(--c-surface);
+  --fc-button-border-color: var(--c-line);
+  --fc-button-hover-bg-color: var(--c-surface-2);
+  --fc-button-hover-border-color: var(--c-line);
+  --fc-button-active-bg-color: var(--c-accent);
+  --fc-button-active-border-color: var(--c-accent);
+  --fc-small-font-size: 0.8rem;
+}
+
+.task-calendar .fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.task-calendar .fc .fc-toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.task-calendar .fc .fc-toolbar-title::first-letter {
+  text-transform: uppercase;
+}
+
+.task-calendar .fc .fc-button {
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: none !important;
+  text-transform: none;
+}
+
+.task-calendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+.task-calendar .fc .fc-button-primary:not(:disabled):active {
+  color: var(--c-accent-fg);
+}
+
+.task-calendar .fc .fc-button:focus-visible {
+  outline: 2px solid var(--c-fg);
+  outline-offset: 2px;
+}
+
+.task-calendar .fc .fc-col-header-cell-cushion,
+.task-calendar .fc .fc-list-day-cushion {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.task-calendar .fc .fc-daygrid-day-number {
+  font-size: 0.8rem;
+  color: var(--c-muted);
+}
+
+.task-calendar .fc .fc-day-today .fc-daygrid-day-number {
+  font-weight: 700;
+  color: var(--c-fg);
+}
+
+.task-calendar .fc .task-event {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 1px 4px;
+  font-weight: 500;
+}
+
+.task-calendar .fc .task-event-overdue {
+  box-shadow: inset 3px 0 0 var(--c-danger);
+}
+
+.task-calendar .fc .task-event-closed {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.task-calendar .fc .fc-list-event {
+  cursor: pointer;
+}
+
+.task-calendar-creatable .fc .fc-daygrid-day,
+.task-calendar-creatable .fc .fc-timegrid-slot-lane {
+  cursor: copy;
+}
+
+/* frappe-gantt (components/tasks/TaskGanttView.vue) */
+.task-gantt {
+  --g-arrow-color: var(--c-muted);
+  --g-bar-color: var(--c-surface-2);
+  --g-bar-border: var(--c-line);
+  --g-tick-color: var(--c-surface-2);
+  --g-tick-color-thick: var(--c-line);
+  --g-actions-background: var(--c-surface-2);
+  --g-border-color: var(--c-line);
+  --g-text-muted: var(--c-muted);
+  --g-text-dark: var(--c-fg);
+  --g-text-light: var(--c-accent-fg);
+  --g-progress-color: rgb(0 0 0 / 0.16);
+  --g-handle-color: var(--c-fg);
+  --g-header-background: var(--c-surface);
+  --g-row-color: var(--c-surface);
+  --g-row-border-color: var(--c-line);
+  --g-today-highlight: var(--c-fg);
+  --g-weekend-label-color: var(--c-line);
+  --g-weekend-highlight-color: var(--c-surface-2);
+}
+
+.task-gantt .gantt-container {
+  border-radius: 0;
+  font-family: inherit;
+}
+
+/* A label sits inside its (pastel) bar, or beside it (.big) when too long. */
+.task-gantt .gantt .bar-label {
+  fill: #1c1917;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.task-gantt .gantt .bar-label.big {
+  fill: var(--c-fg);
+}
+
+.task-gantt .gantt .gantt-overdue .bar {
+  stroke: var(--c-danger);
+  stroke-width: 2;
+}
+
+.task-gantt .gantt .gantt-closed {
+  opacity: 0.55;
+}
+
 @layer base {
   html {
     font-family: var(--font-sans);

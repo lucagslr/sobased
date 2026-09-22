@@ -1,6 +1,8 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from apps.projects import tree
+from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
 
 from .models import WIDGET_KEYS, DashboardView, normalise_filters, normalise_layout
@@ -125,3 +127,60 @@ class ProjectOverviewSerializer(serializers.Serializer):
     overdue = TaskWidgetSerializer()
     today = TaskWidgetSerializer()
     milestones = MilestoneSerializer(many=True)
+
+
+# --- Cards mode of the Projects page (documentation of cards.build_cards) -------
+
+
+class CardStatsSerializer(serializers.Serializer):
+    """Task counts of a project AND of the sub-projects I can see."""
+
+    tasks_total = serializers.IntegerField(
+        help_text="Cancelled tasks and future repetitions excluded"
+    )
+    tasks_done = serializers.IntegerField()
+    tasks_overdue = serializers.IntegerField()
+
+
+class NextDueSerializer(serializers.Serializer):
+    task = serializers.IntegerField()
+    title = serializers.CharField()
+    date = serializers.DateField()
+    project = serializers.IntegerField()
+
+
+class CardEntrySerializer(CardStatsSerializer):
+    """A sub-project inside one of the three columns of a card."""
+
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    color = serializers.CharField()
+    type_name = serializers.CharField()
+    status = serializers.ChoiceField(choices=Project.Status.choices)
+    start_date = serializers.DateField(allow_null=True)
+    end_date = serializers.DateField(allow_null=True)
+    end_overdue = serializers.BooleanField()
+    children_count = serializers.IntegerField()
+
+
+class ProjectCardSerializer(CardStatsSerializer):
+    """One root project. When the root is a SHELL for me, only its id,
+    workspace, name and colour are filled; the rest covers my branches."""
+
+    id = serializers.IntegerField()
+    workspace = serializers.IntegerField()
+    name = serializers.CharField()
+    color = serializers.CharField()
+    is_shell = serializers.BooleanField()
+    type_name = serializers.CharField(allow_null=True)
+    status = serializers.ChoiceField(choices=Project.Status.choices, allow_null=True)
+    start_date = serializers.DateField(allow_null=True)
+    end_date = serializers.DateField(allow_null=True)
+    temporal = serializers.ChoiceField(
+        choices=[tree.PAST, tree.CURRENT, tree.UPCOMING], allow_null=True
+    )
+    end_overdue = serializers.BooleanField()
+    next_due = NextDueSerializer(allow_null=True)
+    past = CardEntrySerializer(many=True)
+    current = CardEntrySerializer(many=True)
+    upcoming = CardEntrySerializer(many=True)

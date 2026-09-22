@@ -39,6 +39,7 @@ from .serializers import (
     MembershipCreateSerializer,
     MembershipUpdateSerializer,
     MoveProjectSerializer,
+    MyProjectStateSerializer,
     OverdueProjectSerializer,
     ProjectNodeSerializer,
     ProjectSerializer,
@@ -117,6 +118,8 @@ class ProjectViewSet(
         "move": Role.ADMIN,
         "transfer_ownership": Role.OWNER,
         "snooze_overdue": Role.EDITOR,
+        # A personal preference, not a change of the project: readers too.
+        "my_state": Role.VIEWER,
     }
 
     def get_project(self, obj):
@@ -146,7 +149,20 @@ class ProjectViewSet(
         if workspace_id.isdigit():
             queryset = queryset.filter(workspace_id=workspace_id)
         if request.query_params.get("include_archived") not in ("true", "1"):
-            queryset = queryset.exclude(status=Project.Status.ARCHIVED)
+            # An archived project takes its whole branch with it: its children
+            # would otherwise show up as roots, their parent being absent.
+            archived = set(
+                queryset.filter(status=Project.Status.ARCHIVED).values_list(
+                    "pk", flat=True
+                )
+            )
+            hidden = [
+                pid
+                for pid in access_map.visible_project_ids()
+                if pid in archived
+                or any(parent in archived for parent in access_map.ancestors(pid))
+            ]
+            queryset = queryset.exclude(pk__in=hidden)
         today = local_today(request.user)
         nodes = [
             project_node(project, access_map.for_project(project.pk), today)
@@ -188,6 +204,21 @@ class ProjectViewSet(
             defaults={"overdue_snoozed_until": local_today(request.user)},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        request=MyProjectStateSerializer, responses={200: MyProjectStateSerializer}
+    )
+    @action(detail=True, methods=["patch"], url_path="my-state")
+    def my_state(self, request, pk=None):
+        """Remember MY task view (list / kanban / calendar / gantt) on this
+        project. Stored on the server so that it follows me across devices."""
+        project = self.get_object()
+        serializer = MyProjectStateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ProjectUserState.objects.update_or_create(
+            user=request.user, project=project, defaults=serializer.validated_data
+        )
+        return Response(serializer.data)
 
     @extend_schema(responses={200: ProjectSerializer})
     def retrieve(self, request, *args, **kwargs):

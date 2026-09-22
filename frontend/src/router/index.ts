@@ -35,8 +35,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'calendrier',
         name: 'calendar',
-        component: comingSoon,
-        meta: { title: 'Calendrier', phase: 5 },
+        component: () => import('@/pages/CalendarPage.vue'),
+        meta: { title: 'Calendrier' },
       },
       {
         path: 'taches',
@@ -161,7 +161,11 @@ router.beforeEach(async (to) => {
   if (to.meta.guestOnly && auth.isAuthenticated) return { name: 'dashboard' }
 })
 
-router.afterEach((to) => {
+router.afterEach((to, from) => {
+  // Same page, new query (?tache=42 opens the task panel): keep the title the
+  // page may have set itself, e.g. the name of the project.
+  // (`from.matched` is empty on the very first navigation.)
+  if (from.matched.length && to.path === from.path) return
   document.title = `${to.meta.title} · SOBASED`
 })
 

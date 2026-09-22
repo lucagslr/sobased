@@ -19,10 +19,12 @@ from apps.projects.models import Project
 from apps.tasks.serializers import PinnedItemSerializer, TaskSerializer
 
 from . import services
+from .cards import build_cards
 from .models import DashboardView, normalise_filters
 from .serializers import (
     DashboardSummarySerializer,
     DashboardViewSerializer,
+    ProjectCardSerializer,
     ProjectOverviewSerializer,
 )
 
@@ -143,6 +145,20 @@ class ProjectOverviewView(APIView):
                 "today": _task_widget(services.today_tasks(request, scope), context),
                 "milestones": services.milestones(request, scope, project.pk),
             }
+        )
+
+
+class ProjectCardsView(APIView):
+    """Cards mode of the Projects page: one card per root project (cards.py)."""
+
+    @extend_schema(
+        parameters=[OpenApiParameter("workspace", int, description="Un seul espace")],
+        responses=ProjectCardSerializer(many=True),
+    )
+    def get(self, request):
+        workspace = request.query_params.get("workspace", "")
+        return Response(
+            build_cards(request, int(workspace) if workspace.isdigit() else None)
         )
 
 

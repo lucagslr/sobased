@@ -19,5 +19,6 @@ urlpatterns = [
         views.ProjectOverviewView.as_view(),
         name="project-overview",
     ),
+    path("projects/cards/", views.ProjectCardsView.as_view(), name="project-cards"),
     *router.urls,
 ]
