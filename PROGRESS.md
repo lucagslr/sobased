@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Les 14 phases sont terminées, `v1.0.0` taguée (puis `v1.0.1` : déploiement sur tag et compléments de `seed_demo`). Il ne reste que ce qui dépend de Luca (SPEC §20) : VPS et nom de domaine puis `make deploy` (`docs/deploy.md`), SMTP, identifiants Google et Microsoft, essais manuels listés dans « Limites connues ».**
+**Dernière mise à jour : 23.09.2026 · Les 14 phases sont terminées, `v1.0.0` taguée (puis `v1.0.1` : déploiement sur tag et compléments de `seed_demo` ; `v1.0.2` : correctif du fichier de workflow). Il ne reste que ce qui dépend de Luca (SPEC §20) : VPS et nom de domaine puis `make deploy` (`docs/deploy.md`), SMTP, identifiants Google et Microsoft, essais manuels listés dans « Limites connues ».**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
