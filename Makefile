@@ -1,6 +1,6 @@
 # Thin wrappers around docker compose. On Windows (no make): see CLAUDE.md for
-# the equivalent commands. backup / restore / deploy arrive in phase 14.
-.PHONY: up down logs migrate makemigrations test lint format seed shell schema
+# the equivalent commands. Production targets use docker-compose.prod.yml.
+.PHONY: up down logs migrate makemigrations test lint format seed shell schema \n	deploy prod-logs backup restore
 
 up:
 	docker compose up -d --build
@@ -39,3 +39,17 @@ seed:
 
 shell:
 	docker compose exec backend python manage.py shell
+
+# --- Production (docs/deploy.md) ---------------------------------------------
+deploy:
+	scripts/deploy.sh
+
+prod-logs:
+	docker compose -f docker-compose.prod.yml logs -f --tail 100
+
+backup:
+	scripts/backup.sh
+
+# make restore ARCHIVE=backups/sobased-20260923-030000.tar.gz.enc
+restore:
+	scripts/restore.sh $(ARCHIVE)

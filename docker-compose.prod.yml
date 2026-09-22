@@ -1,0 +1,92 @@
+# Production stack (docs/deploy.md). Differences with the dev stack: prod
+# image targets (gunicorn, non-root), no source bind mounts, migrations and
+# collectstatic run by scripts/deploy.sh, Caddy with automatic HTTPS serving
+# the built Vue bundle, only ports 80/443 exposed.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+name: sobased
+
+x-backend: &backend
+  build:
+    context: ./backend
+    target: prod
+  image: sobased-backend
+  env_file: .env
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    STATIC_ROOT: /data/static
+  volumes:
+    - media:/data/media
+    - static:/data/static
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    <<: *backend
+
+  worker:
+    <<: *backend
+    command: celery -A config worker -l warning --concurrency 2
+
+  beat:
+    <<: *backend
+    command: celery -A config beat -l warning --schedule /tmp/celerybeat-schedule
+
+  caddy:
+    build:
+      context: .
+      dockerfile: docker/caddy.Dockerfile
+    image: sobased-caddy
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - media:/srv/media:ro
+      - static:/srv/static:ro
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
+  static:
+  caddy_data:
+  caddy_config:

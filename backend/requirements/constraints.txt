@@ -9,7 +9,9 @@ boto3==1.43.99
 botocore==1.43.99
 brotli==1.2.0
 celery==5.6.3
+certifi==2026.7.22
 cffi==2.1.1
+charset-normalizer==3.5.1
 click==8.5.0
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
@@ -26,6 +28,7 @@ factory_boy==3.3.3
 Faker==40.39.0
 flake8==7.3.0
 fonttools==4.65.0
+idna==3.20
 inflection==0.5.1
 iniconfig==2.3.0
 isort==6.1.0
@@ -38,7 +41,7 @@ mypy_extensions==1.1.0
 openpyxl==3.1.5
 packaging==26.3
 pathspec==1.1.1
-pillow==11.3.0
+pillow==12.3.0
 platformdirs==4.11.11
 pluggy==1.6.0
 prompt_toolkit==3.0.53
@@ -58,6 +61,7 @@ pytokens==0.4.1
 PyYAML==6.0.3
 redis==5.3.1
 referencing==0.37.0
+requests==2.34.2
 rpds-py==2026.6.3
 s3transfer==0.19.2
 six==1.17.0

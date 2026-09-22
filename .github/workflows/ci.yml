@@ -64,3 +64,12 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+
+  # The production images must keep building (Dockerfiles, Caddyfile).
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target prod backend
+      - run: docker build -f docker/caddy.Dockerfile .
+      - run: docker run --rm -v "$PWD/Caddyfile.prod:/etc/caddy/Caddyfile:ro" -e DOMAIN=example.org -e ACME_EMAIL=ops@example.org caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile

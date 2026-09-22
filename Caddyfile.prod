@@ -1,0 +1,61 @@
+# Production reverse proxy: automatic HTTPS (Let's Encrypt), the security
+# headers, the Vue bundle, Django's static files and the protected media.
+# DOMAIN and ACME_EMAIL come from .env (docker-compose.prod.yml).
+{
+	email {$ACME_EMAIL}
+	admin off
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Same policy as Caddyfile.dev, minus the two Vite-only allowances
+	# (ws: for HMR, blob: workers), plus HSTS. Read the comments there before
+	# changing anything: every host listed has a reason (Google Picker).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://apis.google.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://www.googleapis.com; frame-src https://docs.google.com https://accounts.google.com; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		-Server
+	}
+
+	# Django: API, admin. Protected files come back as X-Accel-Redirect and
+	# are streamed by Caddy from the media volume (Range requests included);
+	# /srv/media itself is never exposed.
+	@backend path /api/* /admin/*
+	handle @backend {
+		reverse_proxy backend:8000 {
+			@accel header X-Accel-Redirect *
+			handle_response @accel {
+				root * /srv/media
+				rewrite * {rp.header.X-Accel-Redirect}
+				method * GET
+				header Content-Type {rp.header.Content-Type}
+				header Content-Disposition {rp.header.Content-Disposition}
+				header Cache-Control {rp.header.Cache-Control}
+				file_server
+			}
+		}
+	}
+
+	# Django's own static files (admin), collected at deploy time.
+	handle_path /static/* {
+		root * /srv/static
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	# The Vue bundle. Hashed assets are immutable; index.html and the service
+	# worker must never be cached, so that a deploy is visible immediately.
+	handle {
+		root * /srv/www
+		@immutable path /assets/*
+		header @immutable Cache-Control "public, max-age=31536000, immutable"
+		@fresh path / /index.html /sw.js /manifest.webmanifest
+		header @fresh Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

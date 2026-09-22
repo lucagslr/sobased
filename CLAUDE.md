@@ -12,11 +12,12 @@ La machine de dev est sous Windows sans `make` : utiliser les commandes `docker 
 | `make down` | `docker compose down` |
 | `make migrate` | `docker compose exec backend python manage.py migrate` |
 | `make test` | `docker compose exec backend pytest` puis `docker compose exec frontend npm run test` |
-| `make seed` | `docker compose exec backend python manage.py seed_demo` |
+| `make seed` | `docker compose exec backend python manage.py seed_demo` (`--password`, `--sessions` pour le navigateur intégré, `--remove`) |
 | lint | `docker compose exec backend sh -c "black --check . && isort --check . && flake8"` · `docker compose exec frontend npm run lint` |
 | `make schema` | `docker compose exec backend python manage.py spectacular --file openapi/schema.yml` puis `docker compose exec frontend npm run gen:api` (après tout changement d'endpoint ; la CI compare) |
 | tâches Celery | `docker compose restart worker beat` après modification (pas de rechargement auto) |
 | e-mails en dev | `docker compose logs worker` (affichés, pas envoyés) |
+| production | `make deploy` / `make backup` / `make restore ARCHIVE=…` (`scripts/*.sh`, `docker-compose.prod.yml`) ; sous Git Bash : `MSYS_NO_PATHCONV=1 COMPOSE_FILE=docker-compose.yml sh scripts/backup.sh` pour les essayer sur la pile de dev |
 
 Site de dev : `http://localhost:8080` (Caddy → Vite + Django).
 

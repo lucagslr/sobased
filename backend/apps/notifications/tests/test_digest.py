@@ -70,8 +70,10 @@ def test_sections(luca, tree):
     Event.objects.create(
         project=tree["A"],
         title="Réunion label",
-        start=timezone.now().replace(hour=14, minute=0, second=0, microsecond=0),
-        end=timezone.now().replace(hour=15, minute=0, second=0, microsecond=0),
+        # Ongoing right now: "today's meetings" are those not finished yet, so a
+        # fixed hour would make the test depend on the time of day it runs.
+        start=timezone.now() - timedelta(minutes=5),
+        end=timezone.now() + timedelta(hours=1),
         created_by=luca,
     )
     if not tree.workspace.categories.exists():

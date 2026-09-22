@@ -13,8 +13,9 @@ RUN apt-get update \
         libffi8 libjpeg62-turbo libopenjp2-7 shared-mime-info fonts-dejavu-core \
         ffmpeg \
     && rm -rf /var/lib/apt/lists/*
-# Uploaded files live outside the code directory, on a volume shared with Caddy.
-RUN mkdir -p /data/media
+# Uploaded files and collected static files live outside the code directory,
+# on volumes shared with Caddy.
+RUN mkdir -p /data/media /data/static
 COPY requirements/ requirements/
 
 FROM base AS dev
@@ -25,6 +26,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 FROM base AS prod
 RUN pip install -r requirements/prod.txt -c requirements/constraints.txt
 COPY . .
-RUN useradd --uid 1000 --create-home app && chown -R app:app /data/media
+# The named volumes inherit the ownership of these directories on first use.
+RUN useradd --uid 1000 --create-home app && chown -R app:app /data
 USER app
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--worker-class", "gthread", "--workers", "2", "--threads", "4", "--timeout", "120"]

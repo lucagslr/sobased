@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 13 terminées. Prochaine étape : phase 14 (déploiement : `docker-compose.prod.yml` avec Caddy HTTPS automatique et la même CSP que `Caddyfile.dev` (domaines Google inclus), HSTS, gunicorn, `collectstatic`, build Vite servi par Caddy, `SITE_IS_HTTPS`, `PROTECTED_MEDIA_ACCEL` ; `docs/deploy.md` avec la liste exacte pour Luca (VPS, DNS, SMTP, client OAuth Google avec `<SITE_URL>/api/integrations/google/callback/`, APIs Drive + Calendar + Picker, clé API et app id, application Azure avec `<SITE_URL>/api/integrations/microsoft/callback/`) ; sauvegardes quotidiennes `pg_dump` + fichiers chiffrées vers un stockage externe, rétention 30 jours, script de restauration testé ; `manage.py seed_demo` remplaçant `scripts/dev_scenario.py` ; relecture OWASP (en-têtes, limitation de débit, CSRF, uploads, droits, secrets) ; README final ; tag `v1.0.0`).**
+**Dernière mise à jour : 23.09.2026 · Les 14 phases sont terminées, `v1.0.0` taguée. Il ne reste que ce qui dépend de Luca (SPEC §20) : VPS et nom de domaine puis `make deploy` (`docs/deploy.md`), SMTP, identifiants Google et Microsoft, essais manuels listés dans « Limites connues ».**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -24,7 +24,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ✅ terminé · [doc](docs/phases/phase-11-calendriers.md) |
 | 12 | Notifications in-app, e-mails, résumé de 8h | ✅ terminé · [doc](docs/phases/phase-12-notifications.md) |
 | 13 | Journal d'activité, export et suppression des données, PWA | ✅ terminé · [doc](docs/phases/phase-13-activite-export-pwa.md) |
-| 14 | Déploiement, sauvegardes, seed, relecture sécurité OWASP, README | ⏳ |
+| 14 | Déploiement, sauvegardes, seed, relecture sécurité OWASP, README | ✅ terminé · [doc](docs/phases/phase-14-deploiement.md) |
 
 ## Phase 0 : ce qui a été produit
 
@@ -259,6 +259,17 @@ Détail dans `docs/phases/phase-13-activite-export-pwa.md`. App `apps/activity` 
 - La suppression d'un compte laisse la ligne `User` (contenu signé « Utilisateur supprimé ») : les listes d'utilisateurs (recherche, assignés) doivent continuer d'exclure `is_active = false`.
 - La phase 14 doit servir `/sw.js` et `/manifest.webmanifest` depuis le build Vite (ils sont dans `dist/`) et vérifier l'installation sur un vrai téléphone en HTTPS.
 
+## Phase 14 : ce qui a été produit
+
+Détail dans `docs/phases/phase-14-deploiement.md`. `docker-compose.prod.yml` (gunicorn non root, Caddy HTTPS avec le bundle Vue dans l'image, volumes, seuls 80 / 443 exposés), `Caddyfile.prod` (HSTS, même CSP qu'en dev sans les exceptions Vite, relais des fichiers protégés, SPA, caches), `scripts/deploy.sh` idempotent, `scripts/backup.sh` (dump + fichiers, AES-256, rétention 30 jours, copie rclone) et `scripts/restore.sh` **testés de bout en bout sur la pile de dev**, `manage.py seed_demo` (remplace `scripts/dev_scenario.py`, ne touche jamais aux données réelles), relecture OWASP (`docs/securite.md`, Pillow passé en 12.3.0 après `pip-audit`), `docs/deploy.md` avec la liste exacte pour Google et Microsoft, README v1.0.0, job CI de construction des images. **Aucun déploiement réel** (VPS et domaine à fournir).
+
+À retenir pour la suite :
+
+- Les images de production se construisent depuis le dépôt sur le serveur (`make deploy`) ; les épingles (`constraints.txt`, `package-lock.json`) décident des versions : refaire `pip-audit` / `npm audit` et les mettre à jour régulièrement.
+- Les volumes `media` et `static` doivent appartenir à `app` (uid 1000) : l'image les crée avec le bon propriétaire et `deploy.sh` refait un `chown` par sécurité.
+- Sous Git Bash (Windows), tout chemin absolu passé à Docker est converti : `MSYS_NO_PATHCONV=1` devant les scripts ; inutile sur Linux.
+- `seed_demo --sessions` imprime des sessions prêtes pour le navigateur intégré (dev seulement) ; `--remove` nettoie.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -279,6 +290,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 14 : **aucun déploiement réel effectué** (VPS, domaine, SMTP à fournir) : premier `make deploy` à surveiller, installation PWA et flux Google / Microsoft à essayer en HTTPS ; `backup.sh` / `restore.sh` testés sous Git Bash seulement ; pas d'alerte automatique sur un échec de sauvegarde ; admin Django sans limitation de débit propre.
 - Phase 13 : l'historique d'un projet racine supprimé reste en base (espace) mais n'est visible nulle part ; pas de journal pour les commentaires, la checklist, les contacts et les fichiers Drive ; export construit d'un bloc (quelques centaines de Mo au plus) ; suppression de compte sans délai de rétractation ; installation PWA **non essayée sur un téléphone** (service worker en production seulement, HTTPS en phase 14).
 - Phase 12 : compteur de la cloche rafraîchi toutes les 60 s (jusqu'à une minute de latence dans la barre latérale) ; pas de purge des notifications lues ; résumé sans les conflits de synchronisation calendrier ; e-mail du résumé seulement avec adresse vérifiée ; aucun SMTP réel exercé (e-mails lus dans les journaux du worker).
 - Phase 11 : **aucun appel réussi aux vrais Google Calendar et Microsoft Graph** (identifiants à fournir) ; tâche horaire toujours poussée comme créneau de 30 min (une durée changée dehors est re-normalisée) ; canal push seulement en HTTPS public ; miroir des calendriers externes limité à −30 j / +180 j ; conflits visibles dans les paramètres seulement.
@@ -300,7 +312,7 @@ Limites **anticipées**, à confirmer par test le moment venu :
 
 ## À fournir par Luca (SPEC §20)
 
-Non bloquant (les phases 10 et 11 tournent avec des clients simulés) : projet Google Cloud (client OAuth, API Drive, Calendar, Picker), application Azure (`Calendars.ReadWrite`, `offline_access`), SMTP, VPS, nom de domaine. D'ici là : intégrations derrière des variables d'environnement, testées avec des clients simulés. La liste exacte (URL de redirection, scopes) sera dans `docs/deploy.md`.
+Tout est documenté dans `docs/deploy.md` : VPS suisse et nom de domaine (puis `make deploy`), SMTP, phrase de sauvegarde et remote rclone, projet Google Cloud (client OAuth « application Web » avec `<SITE_URL>/api/integrations/google/callback/`, API Drive + Calendar + Picker, clé API, numéro de projet), application Microsoft Entra (`<SITE_URL>/api/integrations/microsoft/callback/`, `Calendars.ReadWrite`, `User.Read`, `offline_access`). Les intégrations restent désactivées tant que les variables sont vides ; leur code n'a été exercé que contre des clients simulés.
 
 ## Environnement de dev constaté (21.09.2026)
 

@@ -1,11 +1,14 @@
 # Changelog
 
-Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/). La `v1.0.0` sera taguée à la fin de la phase 14.
+Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
-## [Non publié]
+## [1.0.0] - 2026-09-23
+
+Première version complète : les quatorze phases du cahier des charges.
 
 ### Ajouté
 
+- Phase 14 : pile de production (`docker-compose.prod.yml`, Caddy HTTPS automatique avec l'application construite dans l'image, gunicorn non root), `make deploy` idempotent, sauvegardes quotidiennes chiffrées avec copie externe et rétention 30 jours (`make backup`), restauration testée (`make restore`), `manage.py seed_demo` avec suppression propre, guide de déploiement (Google, Microsoft, SMTP, sauvegardes), relecture sécurité OWASP, job CI de construction des images.
 - Phase 13 : journal d'activité par projet (création, modification des champs clés, statut, suppression, partage, droits ; qui, quand, quoi, avec l'ancienne et la nouvelle valeur) visible par les éditeurs dans l'onglet Activité, avec filtre par action et sous-projets, montants réservés aux droits compta, conservé 12 mois ; export de mes données (ZIP avec profil, accès, tâches, commentaires, RDV, écritures et fichiers déposés, préparé en arrière-plan, téléchargeable 7 jours) ; suppression du compte avec mot de passe redemandé, bloquée tant qu'un espace ou un projet racine partagé n'est pas transféré, anonymisation (« Utilisateur supprimé ») et déconnexion ; site installable (manifest, icônes, service worker minimal sans mode hors ligne) ; purges automatiques (journal et journaux d'accès 12 mois, invitations expirées 30 jours, exports 7 jours).
 - Phase 12 : notifications in-app (tâche assignée, mention, changement de statut d'un fichier suivi, ajout à un espace ou un projet, première ouverture d'un lien partagé quand l'option est cochée), jamais pour soi-même ; page Notifications avec « Non lues seulement » et « Tout marquer lu », ouverture qui mène à l'objet ; compteur de non-lues dans la barre latérale et sur l'onglet « Plus », rafraîchi toutes les 60 secondes ; e-mails d'assignation et de mention selon les préférences du profil, d'ajout à un projet toujours ; résumé quotidien par e-mail à l'heure locale choisie (en retard, aujourd'hui, RDV du jour, à valider, frais à payer cette semaine, justificatifs manquants ; sections compta selon les droits ; rien si tout est vide), rattrapé après une panne.
 - Phase 11 : connexion d'un compte Microsoft et accès calendrier du compte Google (consentement incrémental), liste des calendriers externes avec choix de ceux affichés et du calendrier cible unique, synchronisation bidirectionnelle toutes les 5 minutes (Google `syncToken` et canal push en HTTPS, Graph `calendarView/delta`) : tâches assignées avec échéance et RDV poussés dans le calendrier cible (« ☐ » / « ☑ », suppression quand annulé ou désassigné), titre et dates remontés selon les droits, suppression externe qui détache sans jamais supprimer, échos ignorés, conflits réglés par la modification la plus récente et journalisés ; événements des calendriers affichés en lecture seule dans la vue calendrier ; « Synchroniser maintenant » et conflits dans les paramètres.
@@ -23,6 +26,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 
 ### Modifié
 
+- Phase 14 : Pillow 12.3 (correctifs de sécurité du décodage d'images) ; les versions de `requests` et de ses dépendances sont épinglées.
 - Phase 12 : les e-mails d'assignation, de mention et d'ajout à un projet passent par le service de notifications (mêmes gabarits, même préférences).
 - Phase 10 : la politique de sécurité de contenu autorise le sélecteur Google (`script-src https://apis.google.com`, `frame-src docs.google.com`, icônes et miniatures Drive) ; le script n'est chargé qu'à l'ouverture du sélecteur.
 - Phase 8 : `/api/me/` expose `max_upload_mb` ; `ffmpeg` fait partie de l'image backend et du runner de CI.
