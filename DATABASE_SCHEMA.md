@@ -349,6 +349,8 @@ erDiagram
         int width "image, vidéo"
         int height
         int page_count "PDF"
+        datetime processed_at "null tant que Celery n'a pas fini"
+        string processing_error
         string drive_file_id "null si fichier interne"
         json drive_meta "nom, mime, icône, lien, miniature"
         text note
@@ -361,6 +363,8 @@ erDiagram
         string params_hash "texte du filigrane, intervalle…"
         enum status "pending, ready, failed"
         file file
+        string content_type
+        string error
     }
     ASSET_COMMENT {
         bigint id PK
@@ -376,6 +380,7 @@ erDiagram
         int page "PDF"
         datetime resolved_at "sur le commentaire racine"
         bigint resolved_by_id FK
+        datetime edited_at
     }
     ASSET_STATUS_CHANGE {
         bigint id PK
@@ -447,7 +452,9 @@ erDiagram
     SHARE_LINK ||--o{ SHARE_ACCESS_LOG : "journal"
 ```
 
-- `ASSET_VERSION` : `CHECK` exactement un de `file` / `drive_file_id`.
+- `ASSET_VERSION` : `CHECK` exactement un de `file` / `drive_file_id` ; unique `(asset, number)`. Le fichier est stocké sous `assets/<projet>/<24 hex>.<ext>` (rien du nom d'origine), le dérivé sous `derived/<projet>/…`. Le type réel d'une version (`kind`, propriété) se déduit de son `mime_type` reniflé, celui de l'asset servant de secours : c'est lui qui décide de la visionneuse et des ancres acceptées.
+- `ASSET` : index `(project, status)` pour le widget « À valider ».
+- `ASSET_COMMENT` : `rect_*` en `decimal(6,3)` (pour cent) ; une réponse (`parent` non nul) n'a pas d'ancre ; `resolved_at` / `resolved_by` ne vivent que sur la racine.
 - `ASSET_DERIVATIVE` : unique `(version, kind, params_hash)` = cache des dérivés.
 - `SHARE_LINK` : tous les assets ciblés appartiennent à `project` ou à ses descendants. Jeton `secrets.token_urlsafe(32)` (32 octets). Seul le hash sert à la recherche ; la copie chiffrée permet de réafficher l'URL aux Éditeurs sans stocker le jeton en clair.
 

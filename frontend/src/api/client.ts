@@ -37,6 +37,12 @@ async function ensureCsrfCookie() {
   }
 }
 
+/** The CSRF token for a write done outside api() (XHR uploads with progress). */
+export async function csrfToken(): Promise<string> {
+  await ensureCsrfCookie()
+  return getCookie('csrftoken') ?? ''
+}
+
 const GENERIC_ERROR = 'Une erreur est survenue. Réessaie dans un instant.'
 
 /** Turns a DRF error body into a message + per-field errors. */

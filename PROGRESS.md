@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 7 terminées. Prochaine étape : phase 8 (fichiers et versions : assets par projet, versions numérotées avec label, upload direct ou référence Drive, statuts Brouillon / À valider / Validé / Refusé avec historique, visionneuse et lecteur, commentaires horodatés audio / vidéo, annotations par zone sur image, commentaires par page PDF, fils résolus ; widget « À valider » étendu aux fichiers ; `pdfjs-dist` et `wavesurfer.js`).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 8 terminées. Prochaine étape : phase 9 (liens protégés : jeton haché + copie chiffrée, mot de passe optionnel, expiration, quotas de vues / lectures, téléchargement autorisé ou non, filigrane image et audio par dérivés `wm_image` / `wm_audio` avec `params_hash`, streaming sans téléchargement, journal d'accès avec IP tronquée, notification à l'ouverture, playlists ; page publique hors app).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -18,7 +18,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 5 | Vues Liste / Kanban / Calendrier / Gantt, Arbre / Cartes, Passé / En cours / À venir | ✅ terminé · [doc](docs/phases/phase-05-vues-et-navigation.md) |
 | 6 | Événements et RDV, contacts | ✅ terminé · [doc](docs/phases/phase-06-evenements-rdv-contacts.md) |
 | 7 | Compta complète et exports | ✅ terminé · [doc](docs/phases/phase-07-compta.md) |
-| 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ⏳ |
+| 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ✅ terminé · [doc](docs/phases/phase-08-fichiers.md) |
 | 9 | Liens protégés, filigranes, streaming, journal d'accès | ⏳ |
 | 10 | Google Drive | ⏳ |
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ⏳ |
@@ -174,6 +174,24 @@ Détail dans `docs/phases/phase-07-compta.md`. App `finance` (catégories, trans
 - Le résumé quotidien (phase 12) prendra « frais à payer » et « justificatifs manquants » dans `apps/dashboard/services.py` (`expenses_to_pay`, `missing_receipts`).
 - Dépendances pip ajoutées : reconstruire les trois images (`docker compose up -d --build backend worker beat`) puis `pip freeze > requirements/constraints.txt`.
 
+## Phase 8 : ce qui a été produit
+
+Détail dans `docs/phases/phase-08-fichiers.md`. App `files` (assets, versions numérotées, dérivés calculés par Celery, commentaires ancrés, historique de statuts, suiveurs), stockage local ou S3 par variable, `ffmpeg` dans l'image ; front : onglet Fichiers, panneau d'upload avec progression, page asset avec sélecteur de versions, visionneuses image / audio (wavesurfer) / vidéo / PDF (pdf.js), colonne de commentaires, panneaux statut et version, widget « À valider ». 1'141 tests backend, 96 tests front. Migration : `files.0001`.
+
+À retenir pour la suite :
+
+- **`Meta.ordering` est ignoré par Django sur une requête avec `GROUP BY`** (annotations `Count`) : mettre `.order_by()` explicitement dans le queryset annoté (`_versions_queryset()`), sinon l'ordre des versions est celui de la base.
+- **Pillow lève `SyntaxError`** (pas `OSError`) sur un PNG au chunk invalide : un reniflage « qui ne lève jamais » attrape `Exception`. Trouvé en envoyant un fichier corrompu par le panneau (500), corrigé et testé.
+- Le type qui décide de la visionneuse et des ancres est celui **de la version** (`AssetVersion.kind`, MIME reniflé), pas celui de l'asset : une image envoyée en v2 d'une vidéo s'affiche et s'annote comme une image.
+- `PublicUserSerializer(read_only=True)` sur une FK nullable : ajouter `allow_null=True`, sinon le type TypeScript généré n'est pas nullable.
+- Upload avec progression = `XMLHttpRequest` (`api/files.ts` `upload()`), avec le jeton CSRF via `csrfToken()` de `api/client.ts` ; `fetch` ne sait pas rapporter la progression d'envoi.
+- pdf.js 6 : le worker est importé en `?url` (module de même origine) ; `page.render({canvas, viewport})` (plus `canvasContext`) ; libération par `doc.loadingTask.destroy()`. Aucun `eval` dans pdf.js 6 ni wavesurfer 7 : la CSP n'a pas bougé.
+- wavesurfer 7 avec `peaks` + `duration` fournis ne décode rien : les peaks viennent toujours du serveur (`PEAKS_POINTS = 800`, 8 kHz mono).
+- Les dérivés portent `params_hash` (vide pour les dérivés simples) : les filigranes de la phase 9 s'y rangent (`wm_image`, `wm_audio`) sans nouveau modèle ; `processing.py` a `_store()` / `_fail()` à réutiliser.
+- La liste des suiveurs d'un asset (créateur, auteurs de versions, commentateurs, changeurs de statut) est tenue : la phase 12 n'a qu'à notifier.
+- Le mode S3 (`STORAGE_BACKEND=s3`) est branché (django-storages, URL signées `SIGNED_URL_SECONDS`) mais pas exercé contre un vrai bucket.
+- Scénario de dev : `scripts/dev_scenario.py` génère de vrais fichiers (PNG par Pillow, WAV, PDF écrit à la main, MP4 par ffmpeg) ; le nettoyage (`phase4_cleanup.py` dans le scratchpad) supprime aussi les fichiers via les signaux `post_delete`.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -185,7 +203,7 @@ Détail dans `docs/phases/phase-07-compta.md`. App `finance` (catégories, trans
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
 | `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`pdfjs-dist` (D2) sera ajouté quand il servira (phase 8). `django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7 ; `django-storages[s3]` (SPEC §3), `wavesurfer.js` (SPEC §9) et `pdfjs-dist` (D2), plus `ffmpeg` dans l'image, depuis la phase 8. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -194,6 +212,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 8 : mode S3 non exercé contre un vrai bucket ; pas de reprise d'upload ni d'envoi multiple ; la vidéo est lue par le navigateur depuis l'original (un `.mov` ProRes ne se lira pas dans la page, téléchargement seulement) ; nombre de pages PDF approximatif côté serveur ; le dessin d'une zone sur une image vérifié à la souris synthétique seulement : **à essayer au doigt par Luca** ; notifications aux suiveurs en phase 12.
 - Phase 7 : le PDF est en DejaVu (police du conteneur), pas en Inter ; pas d'aperçu du justificatif dans le panneau (nouvel onglet ; la visionneuse arrive en phase 8) ; une écriture générée par un frais récurrent ne suit plus le frais une fois créée ; l'upload d'un justificatif a été vérifié avec un PNG synthétique et un vrai fichier via l'API, pas avec l'appareil photo d'un téléphone (bouton « Photographier » à essayer par Luca).
 - Phase 6 : pas de notification à l'invitation à un RDV (résumé quotidien en phase 12, synchro calendrier en phase 11) ; pas d'import / export du carnet ; le glisser d'un RDV dans le calendrier vérifié par événements synthétiques seulement.
 - Phase 5 : **le Gantt ne se manipule pas au doigt** (frappe-gantt n'écoute que la souris ; sur téléphone on ouvre la tâche pour changer ses dates) ; Gantt en lecture seule « en bloc » (un glisser refusé par le serveur est annulé) ; dans un kanban qui inclut les sous-projets, l'ordre n'est exact qu'à l'intérieur d'un même projet ; le calendrier global ne crée pas de tâche ; pas de glisser-déposer dans l'arbre des projets (liste de destinations à la place) ; glisser du kanban, du calendrier et du Gantt vérifiés par événements synthétiques : **à essayer une fois à la main**.
@@ -206,7 +225,6 @@ Limites **anticipées**, à confirmer par test le moment venu :
 - Le streaming « sans téléchargement » décourage la copie sans pouvoir l'empêcher.
 - Pas de filigrane sur PDF et vidéo en v1.
 - Une version Drive ne peut pas être partagée par lien sans import préalable dans le stockage interne.
-- Pas de reprise d'upload après coupure.
 - Le calendrier Microsoft de la HEG peut être bloqué par la politique de consentement du tenant de l'école.
 
 ## À fournir par Luca (SPEC §20)

@@ -143,21 +143,21 @@ Les exports sont des téléchargements de même origine : le cookie de session s
 
 | Méthode | Chemin | Rôle min. | Description |
 |---|---|---|---|
-| GET | `/api/assets/` | Lecteur | Filtres : `project`, `include_descendants`, `kind`, `status`, `tag` |
-| POST | `/api/assets/` | Éditeur | Crée l'asset et sa v1 (`multipart` ou référence Drive) |
-| GET, PATCH, DELETE | `/api/assets/{id}/` | Lecteur / Éditeur | |
-| POST | `/api/assets/{id}/status/` | Éditeur | Change le statut (+ note), écrit l'historique, notifie les abonnés |
+| GET | `/api/assets/` | Lecteur | Paginé. Filtres : `project`, `include_descendants`, `workspace`, `kind`, `status`, `tag`, `search` ; `ordering` (`updated_at`, `created_at`, `name`) |
+| POST | `/api/assets/` | Éditeur | `multipart` : `project`, `name`, `file` (devient la v1), `label`, `note`, `tags`. Le `kind` est déduit du contenu du fichier. La référence Drive arrive en phase 10 |
+| GET, PATCH, DELETE | `/api/assets/{id}/` | Lecteur / Éditeur | PATCH : `name`, `kind`, `tags` (jamais `project`). Réponse : `latest_version`, `versions_count`, `is_following` |
+| POST | `/api/assets/{id}/status/` | Éditeur | `{status, note}` : change le statut, écrit l'historique, ajoute l'auteur aux suiveurs (notifications en phase 12) |
 | GET | `/api/assets/{id}/status-history/` | Lecteur | Qui, quand, ancien → nouveau |
 | POST, DELETE | `/api/assets/{id}/follow/` | Lecteur | Suivre / ne plus suivre |
-| GET, POST | `/api/assets/{id}/versions/` | Lecteur / Éditeur | Nouvelle version : numéro automatique, label, note |
-| GET, PATCH, DELETE | `/api/asset-versions/{id}/` | Lecteur / Éditeur | Label et note modifiables ; le fichier d'une version ne se remplace pas |
-| GET | `/api/asset-versions/{id}/file/` | Lecteur | Fichier original. Contrôle des droits puis délégation à Caddy (`X-Accel-Redirect`) ou redirection vers une URL S3 signée (60 s). Requêtes `Range` gérées |
-| GET | `/api/asset-versions/{id}/stream/` | Lecteur | Dérivé MP3 128 kbps pour la lecture in-app |
-| GET | `/api/asset-versions/{id}/peaks/` | Lecteur | Forme d'onde pré-calculée (JSON) pour wavesurfer |
-| GET | `/api/asset-versions/{id}/thumbnail/` | Lecteur | Miniature image / vidéo / PDF |
+| GET, POST | `/api/assets/{id}/versions/` | Lecteur / Éditeur | GET : toutes les versions, la plus récente en premier. POST `multipart` (`file`, `label`, `note`) : numéro automatique pris sous verrou |
+| GET, PATCH, DELETE | `/api/asset-versions/{id}/` | Lecteur / Éditeur | `label` et `note` modifiables ; le fichier ne se remplace pas ; la dernière version ne se supprime pas (400). Champs : `kind` (type réel de la version), `mime_type`, `size_bytes`, `sha256`, `duration_ms`, `width`, `height`, `page_count`, `processed_at`, `processing_error`, `file_url`, `derivatives {thumbnail_url, stream_url, peaks_url, pending}`, `comments_count`, `open_threads` |
+| GET | `/api/asset-versions/{id}/file/` | Lecteur | Fichier original (`?download=1` : pièce jointe avec le nom d'origine). Contrôle des droits puis délégation à Caddy (`X-Accel-Redirect`, `Range` géré) ou redirection vers une URL S3 signée (`SIGNED_URL_SECONDS`, 60 s) |
+| GET | `/api/asset-versions/{id}/stream/` | Lecteur | Dérivé MP3 128 kbps (audio et bande-son des vidéos) ; 404 tant qu'il n'est pas prêt |
+| GET | `/api/asset-versions/{id}/peaks/` | Lecteur | Forme d'onde pré-calculée `{points: [0..1 × 800], duration_ms}` pour wavesurfer ; 404 tant que non prête |
+| GET | `/api/asset-versions/{id}/thumbnail/` | Lecteur | Miniature WebP 512 px (image, vidéo) ; 404 sinon (PDF rendu par pdf.js) |
 | POST | `/api/asset-versions/{id}/import-from-drive/` | Éditeur | Copie un fichier Drive dans le stockage interne (requis pour le partager par lien) |
-| GET, POST | `/api/asset-versions/{id}/comments/` | Lecteur / Commentateur | Ancre selon le type : `timestamp_ms`, `rect_*` en %, `page`. `parent` pour répondre |
-| PATCH, DELETE | `/api/asset-comments/{id}/` | auteur (suppression aussi par Admin) | |
+| GET, POST | `/api/asset-versions/{id}/comments/` | Lecteur / Commentateur | Ancre selon le `kind` de la version : `timestamp_ms` (≤ durée), `rect_x/y/w/h` en % (dans l'image, non vide), `page` (1..page_count) ; les autres ancres sont ignorées. `parent` pour répondre (sans ancre, un seul niveau). L'auteur devient suiveur |
+| PATCH, DELETE | `/api/asset-comments/{id}/` | auteur (suppression aussi par Admin) | PATCH : `body` seulement (`edited_at` posé) |
 | POST | `/api/asset-comments/{id}/resolve/` · `/reopen/` | auteur du fil ou Éditeur | Résolu / non résolu |
 | GET, POST | `/api/drive-links/?project=&task=` | Lecteur / Éditeur | Fichiers Drive attachés à un projet ou une tâche |
 | DELETE | `/api/drive-links/{id}/` | Éditeur | |

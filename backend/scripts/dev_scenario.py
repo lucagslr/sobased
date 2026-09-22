@@ -339,3 +339,215 @@ RecurringExpense.objects.create(
     created_by=demo,
 )
 print("TRANSACTIONS", Transaction.objects.count())
+
+# --- Phase 8: files with real (generated) content ----------------------------------
+# Small files built here: a cover (PNG), a mix (WAV sine), a dossier (PDF with
+# two pages), a clip (MP4 made by ffmpeg). Processing runs through Celery
+# after the commit; comments are anchored by kind.
+import io  # noqa: E402
+import math  # noqa: E402
+import struct  # noqa: E402
+import subprocess  # noqa: E402
+import tempfile  # noqa: E402
+import wave  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from django.core.files.uploadedfile import SimpleUploadedFile  # noqa: E402
+from django.db import transaction as db_transaction  # noqa: E402
+from PIL import Image, ImageDraw  # noqa: E402
+
+from apps.files import services as file_services  # noqa: E402
+from apps.files.models import Asset, AssetComment  # noqa: E402
+
+
+def png_bytes(color, size=(1200, 1200), text=""):
+    image = Image.new("RGB", size, color)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((100, 100, 500, 500), fill="#1c1917")
+    draw.ellipse((700, 700, 1100, 1100), fill="#fef3c7")
+    draw.text((120, 1050), text, fill="#1c1917")
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def wav_bytes(seconds=12, rate=22050):
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(rate)
+        frames = bytearray()
+        for i in range(int(rate * seconds)):
+            t = i / rate
+            envelope = 0.5 + 0.5 * math.sin(2 * math.pi * 0.25 * t)
+            value = int(
+                9000 * envelope * math.sin(2 * math.pi * (220 + 110 * int(t)) * t)
+            )
+            frames += struct.pack("<h", value)
+        handle.writeframes(bytes(frames))
+    return buffer.getvalue()
+
+
+def pdf_bytes():
+    pages = []
+    for index, title in enumerate(["Dossier de presse", "Fiche technique"], start=1):
+        content = f"BT /F1 36 Tf 72 720 Td ({title}) Tj ET".encode()
+        pages.append(content)
+    objects = [b"<< /Type /Catalog /Pages 2 0 R >>", None]
+    kids = []
+    for content in pages:
+        page_id = len(objects) + 1
+        objects.append(
+            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842]"
+            f" /Contents {page_id + 1} 0 R"
+            f" /Resources << /Font << /F1 {len(pages) * 2 + 3} 0 R >> >> >>".encode()
+        )
+        objects.append(
+            b"<< /Length "
+            + str(len(content)).encode()
+            + b" >>\nstream\n"
+            + content
+            + b"\nendstream"
+        )
+        kids.append(f"{page_id} 0 R")
+    objects[1] = (
+        f"<< /Type /Pages /Kids [{' '.join(kids)}] /Count {len(pages)} >>".encode()
+    )
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    out = io.BytesIO()
+    out.write(b"%PDF-1.4\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(out.tell())
+        out.write(f"{number} 0 obj\n".encode() + body + b"\nendobj\n")
+    xref = out.tell()
+    out.write(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode())
+    for offset in offsets:
+        out.write(f"{offset:010d} 00000 n \n".encode())
+    trailer = f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n"
+    out.write(f"{trailer}startxref\n{xref}\n%%EOF\n".encode())
+    return out.getvalue()
+
+
+def mp4_bytes():
+    with tempfile.TemporaryDirectory() as folder:
+        target = Path(folder) / "clip.mp4"
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=640x360:rate=25:duration=6",
+                "-f",
+                "lavfi",
+                "-i",
+                "sine=frequency=330:duration=6",
+                "-shortest",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                "-y",
+                str(target),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        return target.read_bytes()
+
+
+def asset(
+    project_, name, filename, content, author, label="", status="draft", **fields
+):
+    created = Asset.objects.create(
+        project=project_, name=name, created_by=author, **fields
+    )
+    upload = SimpleUploadedFile(filename, content)
+    with db_transaction.atomic():
+        version = file_services.add_version(created, upload, author, label=label)
+    if status != "draft":
+        file_services.change_status(created, status, author)
+    created.refresh_from_db()
+    return created, version
+
+
+visuels = Project.objects.get(name="Visuels / cover", workspace=asso)
+cover, cover_v1 = asset(
+    visuels,
+    "Cover MARCHIOLY",
+    "cover_v1.png",
+    png_bytes("#fbcfe8", text="v1"),
+    demo,
+    "esquisse",
+)
+cover_v2 = file_services.add_version(
+    cover,
+    SimpleUploadedFile("cover_v2.png", png_bytes("#bbf7d0", text="v2")),
+    demo,
+    label="cover finale",
+    note="Logo remonté, fond vert.",
+)
+file_services.change_status(cover, "to_validate", demo, note="Prête pour validation")
+AssetComment.objects.create(
+    version=cover_v2,
+    author=helder,
+    body="Le logo est encore un peu bas, non ?",
+    rect_x=8,
+    rect_y=8,
+    rect_w=34,
+    rect_h=34,
+)
+general = AssetComment.objects.create(
+    version=cover_v2, author=demo, body="Le vert marche mieux que le rose."
+)
+AssetComment.objects.create(
+    version=cover_v2, author=helder, body="Validé pour moi.", parent=general
+)
+
+mix, mix_v1 = asset(album, "Mix titre 3", "mix_titre3.wav", wav_bytes(), demo, "mix 1")
+AssetComment.objects.create(
+    version=mix_v1, author=demo, body="Basse trop forte ici.", timestamp_ms=3200
+)
+AssetComment.objects.create(
+    version=mix_v1,
+    author=demo,
+    body="Couper la réverb sur la voix.",
+    timestamp_ms=8900,
+    resolved_at=timezone.now(),
+    resolved_by=demo,
+)
+
+dossier, dossier_v1 = asset(
+    shorty,
+    "Dossier de presse",
+    "dossier_presse.pdf",
+    pdf_bytes(),
+    demo,
+    status="approved",
+)
+AssetComment.objects.create(
+    version=dossier_v1, author=demo, body="Manque le logo du label.", page=2
+)
+
+try:
+    clip_asset, _ = asset(
+        clip, "Clip teaser", "teaser.mp4", mp4_bytes(), demo, "montage 1"
+    )
+except Exception as exc:  # noqa: BLE001 - ffmpeg missing: the rest still helps
+    print("NO_VIDEO", exc)
+
+asset(admin, "Statuts de l'association", "statuts.txt", b"Statuts...\n", demo)
+print(
+    "ASSETS",
+    Asset.objects.count(),
+    "cover",
+    cover.pk,
+    "mix",
+    mix.pk,
+    "dossier",
+    dossier.pk,
+)

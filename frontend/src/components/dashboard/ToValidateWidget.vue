@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/** "À valider": tasks and projects waiting for a decision (assets in phase 8). */
-import { CircleCheckBig, FolderTree } from 'lucide-vue-next'
+/** "À valider": tasks, projects and files waiting for a decision. */
+import { CircleCheckBig, FileCheck, FolderTree } from 'lucide-vue-next'
 
 import type { ValidateItem } from '@/api/dashboard'
 import ColorDot from '@/components/ui/ColorDot.vue'
@@ -9,6 +9,7 @@ defineProps<{ items: ValidateItem[] }>()
 const emit = defineEmits<{ open: [item: ValidateItem] }>()
 
 const KIND_LABELS = { task: 'Tâche', project: 'Projet', asset: 'Fichier' }
+const ICONS = { task: CircleCheckBig, project: FolderTree, asset: FileCheck }
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const KIND_LABELS = { task: 'Tâche', project: 'Projet', asset: 'Fichier' }
         @click="emit('open', item)"
       >
         <component
-          :is="item.kind === 'project' ? FolderTree : CircleCheckBig"
+          :is="ICONS[item.kind]"
           class="mt-0.5 size-4 shrink-0 text-muted"
           aria-hidden="true"
         />

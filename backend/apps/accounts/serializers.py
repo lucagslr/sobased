@@ -1,5 +1,6 @@
 import zoneinfo
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -53,6 +54,8 @@ class MeSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(read_only=True)
     email_verified = serializers.BooleanField(read_only=True)
     avatar_url = serializers.SerializerMethodField()
+    # Server limits the front needs before sending anything (upload size).
+    max_upload_mb = serializers.SerializerMethodField()
     # Only required when the e-mail changes (see validate()).
     current_password = serializers.CharField(write_only=True, required=False)
 
@@ -74,6 +77,7 @@ class MeSerializer(serializers.ModelSerializer):
             "daily_digest_time",
             "email_on_mention",
             "email_on_assignment",
+            "max_upload_mb",
             "current_password",
         ]
         # The username is immutable: "@username" mentions are stored as text.
@@ -81,6 +85,9 @@ class MeSerializer(serializers.ModelSerializer):
 
     def get_avatar_url(self, user) -> str | None:
         return avatar_url(user)
+
+    def get_max_upload_mb(self, user) -> int:
+        return settings.MAX_UPLOAD_MB
 
     def validate_timezone(self, value):
         if value not in zoneinfo.available_timezones():

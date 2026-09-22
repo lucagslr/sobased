@@ -107,6 +107,7 @@ async function tick(item: PinnedItem) {
 
 function openValidation(item: ValidateItem) {
   if (item.kind === 'task') openTask(item.id)
+  else if (item.kind === 'asset') router.push(`/projets/${item.project}/fichiers/${item.id}`)
   else router.push(`/projets/${item.project}`)
 }
 

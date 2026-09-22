@@ -24,6 +24,8 @@ from apps.core.localtime import (
     user_zone,
 )
 from apps.events.models import Event
+from apps.files.models import Asset
+from apps.files.models import Status as AssetStatus
 from apps.finance.models import Transaction
 from apps.projects.access import get_access_map
 from apps.projects.models import Project
@@ -245,10 +247,11 @@ def upcoming_events(request, scope: Scope, days: int = MEETINGS_DAYS):
 
 
 def to_validate_items(request, scope: Scope) -> list[dict]:
-    """Everything waiting for a validation: tasks and projects "À valider".
+    """Everything waiting for a validation: tasks, projects and files
+    "À valider".
 
     "Only mine" is ignored on purpose: the person who validates is usually
-    not the person the task is assigned to. Assets join in phase 8.
+    not the person the task is assigned to.
     """
     items = [
         {
@@ -278,6 +281,24 @@ def to_validate_items(request, scope: Scope) -> list[dict]:
             "project_color": project.color,
         }
         for project in projects.order_by("end_date", "name")[:WIDGET_LIMIT]
+    ]
+    assets = (
+        Asset.objects.for_user(request)
+        .filter(project_id__in=scope.project_ids, status=AssetStatus.TO_VALIDATE)
+        .select_related("project")
+    )
+    if scope.tag_ids:
+        assets = assets.filter(tags__in=scope.tag_ids).distinct()
+    items += [
+        {
+            "kind": "asset",
+            "id": asset.pk,
+            "title": asset.name,
+            "project": asset.project_id,
+            "project_name": asset.project.name,
+            "project_color": asset.project.color,
+        }
+        for asset in assets.order_by("-updated_at", "id")[:WIDGET_LIMIT]
     ]
     return items
 

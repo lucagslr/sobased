@@ -2,7 +2,7 @@
 
 Gestion de projets multi-utilisateurs, conçue d'abord pour l'association culturelle 100SATIONS (Genève) : management d'artistes, administration de l'association, et usage personnel (cours, rendus, mandats). Chacun crée ses espaces et ses projets (arbre à 4 niveaux) et invite d'autres personnes avec des droits précis, comme sur Google Drive.
 
-> **État : phase 7 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts, compta avec justificatifs, budget, avances, frais récurrents et exports). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
+> **État : phase 8 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts, compta avec justificatifs, budget, avances, frais récurrents et exports, fichiers avec versions, visionneuses, commentaires ancrés et statuts de validation). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
 
 ## Fonctionnalités prévues
 
@@ -57,7 +57,7 @@ Aucun secret dans le code : tout passe par `.env` (modèle documenté dans `.env
 | `REGISTRATION_OPEN` | `true` : inscription libre · `false` : sur invitation seulement |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` | SMTP |
 | `MAX_UPLOAD_MB` | Taille max d'un fichier (500 par défaut) |
-| `STORAGE_BACKEND`, `S3_ENDPOINT_URL`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION` | `local` ou `s3` (stockage objet Infomaniak) |
+| `STORAGE_BACKEND`, `S3_ENDPOINT_URL`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `SIGNED_URL_SECONDS` | `local` (volume partagé avec Caddy) ou `s3` (bucket privé S3-compatible, Infomaniak Object Storage) ; durée des URL signées (60 s) |
 | `AUDIO_WATERMARK_TAG`, `AUDIO_WATERMARK_INTERVAL_S` | Filigrane audio des liens partagés |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_API_KEY`, `GOOGLE_APP_ID` | Drive, Picker, Calendar (intégration désactivée si vide) |
 | `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `MS_TENANT` | Microsoft Graph (désactivée si vide) |

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.events",
     "apps.tasks",
     "apps.finance",
+    "apps.files",
     "apps.dashboard",
 ]
 
@@ -172,6 +173,30 @@ MEDIA_ROOT = env("MEDIA_ROOT", "/data/media")
 MEDIA_URL = "/media-is-never-served-directly/"
 # True when a reverse proxy (Caddy) understands X-Accel-Redirect.
 PROTECTED_MEDIA_ACCEL = env_bool("PROTECTED_MEDIA_ACCEL", True)
+# local: MEDIA_ROOT on the Caddy-shared volume. s3: an S3-compatible bucket
+# (Infomaniak Object Storage), private, files reached through pre-signed
+# URLs of SIGNED_URL_SECONDS. Never both.
+STORAGE_BACKEND = env("STORAGE_BACKEND", "local")
+SIGNED_URL_SECONDS = env_int("SIGNED_URL_SECONDS", 60)
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+if STORAGE_BACKEND == "s3":
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "endpoint_url": env("S3_ENDPOINT_URL", ""),
+            "bucket_name": env("S3_BUCKET", ""),
+            "access_key": env("S3_ACCESS_KEY", ""),
+            "secret_key": env("S3_SECRET_KEY", ""),
+            "region_name": env("S3_REGION", "") or None,
+            "default_acl": "private",
+            "querystring_auth": True,
+            "file_overwrite": False,
+        },
+    }
+    PROTECTED_MEDIA_ACCEL = False
 MAX_UPLOAD_MB = env_int("MAX_UPLOAD_MB", 500)
 AVATAR_MAX_MB = 10
 # Large uploads are streamed to temporary files, never held in memory.
@@ -239,6 +264,8 @@ SPECTACULAR_SETTINGS = {
         "PaymentStatusEnum": "apps.finance.models.PAYMENT_STATUS_CHOICES",
         "FrequencyEnum": "apps.finance.models.FREQUENCY_CHOICES",
         "DisplayStatusEnum": "apps.finance.models.DISPLAY_STATUS_CHOICES",
+        "AssetKindEnum": "apps.files.models.ASSET_KIND_CHOICES",
+        "AssetStatusEnum": "apps.files.models.ASSET_STATUS_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

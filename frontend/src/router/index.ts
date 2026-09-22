@@ -51,6 +51,13 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Projets' },
       },
       {
+        // Before the tab route: "fichiers/12" is an asset, not a tab.
+        path: 'projets/:id(\\d+)/fichiers/:assetId(\\d+)',
+        name: 'asset',
+        component: () => import('@/pages/project/AssetPage.vue'),
+        meta: { title: 'Fichier' },
+      },
+      {
         path: 'projets/:id(\\d+)/:tab?',
         name: 'project',
         component: () => import('@/pages/project/ProjectPage.vue'),

@@ -3,6 +3,897 @@ info:
   title: SOBASED API
   version: 1.0.0
 paths:
+  /api/asset-comments/{id}/:
+    patch:
+      operationId: asset_comments_partial_update
+      description: |-
+        Edit (author), delete (author or admin), resolve / reopen a thread
+        (its author or an editor).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset comment.
+        required: true
+      tags:
+      - asset-comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetCommentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetCommentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetComment'
+          description: ''
+    delete:
+      operationId: asset_comments_destroy
+      description: |-
+        Edit (author), delete (author or admin), resolve / reopen a thread
+        (its author or an editor).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset comment.
+        required: true
+      tags:
+      - asset-comments
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/asset-comments/{id}/reopen/:
+    post:
+      operationId: asset_comments_reopen_create
+      description: |-
+        Edit (author), delete (author or admin), resolve / reopen a thread
+        (its author or an editor).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset comment.
+        required: true
+      tags:
+      - asset-comments
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetComment'
+          description: ''
+  /api/asset-comments/{id}/resolve/:
+    post:
+      operationId: asset_comments_resolve_create
+      description: |-
+        Edit (author), delete (author or admin), resolve / reopen a thread
+        (its author or an editor).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset comment.
+        required: true
+      tags:
+      - asset-comments
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetComment'
+          description: ''
+  /api/asset-versions/{id}/:
+    get:
+      operationId: asset_versions_retrieve
+      description: 'One version: label and note may change, the file never does.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
+          description: ''
+    patch:
+      operationId: asset_versions_partial_update
+      description: 'One version: label and note may change, the file never does.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetVersionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetVersionRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
+          description: ''
+    delete:
+      operationId: asset_versions_destroy
+      description: 'One version: label and note may change, the file never does.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/asset-versions/{id}/comments/:
+    get:
+      operationId: asset_versions_comments_list
+      description: |-
+        GET: every comment of the version (threads flattened, replies carry
+        `parent`). POST: a new thread, or a reply with `parent` (commenters).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetCommentList'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetComment'
+          description: ''
+    post:
+      operationId: asset_versions_comments_create
+      description: |-
+        GET: every comment of the version (threads flattened, replies carry
+        `parent`). POST: a new thread, or a reply with `parent` (commenters).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - asset-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetCommentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetCommentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetCommentList'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetComment'
+          description: ''
+  /api/asset-versions/{id}/file/:
+    get:
+      operationId: asset_versions_file_retrieve
+      description: 'The original, for members: Caddy streams it (Range included).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/asset-versions/{id}/peaks/:
+    get:
+      operationId: asset_versions_peaks_retrieve
+      description: Pre-computed waveform (JSON) for wavesurfer.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+  /api/asset-versions/{id}/stream/:
+    get:
+      operationId: asset_versions_stream_retrieve
+      description: MP3 128 kbps for in-app playback.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/asset-versions/{id}/thumbnail/:
+    get:
+      operationId: asset_versions_thumbnail_retrieve
+      description: 'One version: label and note may change, the file never does.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/assets/:
+    get:
+      operationId: assets_list
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - audio
+          - document
+          - image
+          - other
+          - video
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - draft
+          - rejected
+          - to_validate
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetList'
+          description: ''
+    post:
+      operationId: assets_create
+      description: Custom GET actions (file, stream...) only need the reading role.
+      tags:
+      - assets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+  /api/assets/{id}/:
+    get:
+      operationId: assets_retrieve
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+    patch:
+      operationId: assets_partial_update
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssetRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+    delete:
+      operationId: assets_destroy
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/assets/{id}/follow/:
+    post:
+      operationId: assets_follow_create
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+    delete:
+      operationId: assets_follow_destroy
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+  /api/assets/{id}/status/:
+    post:
+      operationId: assets_status_create
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      tags:
+      - assets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeStatusRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeStatusRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeStatusRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: ''
+  /api/assets/{id}/status-history/:
+    get:
+      operationId: assets_status_history_list
+      description: Custom GET actions (file, stream...) only need the reading role.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - audio
+          - document
+          - image
+          - other
+          - video
+        description: |-
+          * `audio` - Audio
+          * `image` - Image
+          * `video` - Vidéo
+          * `document` - PDF / document
+          * `other` - Autre
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - draft
+          - rejected
+          - to_validate
+        description: |-
+          * `draft` - Brouillon
+          * `to_validate` - À valider
+          * `approved` - Validé
+          * `rejected` - Refusé
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStatusChangeList'
+          description: ''
+  /api/assets/{id}/versions/:
+    get:
+      operationId: assets_versions_list
+      description: 'GET: every version, newest first. POST: the next one (editors).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - audio
+          - document
+          - image
+          - other
+          - video
+        description: |-
+          * `audio` - Audio
+          * `image` - Image
+          * `video` - Vidéo
+          * `document` - PDF / document
+          * `other` - Autre
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - draft
+          - rejected
+          - to_validate
+        description: |-
+          * `draft` - Brouillon
+          * `to_validate` - À valider
+          * `approved` - Validé
+          * `rejected` - Refusé
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - assets
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetVersionList'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
+          description: ''
+    post:
+      operationId: assets_versions_create
+      description: 'GET: every version, newest first. POST: the next one (editors).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset.
+        required: true
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - audio
+          - document
+          - image
+          - other
+          - video
+        description: |-
+          * `audio` - Audio
+          * `image` - Image
+          * `video` - Vidéo
+          * `document` - PDF / document
+          * `other` - Autre
+      - name: ordering
+        required: false
+        in: query
+        description: Quel champ utiliser pour classer les résultats.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - draft
+          - rejected
+          - to_validate
+        description: |-
+          * `draft` - Brouillon
+          * `to_validate` - À valider
+          * `approved` - Validé
+          * `rejected` - Refusé
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - assets
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                label:
+                  type: string
+                note:
+                  type: string
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetVersionList'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
+          description: ''
   /api/auth/csrf/:
     get:
       operationId: auth_csrf_retrieve
@@ -3636,6 +4527,378 @@ components:
       - project_name
       - total
       - transactions
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/AssetKindEnum'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AssetStatusEnum'
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: integer
+        latest_version:
+          allOf:
+          - $ref: '#/components/schemas/AssetVersion'
+          nullable: true
+          readOnly: true
+        versions_count:
+          type: integer
+          readOnly: true
+        is_following:
+          type: boolean
+          readOnly: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - is_following
+      - kind
+      - latest_version
+      - name
+      - project
+      - project_color
+      - project_name
+      - status
+      - tags
+      - updated_at
+      - versions_count
+    AssetComment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        parent:
+          type: integer
+          nullable: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        body:
+          type: string
+        timestamp_ms:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        rect_x:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_y:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_w:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_h:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        page:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        is_resolved:
+          type: boolean
+          readOnly: true
+        resolved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        resolved_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        is_mine:
+          type: boolean
+          readOnly: true
+        edited_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - body
+      - created_at
+      - edited_at
+      - id
+      - is_mine
+      - is_resolved
+      - page
+      - parent
+      - rect_h
+      - rect_w
+      - rect_x
+      - rect_y
+      - resolved_at
+      - resolved_by
+      - timestamp_ms
+      - version
+    AssetCommentRequest:
+      type: object
+      properties:
+        parent:
+          type: integer
+          nullable: true
+        body:
+          type: string
+          minLength: 1
+        timestamp_ms:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        rect_x:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_y:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_w:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_h:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        page:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+      required:
+      - body
+    AssetKindEnum:
+      enum:
+      - audio
+      - image
+      - video
+      - document
+      - other
+      type: string
+      description: |-
+        * `audio` - Audio
+        * `image` - Image
+        * `video` - Vidéo
+        * `document` - PDF / document
+        * `other` - Autre
+    AssetRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/AssetKindEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+        file:
+          type: string
+          format: binary
+          writeOnly: true
+        label:
+          type: string
+          writeOnly: true
+        note:
+          type: string
+          writeOnly: true
+      required:
+      - name
+      - project
+    AssetStatusEnum:
+      enum:
+      - draft
+      - to_validate
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `draft` - Brouillon
+        * `to_validate` - À valider
+        * `approved` - Validé
+        * `rejected` - Refusé
+    AssetVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        asset:
+          type: integer
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          maxLength: 120
+        note:
+          type: string
+        original_filename:
+          type: string
+          readOnly: true
+        size_bytes:
+          type: integer
+          readOnly: true
+        mime_type:
+          type: string
+          readOnly: true
+        sha256:
+          type: string
+          readOnly: true
+        duration_ms:
+          type: integer
+          readOnly: true
+          nullable: true
+        width:
+          type: integer
+          readOnly: true
+          nullable: true
+        height:
+          type: integer
+          readOnly: true
+          nullable: true
+        page_count:
+          type: integer
+          readOnly: true
+          nullable: true
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        processing_error:
+          type: string
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/AssetKindEnum'
+          readOnly: true
+        drive_file_id:
+          type: string
+          readOnly: true
+        drive_meta:
+          readOnly: true
+        is_drive:
+          type: boolean
+          readOnly: true
+        file_url:
+          type: string
+          nullable: true
+          readOnly: true
+        derivatives:
+          allOf:
+          - $ref: '#/components/schemas/Derivatives'
+          readOnly: true
+        comments_count:
+          type: integer
+          readOnly: true
+        open_threads:
+          type: integer
+          readOnly: true
+        author:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - asset
+      - author
+      - comments_count
+      - created_at
+      - derivatives
+      - drive_file_id
+      - drive_meta
+      - duration_ms
+      - file_url
+      - height
+      - id
+      - is_drive
+      - kind
+      - label
+      - mime_type
+      - note
+      - number
+      - open_threads
+      - original_filename
+      - page_count
+      - processed_at
+      - processing_error
+      - sha256
+      - size_bytes
+      - updated_at
+      - width
     Blocker:
       type: object
       description: |-
@@ -3948,6 +5211,16 @@ components:
       - expense
       - income
       - name
+    ChangeStatusRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/AssetStatusEnum'
+        note:
+          type: string
+          maxLength: 2000
+      required:
+      - status
     ChecklistItem:
       type: object
       properties:
@@ -4253,6 +5526,27 @@ components:
       - pinned
       - to_validate
       - today
+    Derivatives:
+      type: object
+      description: Which derivatives are ready for a version (URLs of the endpoints).
+      properties:
+        thumbnail_url:
+          type: string
+          nullable: true
+        stream_url:
+          type: string
+          nullable: true
+        peaks_url:
+          type: string
+          nullable: true
+        pending:
+          type: boolean
+          description: Processing not finished yet
+      required:
+      - peaks_url
+      - pending
+      - stream_url
+      - thumbnail_url
     DirectMembership:
       type: object
       properties:
@@ -4785,6 +6079,9 @@ components:
           type: boolean
         email_on_assignment:
           type: boolean
+        max_upload_mb:
+          type: integer
+          readOnly: true
       required:
       - avatar_url
       - daily_digest_enabled
@@ -4797,6 +6094,7 @@ components:
       - first_name
       - id
       - last_name
+      - max_upload_mb
       - phone
       - theme
       - timezone
@@ -5029,6 +6327,81 @@ components:
       - own
       - to_pay
       - with_children
+    PaginatedAssetCommentList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetComment'
+    PaginatedAssetList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+    PaginatedAssetVersionList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetVersion'
     PaginatedEventList:
       type: object
       required:
@@ -5054,6 +6427,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
+    PaginatedStatusChangeList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusChange'
     PaginatedTaskList:
       type: object
       required:
@@ -5135,6 +6533,78 @@ components:
       - new_password
       - token
       - uid
+    PatchedAssetCommentRequest:
+      type: object
+      properties:
+        parent:
+          type: integer
+          nullable: true
+        body:
+          type: string
+          minLength: 1
+        timestamp_ms:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        rect_x:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_y:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_w:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        rect_h:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        page:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+    PatchedAssetRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/AssetKindEnum'
+        tags:
+          type: array
+          items:
+            type: integer
+        file:
+          type: string
+          format: binary
+          writeOnly: true
+        label:
+          type: string
+          writeOnly: true
+        note:
+          type: string
+          writeOnly: true
+    PatchedAssetVersionRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 120
+        note:
+          type: string
     PatchedBudgetLineRequest:
       type: object
       properties:
@@ -6399,6 +7869,39 @@ components:
       - project
       - start
       - title
+    StatusChange:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        from_status:
+          allOf:
+          - $ref: '#/components/schemas/AssetStatusEnum'
+          readOnly: true
+        to_status:
+          allOf:
+          - $ref: '#/components/schemas/AssetStatusEnum'
+          readOnly: true
+        note:
+          type: string
+          readOnly: true
+        changed_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - changed_by
+      - created_at
+      - from_status
+      - id
+      - note
+      - to_status
     Tag:
       type: object
       properties:

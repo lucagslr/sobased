@@ -27,6 +27,8 @@
   --c-danger-soft: #fee2e2;
   --c-warning-soft: #fef3c7;
   --c-warning: #92400e;
+  --c-success: #166534;
+  --c-success-soft: #dcfce7;
 }
 
 .dark {
@@ -43,6 +45,8 @@
   --c-danger-soft: #3b1414;
   --c-warning-soft: #3a2a0c;
   --c-warning: #fcd34d;
+  --c-success: #86efac;
+  --c-success-soft: #0f2e1a;
 }
 
 @theme inline {
@@ -59,6 +63,8 @@
   --color-danger-soft: var(--c-danger-soft);
   --color-warning: var(--c-warning);
   --color-warning-soft: var(--c-warning-soft);
+  --color-success: var(--c-success);
+  --color-success-soft: var(--c-success-soft);
 }
 
 /* Horizontally scrollable tab strips: scrolling stays, the bar is hidden. */

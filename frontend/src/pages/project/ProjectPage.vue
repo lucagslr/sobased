@@ -2,8 +2,8 @@
 /**
  * Project page: the SAME component at every level of the tree (SPEC §15).
  * Header (breadcrumb, status, dates, colour, tags) + tabs. Tabs are added as
- * phases deliver them: Fichiers (8) and Activité (13) still to come. The
- * Compta tab only exists with can_view_finance.
+ * phases deliver them: Activité (13) still to come. The Compta tab only
+ * exists with can_view_finance.
  * A project seen as a shell gets a minimal page instead.
  */
 import { Pencil, Plus } from 'lucide-vue-next'
@@ -25,6 +25,7 @@ import { atLeast } from '@/utils/roles'
 import ProjectCalendarTab from './ProjectCalendarTab.vue'
 import ProjectContactsTab from './ProjectContactsTab.vue'
 import ProjectEventsTab from './ProjectEventsTab.vue'
+import ProjectFilesTab from './ProjectFilesTab.vue'
 import ProjectFinanceTab from './ProjectFinanceTab.vue'
 import ProjectOverviewTab from './ProjectOverviewTab.vue'
 import ProjectSettingsTab from './ProjectSettingsTab.vue'
@@ -53,6 +54,7 @@ const ALL_TABS = [
   { slug: 'taches', label: 'Tâches' },
   { slug: 'calendrier', label: 'Calendrier' },
   { slug: 'rdv', label: 'RDV' },
+  { slug: 'fichiers', label: 'Fichiers' },
   { slug: 'compta', label: 'Compta' },
   { slug: 'contacts', label: 'Contacts' },
   { slug: 'parametres', label: 'Paramètres' },
@@ -177,6 +179,7 @@ watch(projectId, load, { immediate: true })
     <ProjectTasksTab v-else-if="currentTab === 'taches'" :project="full" />
     <ProjectCalendarTab v-else-if="currentTab === 'calendrier'" :project="full" />
     <ProjectEventsTab v-else-if="currentTab === 'rdv'" :project="full" />
+    <ProjectFilesTab v-else-if="currentTab === 'fichiers'" :project="full" />
     <ProjectFinanceTab v-else-if="currentTab === 'compta'" :project="full" />
     <ProjectContactsTab v-else-if="currentTab === 'contacts'" :project="full" />
     <ProjectSettingsTab

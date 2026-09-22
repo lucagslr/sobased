@@ -4,6 +4,288 @@
  */
 
 export interface paths {
+    "/api/asset-comments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Edit (author), delete (author or admin), resolve / reopen a thread
+         *     (its author or an editor).
+         */
+        delete: operations["asset_comments_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Edit (author), delete (author or admin), resolve / reopen a thread
+         *     (its author or an editor).
+         */
+        patch: operations["asset_comments_partial_update"];
+        trace?: never;
+    };
+    "/api/asset-comments/{id}/reopen/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Edit (author), delete (author or admin), resolve / reopen a thread
+         *     (its author or an editor).
+         */
+        post: operations["asset_comments_reopen_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-comments/{id}/resolve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Edit (author), delete (author or admin), resolve / reopen a thread
+         *     (its author or an editor).
+         */
+        post: operations["asset_comments_resolve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One version: label and note may change, the file never does. */
+        get: operations["asset_versions_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description One version: label and note may change, the file never does. */
+        delete: operations["asset_versions_destroy"];
+        options?: never;
+        head?: never;
+        /** @description One version: label and note may change, the file never does. */
+        patch: operations["asset_versions_partial_update"];
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/comments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET: every comment of the version (threads flattened, replies carry
+         *     `parent`). POST: a new thread, or a reply with `parent` (commenters).
+         */
+        get: operations["asset_versions_comments_list"];
+        put?: never;
+        /**
+         * @description GET: every comment of the version (threads flattened, replies carry
+         *     `parent`). POST: a new thread, or a reply with `parent` (commenters).
+         */
+        post: operations["asset_versions_comments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/file/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The original, for members: Caddy streams it (Range included). */
+        get: operations["asset_versions_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/peaks/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Pre-computed waveform (JSON) for wavesurfer. */
+        get: operations["asset_versions_peaks_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/stream/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description MP3 128 kbps for in-app playback. */
+        get: operations["asset_versions_stream_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/{id}/thumbnail/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One version: label and note may change, the file never does. */
+        get: operations["asset_versions_thumbnail_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        get: operations["assets_list"];
+        put?: never;
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        post: operations["assets_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        get: operations["assets_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        delete: operations["assets_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        patch: operations["assets_partial_update"];
+        trace?: never;
+    };
+    "/api/assets/{id}/follow/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        post: operations["assets_follow_create"];
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        delete: operations["assets_follow_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/status/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        post: operations["assets_status_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/status-history/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Custom GET actions (file, stream...) only need the reading role. */
+        get: operations["assets_status_history_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description GET: every version, newest first. POST: the next one (editors). */
+        get: operations["assets_versions_list"];
+        put?: never;
+        /** @description GET: every version, newest first. POST: the next one (editors). */
+        post: operations["assets_versions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf/": {
         parameters: {
             query?: never;
@@ -1660,6 +1942,122 @@ export interface components {
             total: string;
             transactions: number[];
         };
+        Asset: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            name: string;
+            kind: components["schemas"]["AssetKindEnum"];
+            readonly status: components["schemas"]["AssetStatusEnum"];
+            tags: number[];
+            readonly latest_version: components["schemas"]["AssetVersion"] | null;
+            readonly versions_count: number;
+            readonly is_following: boolean;
+            readonly created_by: components["schemas"]["PublicUser"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AssetComment: {
+            readonly id: number;
+            readonly version: number;
+            parent: number | null;
+            readonly author: components["schemas"]["PublicUser"] | null;
+            body: string;
+            timestamp_ms: number | null;
+            /** Format: decimal */
+            rect_x: string | null;
+            /** Format: decimal */
+            rect_y: string | null;
+            /** Format: decimal */
+            rect_w: string | null;
+            /** Format: decimal */
+            rect_h: string | null;
+            page: number | null;
+            readonly is_resolved: boolean;
+            /** Format: date-time */
+            readonly resolved_at: string | null;
+            readonly resolved_by: components["schemas"]["PublicUser"] | null;
+            readonly is_mine: boolean;
+            /** Format: date-time */
+            readonly edited_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        AssetCommentRequest: {
+            parent?: number | null;
+            body: string;
+            timestamp_ms?: number | null;
+            /** Format: decimal */
+            rect_x?: string | null;
+            /** Format: decimal */
+            rect_y?: string | null;
+            /** Format: decimal */
+            rect_w?: string | null;
+            /** Format: decimal */
+            rect_h?: string | null;
+            page?: number | null;
+        };
+        /**
+         * @description * `audio` - Audio
+         *     * `image` - Image
+         *     * `video` - Vidéo
+         *     * `document` - PDF / document
+         *     * `other` - Autre
+         * @enum {string}
+         */
+        AssetKindEnum: "audio" | "image" | "video" | "document" | "other";
+        AssetRequest: {
+            project: number;
+            name: string;
+            kind?: components["schemas"]["AssetKindEnum"];
+            tags?: number[];
+            /** Format: binary */
+            file?: string;
+            label?: string;
+            note?: string;
+        };
+        /**
+         * @description * `draft` - Brouillon
+         *     * `to_validate` - À valider
+         *     * `approved` - Validé
+         *     * `rejected` - Refusé
+         * @enum {string}
+         */
+        AssetStatusEnum: "draft" | "to_validate" | "approved" | "rejected";
+        AssetVersion: {
+            readonly id: number;
+            readonly asset: number;
+            readonly number: number;
+            label: string;
+            note: string;
+            readonly original_filename: string;
+            readonly size_bytes: number;
+            readonly mime_type: string;
+            readonly sha256: string;
+            readonly duration_ms: number | null;
+            readonly width: number | null;
+            readonly height: number | null;
+            readonly page_count: number | null;
+            /** Format: date-time */
+            readonly processed_at: string | null;
+            readonly processing_error: string;
+            readonly kind: components["schemas"]["AssetKindEnum"];
+            readonly drive_file_id: string;
+            readonly drive_meta: unknown;
+            readonly is_drive: boolean;
+            readonly file_url: string | null;
+            readonly derivatives: components["schemas"]["Derivatives"];
+            readonly comments_count: number;
+            readonly open_threads: number;
+            readonly author: components["schemas"]["PublicUser"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
         /**
          * @description A task blocking another one. For a blocker the user cannot see, only
          *     `id` and `is_open` are filled: enough for the padlock, nothing more.
@@ -1778,6 +2176,10 @@ export interface components {
             category: number;
             name: string;
         };
+        ChangeStatusRequest: {
+            status: components["schemas"]["AssetStatusEnum"];
+            note?: string;
+        };
         ChecklistItem: {
             readonly id: number;
             readonly task: number;
@@ -1876,6 +2278,14 @@ export interface components {
             meetings: components["schemas"]["MeetingsWidget"];
             expenses_to_pay: components["schemas"]["MoneyWidget"];
             missing_receipts: components["schemas"]["MoneyWidget"];
+        };
+        /** @description Which derivatives are ready for a version (URLs of the endpoints). */
+        Derivatives: {
+            thumbnail_url: string | null;
+            stream_url: string | null;
+            peaks_url: string | null;
+            /** @description Processing not finished yet */
+            pending: boolean;
         };
         DirectMembership: {
             readonly id: number;
@@ -2085,6 +2495,7 @@ export interface components {
             daily_digest_time: string;
             email_on_mention: boolean;
             email_on_assignment: boolean;
+            readonly max_upload_mb: number;
         };
         MeetingsWidget: {
             available: boolean;
@@ -2180,6 +2591,51 @@ export interface components {
             /** Format: decimal */
             to_pay: string;
         };
+        PaginatedAssetCommentList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["AssetComment"][];
+        };
+        PaginatedAssetList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["Asset"][];
+        };
+        PaginatedAssetVersionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["AssetVersion"][];
+        };
         PaginatedEventList: {
             /** @example 123 */
             count: number;
@@ -2194,6 +2650,21 @@ export interface components {
              */
             previous: string | null;
             results: components["schemas"]["Event"][];
+        };
+        PaginatedStatusChangeList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["StatusChange"][];
         };
         PaginatedTaskList: {
             /** @example 123 */
@@ -2233,6 +2704,34 @@ export interface components {
             uid: string;
             token: string;
             new_password: string;
+        };
+        PatchedAssetCommentRequest: {
+            parent?: number | null;
+            body?: string;
+            timestamp_ms?: number | null;
+            /** Format: decimal */
+            rect_x?: string | null;
+            /** Format: decimal */
+            rect_y?: string | null;
+            /** Format: decimal */
+            rect_w?: string | null;
+            /** Format: decimal */
+            rect_h?: string | null;
+            page?: number | null;
+        };
+        PatchedAssetRequest: {
+            project?: number;
+            name?: string;
+            kind?: components["schemas"]["AssetKindEnum"];
+            tags?: number[];
+            /** Format: binary */
+            file?: string;
+            label?: string;
+            note?: string;
+        };
+        PatchedAssetVersionRequest: {
+            label?: string;
+            note?: string;
         };
         PatchedBudgetLineRequest: {
             project?: number;
@@ -2717,6 +3216,15 @@ export interface components {
             all_day: boolean;
             project: number;
         };
+        StatusChange: {
+            readonly id: number;
+            readonly from_status: components["schemas"]["AssetStatusEnum"];
+            readonly to_status: components["schemas"]["AssetStatusEnum"];
+            readonly note: string;
+            readonly changed_by: components["schemas"]["PublicUser"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         Tag: {
             readonly id: number;
             workspace: number;
@@ -2999,6 +3507,704 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    asset_comments_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    asset_comments_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAssetCommentRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAssetCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_comments_reopen_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_comments_resolve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset comment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_versions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
+                };
+            };
+        };
+    };
+    asset_versions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    asset_versions_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAssetVersionRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAssetVersionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
+                };
+            };
+        };
+    };
+    asset_versions_comments_list: {
+        parameters: {
+            query?: {
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAssetCommentList"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_versions_comments_create: {
+        parameters: {
+            query?: {
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetCommentRequest"];
+                "multipart/form-data": components["schemas"]["AssetCommentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAssetCommentList"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_versions_file_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    asset_versions_peaks_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    asset_versions_stream_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    asset_versions_thumbnail_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    assets_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                kind?: "audio" | "document" | "image" | "other" | "video";
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                search?: string;
+                status?: "approved" | "draft" | "rejected" | "to_validate";
+                tag?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAssetList"];
+                };
+            };
+        };
+    };
+    assets_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetRequest"];
+                "multipart/form-data": components["schemas"]["AssetRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AssetRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    assets_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAssetRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAssetRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAssetRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_follow_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_follow_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_status_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeStatusRequest"];
+                "multipart/form-data": components["schemas"]["ChangeStatusRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ChangeStatusRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+        };
+    };
+    assets_status_history_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                /**
+                 * @description * `audio` - Audio
+                 *     * `image` - Image
+                 *     * `video` - Vidéo
+                 *     * `document` - PDF / document
+                 *     * `other` - Autre
+                 */
+                kind?: "audio" | "document" | "image" | "other" | "video";
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                search?: string;
+                /**
+                 * @description * `draft` - Brouillon
+                 *     * `to_validate` - À valider
+                 *     * `approved` - Validé
+                 *     * `rejected` - Refusé
+                 */
+                status?: "approved" | "draft" | "rejected" | "to_validate";
+                tag?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStatusChangeList"];
+                };
+            };
+        };
+    };
+    assets_versions_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                /**
+                 * @description * `audio` - Audio
+                 *     * `image` - Image
+                 *     * `video` - Vidéo
+                 *     * `document` - PDF / document
+                 *     * `other` - Autre
+                 */
+                kind?: "audio" | "document" | "image" | "other" | "video";
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                search?: string;
+                /**
+                 * @description * `draft` - Brouillon
+                 *     * `to_validate` - À valider
+                 *     * `approved` - Validé
+                 *     * `rejected` - Refusé
+                 */
+                status?: "approved" | "draft" | "rejected" | "to_validate";
+                tag?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAssetVersionList"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
+                };
+            };
+        };
+    };
+    assets_versions_create: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                /**
+                 * @description * `audio` - Audio
+                 *     * `image` - Image
+                 *     * `video` - Vidéo
+                 *     * `document` - PDF / document
+                 *     * `other` - Autre
+                 */
+                kind?: "audio" | "document" | "image" | "other" | "video";
+                /** @description Quel champ utiliser pour classer les résultats. */
+                ordering?: string;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                search?: string;
+                /**
+                 * @description * `draft` - Brouillon
+                 *     * `to_validate` - À valider
+                 *     * `approved` - Validé
+                 *     * `rejected` - Refusé
+                 */
+                status?: "approved" | "draft" | "rejected" | "to_validate";
+                tag?: number;
+                workspace?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                    label?: string;
+                    note?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAssetVersionList"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
+                };
+            };
+        };
+    };
     auth_csrf_retrieve: {
         parameters: {
             query?: never;
