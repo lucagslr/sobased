@@ -25,6 +25,7 @@ from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.activity.mixins import ActivityMixin
 from apps.core.files import protected_file_response
 from apps.core.localtime import local_today
 from apps.projects.access import Role, effective_access, get_access_map
@@ -185,7 +186,17 @@ class _FinanceScopedViewSet(ProjectScopedViewSet):
         return "view" if self.request.method in SAFE_METHODS else "edit"
 
 
-class TransactionViewSet(_FinanceScopedViewSet, viewsets.ModelViewSet):
+class TransactionViewSet(ActivityMixin, _FinanceScopedViewSet, viewsets.ModelViewSet):
+    activity_type = "transaction"
+    activity_fields = (
+        "label",
+        "kind",
+        "amount",
+        "date",
+        "category",
+        "payment_status",
+        "receipt",
+    )
     queryset = Transaction.objects.select_related(
         "project",
         "category",
@@ -327,6 +338,7 @@ class TransactionViewSet(_FinanceScopedViewSet, viewsets.ModelViewSet):
 
 
 class BudgetLineViewSet(
+    ActivityMixin,
     _FinanceScopedViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -336,6 +348,8 @@ class BudgetLineViewSet(
 ):
     """Planned amounts of a project (`?project=`), one per category and kind."""
 
+    activity_type = "budget_line"
+    activity_fields = ("amount",)
     queryset = BudgetLine.objects.select_related("project", "category")
     serializer_class = BudgetLineSerializer
     pagination_class = None
@@ -350,6 +364,9 @@ class BudgetLineViewSet(
         project = self.request.query_params.get("project", "")
         return queryset.filter(project_id=project) if project.isdigit() else queryset
 
+    def activity_label(self, obj):
+        return f"{obj.category.name} · {obj.get_kind_display()}"
+
     def perform_create(self, serializer):
         data = serializer.validated_data
         self.check_project_access(data["project"])
@@ -359,7 +376,11 @@ class BudgetLineViewSet(
         )
 
 
-class RecurringExpenseViewSet(_FinanceScopedViewSet, viewsets.ModelViewSet):
+class RecurringExpenseViewSet(
+    ActivityMixin, _FinanceScopedViewSet, viewsets.ModelViewSet
+):
+    activity_type = "recurring_expense"
+    activity_fields = ("label", "amount", "frequency", "is_active")
     queryset = RecurringExpense.objects.select_related("project", "category")
     serializer_class = RecurringExpenseSerializer
     pagination_class = None

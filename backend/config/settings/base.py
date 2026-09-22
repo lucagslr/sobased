@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.workspaces",
     "apps.projects",
+    "apps.activity",
     "apps.contacts",
     "apps.events",
     "apps.tasks",
@@ -178,6 +179,24 @@ CELERY_BEAT_SCHEDULE = {
     "send-daily-digests": {
         "task": "apps.notifications.tasks.send_daily_digests",
         "schedule": 60 * 15,
+    },
+    # Retention (DATABASE_SCHEMA §7): journal and access logs 12 months,
+    # expired invitations 30 days, data exports 7 days.
+    "purge-activity": {
+        "task": "apps.activity.tasks.purge_old_entries",
+        "schedule": 60 * 60 * 24,
+    },
+    "purge-share-access-logs": {
+        "task": "apps.sharing.tasks.purge_access_logs",
+        "schedule": 60 * 60 * 24,
+    },
+    "purge-expired-invitations": {
+        "task": "apps.projects.tasks.purge_expired_invitations",
+        "schedule": 60 * 60 * 24,
+    },
+    "purge-expired-exports": {
+        "task": "apps.accounts.tasks.purge_expired_exports",
+        "schedule": 60 * 60 * 24,
     },
 }
 

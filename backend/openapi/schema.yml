@@ -3,6 +3,73 @@ info:
   title: SOBASED API
   version: 1.0.0
 paths:
+  /api/activity/:
+    get:
+      operationId: activity_list
+      description: |-
+        Mixin for viewsets whose objects belong to a project.
+
+        Declare roles with:
+            read_role   = Role.VIEWER   (list, retrieve)
+            write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+            action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+            finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+                                  need can_edit_finance, on top of the role)
+
+        The model's default manager must come from ProjectScopedQuerySet.
+      parameters:
+      - in: query
+        name: actor
+        schema:
+          type: string
+        description: username
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: target_type
+        schema:
+          type: string
+      - in: query
+        name: verb
+        schema:
+          type: string
+          enum:
+          - access_changed
+          - created
+          - deleted
+          - shared
+          - status_changed
+          - updated
+      tags:
+      - activity
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActivityEntryList'
+          description: ''
   /api/asset-comments/{id}/:
     patch:
       operationId: asset_comments_partial_update
@@ -101,6 +168,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetComment'
+          description: ''
+  /api/asset-versions/:
+    post:
+      operationId: asset_versions_create
+      description: 'One version: label and note may change, the file never does.'
+      tags:
+      - asset-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetVersionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetVersionRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
           description: ''
   /api/asset-versions/{id}/:
     get:
@@ -2813,6 +2903,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/me/delete/:
+    post:
+      operationId: me_delete_create
+      description: Password again, then anonymisation (services.anonymize) and sign-out.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/me/exports/:
+    get:
+      operationId: me_exports_list
+      description: |-
+        GET: my export requests (7-day archives). POST: ask for a new one,
+        built by Celery; one at a time.
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataExport'
+          description: ''
+    post:
+      operationId: me_exports_create
+      description: |-
+        GET: my export requests (7-day archives). POST: ask for a new one,
+        built by Celery; one at a time.
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExport'
+          description: ''
+  /api/me/exports/{id}/download/:
+    get:
+      operationId: me_exports_download_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - me
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/memberships/:
     get:
       operationId: memberships_list
@@ -5399,6 +5565,56 @@ components:
       description: |-
         * `ok` - Connecté
         * `needs_reauth` - Reconnexion nécessaire
+    ActivityEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        verb:
+          allOf:
+          - $ref: '#/components/schemas/VerbEnum'
+          readOnly: true
+        actor:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        project:
+          type: integer
+          readOnly: true
+          nullable: true
+        project_name:
+          type: string
+          nullable: true
+          readOnly: true
+        target_type:
+          type: string
+          readOnly: true
+        target_id:
+          type: integer
+          readOnly: true
+          nullable: true
+        target_label:
+          type: string
+          readOnly: true
+        changes:
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actor
+      - changes
+      - created_at
+      - id
+      - project
+      - project_name
+      - target_id
+      - target_label
+      - target_type
+      - verb
     Advance:
       type: object
       properties:
@@ -5817,6 +6033,14 @@ components:
       - size_bytes
       - updated_at
       - width
+    AssetVersionRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 120
+        note:
+          type: string
     BlankEnum:
       enum:
       - ''
@@ -6455,6 +6679,62 @@ components:
       - pinned
       - to_validate
       - today
+    DataExport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DataExportStatusEnum'
+          readOnly: true
+        size_bytes:
+          type: integer
+          readOnly: true
+        error:
+          type: string
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_available:
+          type: boolean
+          readOnly: true
+      required:
+      - created_at
+      - error
+      - expires_at
+      - id
+      - is_available
+      - size_bytes
+      - status
+    DataExportStatusEnum:
+      enum:
+      - pending
+      - ready
+      - failed
+      type: string
+      description: |-
+        * `pending` - En préparation
+        * `ready` - Prêt
+        * `failed` - Échec
+    DeleteAccountRequest:
+      type: object
+      description: 'The password is asked again: a stolen session must not be enough.'
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
     Derivatives:
       type: object
       description: Which derivatives are ready for a version (URLs of the endpoints).
@@ -7530,6 +7810,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccessLog'
+    PaginatedActivityEntryList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityEntry'
     PaginatedAssetCommentList:
       type: object
       required:
@@ -10258,6 +10563,22 @@ components:
       - available
       - count
       - items
+    VerbEnum:
+      enum:
+      - created
+      - updated
+      - status_changed
+      - deleted
+      - shared
+      - access_changed
+      type: string
+      description: |-
+        * `created` - Création
+        * `updated` - Modification
+        * `status_changed` - Statut
+        * `deleted` - Suppression
+        * `shared` - Partage
+        * `access_changed` - Droits
     ViewFilters:
       type: object
       description: Shape of DashboardView.filters (documentation only).

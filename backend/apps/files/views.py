@@ -19,6 +19,8 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 
+from apps.activity import services as activity
+from apps.activity.mixins import ActivityMixin
 from apps.core.files import protected_file_response
 from apps.projects.access import Role, effective_access, get_access_map
 from apps.projects.permissions import ProjectScopedViewSet
@@ -65,7 +67,11 @@ class _ReadOnGetMixin:
         return super().required_role()
 
 
-class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet):
+class AssetViewSet(
+    ActivityMixin, _ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet
+):
+    activity_type = "asset"
+    activity_fields = ("name", "kind")
     queryset = Asset.objects.select_related("project", "created_by").prefetch_related(
         "tags", "followers", Prefetch("versions", queryset=_versions_queryset())
     )
@@ -174,6 +180,13 @@ class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet)
         except services.DriveProblem as exc:
             raise ValidationError({"drive_file_id": [str(exc)]}) from exc
         fresh = _versions_queryset().get(pk=version.pk)
+        activity.log(
+            request.user,
+            activity.Verb.UPDATED,
+            asset,
+            target_type="asset",
+            changes={"version": [version.number - 1 or None, version.number]},
+        )
         return Response(
             AssetVersionSerializer(fresh, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
@@ -186,12 +199,21 @@ class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet)
         asset = self.get_object()  # editor: write_role
         serializer = ChangeStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        before = asset.status
         services.change_status(
             asset,
             serializer.validated_data["status"],
             request.user,
             note=serializer.validated_data.get("note", ""),
         )
+        if asset.status != before:
+            activity.log(
+                request.user,
+                activity.Verb.STATUS_CHANGED,
+                asset,
+                target_type="asset",
+                changes={"status": [before, asset.status]},
+            )
         return self._fresh(None, asset.pk)
 
     @extend_schema(responses=StatusChangeSerializer(many=True))
@@ -213,6 +235,7 @@ class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet)
 
 
 class AssetVersionViewSet(
+    ActivityMixin,
     _ReadOnGetMixin,
     ProjectScopedViewSet,
     mixins.RetrieveModelMixin,
@@ -222,6 +245,8 @@ class AssetVersionViewSet(
 ):
     """One version: label and note may change, the file never does."""
 
+    activity_type = "asset_version"
+    activity_fields = ("label",)
     queryset = _versions_queryset().select_related("asset__project")
     serializer_class = AssetVersionSerializer
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
@@ -229,6 +254,9 @@ class AssetVersionViewSet(
 
     def get_project(self, obj):
         return obj.asset.project
+
+    def activity_label(self, obj):
+        return f"{obj.asset.name} · v{obj.number}"
 
     def perform_destroy(self, instance):
         if instance.asset.versions.count() == 1:

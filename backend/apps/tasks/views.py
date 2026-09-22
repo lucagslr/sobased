@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
+from apps.activity.mixins import ActivityMixin
 from apps.core.localtime import local_today
 from apps.projects.access import Role, effective_access, get_access_map
 from apps.projects.permissions import ProjectScopedViewSet
@@ -54,7 +55,9 @@ def _renumber(project_id: int, column: str, moved: Task | None = None, index: in
             task.position = position
 
 
-class TaskViewSet(ProjectScopedViewSet, viewsets.ModelViewSet):
+class TaskViewSet(ActivityMixin, ProjectScopedViewSet, viewsets.ModelViewSet):
+    activity_type = "task"
+    activity_fields = ("title", "status", "priority", "start_at", "due_at", "assignees")
     queryset = (
         Task.objects.select_related("project", "series", "source_event")
         .prefetch_related("assignees", "tags", "checklist", "blocked_by__project")

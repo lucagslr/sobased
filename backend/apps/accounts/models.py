@@ -5,12 +5,15 @@ notifications, password reset) and must be verified before it can be used to
 receive invitations: see SPECIFICATIONS.md §1.4.
 """
 
+import secrets
 from datetime import time
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 # Letters, digits, dot, dash, underscore: keeps "@username" mentions unambiguous
 # (Django's default validator also allows "@" and "+").
@@ -64,7 +67,7 @@ class User(AbstractUser):
 
     privacy_accepted_at = models.DateTimeField(null=True, blank=True)
     # Set when the account is deleted: the row stays (authorship of shared
-    # content) but every personal field is wiped. Implemented in phase 13.
+    # content) but every personal field is wiped (services.anonymize).
     anonymized_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -82,9 +85,51 @@ class User(AbstractUser):
 
     @property
     def display_name(self) -> str:
-        """Full name when known, username otherwise."""
+        """Full name when known, username otherwise; a deleted account keeps
+        signing its content, anonymously (SPEC §16)."""
+        if self.anonymized_at:
+            return "Utilisateur supprimé"
         return self.get_full_name().strip() or self.username
 
     @property
     def email_verified(self) -> bool:
         return self.email_verified_at is not None
+
+
+def export_path(export, filename: str) -> str:
+    """exports/<user>/<random>.zip: the URL never reveals anything."""
+    return f"exports/{export.user_id}/{secrets.token_hex(12)}.zip"
+
+
+class DataExport(models.Model):
+    """One request of "export my data" (SPEC §16): built by Celery, kept 7
+    days, served through protected_file_response() only."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "En préparation"
+        READY = "ready", "Prêt"
+        FAILED = "failed", "Échec"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="data_exports"
+    )
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING
+    )
+    archive = models.FileField(upload_to=export_path, blank=True, max_length=200)
+    size_bytes = models.BigIntegerField(default=0)
+    error = models.CharField(max_length=200, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def is_available(self) -> bool:
+        return (
+            self.status == self.Status.READY
+            and bool(self.archive)
+            and self.expires_at is not None
+            and self.expires_at > timezone.now()
+        )

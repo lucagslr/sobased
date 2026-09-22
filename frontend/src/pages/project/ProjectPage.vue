@@ -22,6 +22,7 @@ import { useWorkspacesStore } from '@/stores/workspaces'
 import { formatDateRange, MAX_DEPTH } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
+import ProjectActivityTab from './ProjectActivityTab.vue'
 import ProjectCalendarTab from './ProjectCalendarTab.vue'
 import ProjectContactsTab from './ProjectContactsTab.vue'
 import ProjectEventsTab from './ProjectEventsTab.vue'
@@ -59,6 +60,7 @@ const ALL_TABS = [
   { slug: 'compta', label: 'Compta' },
   { slug: 'contacts', label: 'Contacts' },
   { slug: 'liens', label: 'Liens' },
+  { slug: 'activite', label: 'Activité' },
   { slug: 'parametres', label: 'Paramètres' },
 ]
 // Money is only for those with can_view_finance (SPEC §13); share links
@@ -67,7 +69,8 @@ const TABS = computed(() =>
   ALL_TABS.filter(
     (tab) =>
       (tab.slug !== 'compta' || full.value?.can_view_finance) &&
-      (tab.slug !== 'liens' || canEdit.value),
+      (tab.slug !== 'liens' || canEdit.value) &&
+      (tab.slug !== 'activite' || canEdit.value),
   ),
 )
 const currentTab = computed(() =>
@@ -190,6 +193,7 @@ watch(projectId, load, { immediate: true })
     <ProjectFinanceTab v-else-if="currentTab === 'compta'" :project="full" />
     <ProjectContactsTab v-else-if="currentTab === 'contacts'" :project="full" />
     <ProjectLinksTab v-else-if="currentTab === 'liens'" :project="full" />
+    <ProjectActivityTab v-else-if="currentTab === 'activite'" :project="full" />
     <ProjectSettingsTab
       v-else
       :project="full"

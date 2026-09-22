@@ -12,6 +12,7 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 
+from apps.activity.mixins import ActivityMixin
 from apps.projects.access import get_access_map
 from apps.projects.permissions import ProjectScopedViewSet
 
@@ -31,7 +32,9 @@ SCOPE_PARAMETER = OpenApiParameter(
 )
 
 
-class EventViewSet(ProjectScopedViewSet, viewsets.ModelViewSet):
+class EventViewSet(ActivityMixin, ProjectScopedViewSet, viewsets.ModelViewSet):
+    activity_type = "event"
+    activity_fields = ("title", "type", "start", "end", "all_day", "location")
     queryset = Event.objects.select_related("project", "series").prefetch_related(
         "participants", "contacts", "tags", "tasks"
     )

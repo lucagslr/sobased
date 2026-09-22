@@ -15,6 +15,7 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -25,7 +26,7 @@ from django.utils.module_loading import import_string
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -34,9 +35,13 @@ from rest_framework.views import APIView
 
 from apps.core.files import protected_file_response
 
+from . import services
 from .avatars import InvalidImage, build_avatar
 from .emails import send_password_reset_email, send_verification_email
+from .models import DataExport
 from .serializers import (
+    DataExportSerializer,
+    DeleteAccountSerializer,
     EmailSerializer,
     LoginSerializer,
     MeSerializer,
@@ -382,3 +387,59 @@ class UserSearchView(generics.ListAPIView):
             .exclude(pk=self.request.user.pk)
             .order_by("username")[:10]
         )
+
+
+# --- My data (SPEC §16) ---------------------------------------------------------------
+class MyExportsView(APIView):
+    """GET: my export requests (7-day archives). POST: ask for a new one,
+    built by Celery; one at a time."""
+
+    @extend_schema(responses=DataExportSerializer(many=True))
+    def get(self, request):
+        rows = request.user.data_exports.all()[:10]
+        return Response(DataExportSerializer(rows, many=True).data)
+
+    @extend_schema(request=None, responses={202: DataExportSerializer})
+    def post(self, request):
+        from .tasks import build_export
+
+        pending = request.user.data_exports.filter(status=DataExport.Status.PENDING)
+        if pending.exists():
+            raise ValidationError({"detail": "Un export est déjà en préparation."})
+        export = DataExport.objects.create(user=request.user)
+        transaction.on_commit(lambda: build_export.delay(export.pk))
+        return Response(
+            DataExportSerializer(export).data, status=status.HTTP_202_ACCEPTED
+        )
+
+
+class MyExportDownloadView(APIView):
+    @extend_schema(responses={(200, "application/zip"): bytes})
+    def get(self, request, pk):
+        export = get_object_or_404(request.user.data_exports, pk=pk)
+        if not export.is_available:
+            raise NotFound()
+        stamp = export.created_at.strftime("%Y-%m-%d")
+        return protected_file_response(
+            export.archive,
+            content_type="application/zip",
+            filename=f"sobased-export-{stamp}.zip",
+            inline=False,
+        )
+
+
+class DeleteAccountView(APIView):
+    """Password again, then anonymisation (services.anonymize) and sign-out."""
+
+    @extend_schema(request=DeleteAccountSerializer, responses={204: None})
+    def post(self, request):
+        serializer = DeleteAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not request.user.check_password(serializer.validated_data["password"]):
+            raise ValidationError({"password": ["Mot de passe incorrect."]})
+        try:
+            services.anonymize(request.user)
+        except ValueError as exc:
+            raise ValidationError({"detail": str(exc)}) from exc
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -4,6 +4,34 @@
  */
 
 export interface paths {
+    "/api/activity/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Mixin for viewsets whose objects belong to a project.
+         *
+         *     Declare roles with:
+         *         read_role   = Role.VIEWER   (list, retrieve)
+         *         write_role  = Role.EDITOR   (create, update, partial_update, destroy)
+         *         action_roles = {"resolve": Role.COMMENTER}   (per-action overrides)
+         *         finance = "" | "rw"  ("rw": reads need can_view_finance, writes
+         *                               need can_edit_finance, on top of the role)
+         *
+         *     The model's default manager must come from ProjectScopedQuerySet.
+         */
+        get: operations["activity_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/asset-comments/{id}/": {
         parameters: {
             query?: never;
@@ -62,6 +90,23 @@ export interface paths {
          *     (its author or an editor).
          */
         post: operations["asset_comments_resolve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/asset-versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description One version: label and note may change, the file never does. */
+        post: operations["asset_versions_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1395,6 +1440,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/delete/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Password again, then anonymisation (services.anonymize) and sign-out. */
+        post: operations["me_delete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/exports/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET: my export requests (7-day archives). POST: ask for a new one,
+         *     built by Celery; one at a time.
+         */
+        get: operations["me_exports_list"];
+        put?: never;
+        /**
+         * @description GET: my export requests (7-day archives). POST: ask for a new one,
+         *     built by Celery; one at a time.
+         */
+        post: operations["me_exports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/exports/{id}/download/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me_exports_download_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memberships/": {
         parameters: {
             query?: never;
@@ -2555,6 +2657,19 @@ export interface components {
          * @enum {string}
          */
         AccountStatusEnum: "ok" | "needs_reauth";
+        ActivityEntry: {
+            readonly id: number;
+            readonly verb: components["schemas"]["VerbEnum"];
+            readonly actor: components["schemas"]["PublicUser"] | null;
+            readonly project: number | null;
+            readonly project_name: string | null;
+            readonly target_type: string;
+            readonly target_id: number | null;
+            readonly target_label: string;
+            readonly changes: unknown;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         Advance: {
             payer_type: components["schemas"]["PayerTypeEnum"];
             payer_id: number;
@@ -2686,6 +2801,10 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        AssetVersionRequest: {
+            label?: string;
+            note?: string;
         };
         /** @enum {unknown} */
         BlankEnum: "";
@@ -2913,6 +3032,28 @@ export interface components {
             meetings: components["schemas"]["MeetingsWidget"];
             expenses_to_pay: components["schemas"]["MoneyWidget"];
             missing_receipts: components["schemas"]["MoneyWidget"];
+        };
+        DataExport: {
+            readonly id: number;
+            readonly status: components["schemas"]["DataExportStatusEnum"];
+            readonly size_bytes: number;
+            readonly error: string;
+            /** Format: date-time */
+            readonly expires_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly is_available: boolean;
+        };
+        /**
+         * @description * `pending` - En préparation
+         *     * `ready` - Prêt
+         *     * `failed` - Échec
+         * @enum {string}
+         */
+        DataExportStatusEnum: "pending" | "ready" | "failed";
+        /** @description The password is asked again: a stolen session must not be enough. */
+        DeleteAccountRequest: {
+            password: string;
         };
         /** @description Which derivatives are ready for a version (URLs of the endpoints). */
         Derivatives: {
@@ -3325,6 +3466,21 @@ export interface components {
              */
             previous: string | null;
             results: components["schemas"]["AccessLog"][];
+        };
+        PaginatedActivityEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["ActivityEntry"][];
         };
         PaginatedAssetCommentList: {
             /** @example 123 */
@@ -4384,6 +4540,16 @@ export interface components {
             count: number;
             items: components["schemas"]["ValidateItem"][];
         };
+        /**
+         * @description * `created` - Création
+         *     * `updated` - Modification
+         *     * `status_changed` - Statut
+         *     * `deleted` - Suppression
+         *     * `shared` - Partage
+         *     * `access_changed` - Droits
+         * @enum {string}
+         */
+        VerbEnum: "created" | "updated" | "status_changed" | "deleted" | "shared" | "access_changed";
         /** @description Shape of DashboardView.filters (documentation only). */
         ViewFilters: {
             workspaces: number[];
@@ -4466,6 +4632,36 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    activity_list: {
+        parameters: {
+            query: {
+                /** @description username */
+                actor?: string;
+                include_descendants?: boolean;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project: number;
+                target_type?: string;
+                verb?: "access_changed" | "created" | "deleted" | "shared" | "status_changed" | "updated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedActivityEntryList"];
+                };
+            };
+        };
+    };
     asset_comments_destroy: {
         parameters: {
             query?: never;
@@ -4554,6 +4750,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssetComment"];
+                };
+            };
+        };
+    };
+    asset_versions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AssetVersionRequest"];
+                "multipart/form-data": components["schemas"]["AssetVersionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
                 };
             };
         };
@@ -6866,6 +7086,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
+    me_delete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
+                "multipart/form-data": components["schemas"]["DeleteAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    me_exports_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExport"][];
+                };
+            };
+        };
+    };
+    me_exports_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExport"];
+                };
+            };
+        };
+    };
+    me_exports_download_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
                 };
             };
         };

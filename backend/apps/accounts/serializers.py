@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .emails import send_verification_email
-from .models import username_validator
+from .models import DataExport, username_validator
 
 User = get_user_model()
 
@@ -201,3 +201,27 @@ class PasswordChangeSerializer(serializers.Serializer):
     def validate_new_password(self, value):
         _check_password_strength(value, self.context["request"].user)
         return value
+
+
+class DataExportSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=DataExport.Status.choices, read_only=True)
+    is_available = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = DataExport
+        fields = [
+            "id",
+            "status",
+            "size_bytes",
+            "error",
+            "expires_at",
+            "created_at",
+            "is_available",
+        ]
+        read_only_fields = fields
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    """The password is asked again: a stolen session must not be enough."""
+
+    password = serializers.CharField(write_only=True)

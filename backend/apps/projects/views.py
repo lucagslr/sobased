@@ -17,6 +17,8 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.accounts.signals import email_verified
+from apps.activity import services as activity
+from apps.activity.mixins import ActivityMixin
 from apps.core.localtime import local_today
 from apps.workspaces.models import Workspace
 
@@ -102,6 +104,7 @@ SCOPE_PARAMETERS = [
 
 
 class ProjectViewSet(
+    ActivityMixin,
     ProjectScopedViewSet,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -111,6 +114,8 @@ class ProjectViewSet(
 ):
     """Projects. There is no flat list: navigation uses the `tree` action."""
 
+    activity_type = "project"
+    activity_fields = ("name", "status", "start_date", "end_date", "type")
     queryset = Project.objects.select_related("type", "parent").prefetch_related("tags")
     serializer_class = ProjectSerializer
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
@@ -315,7 +320,17 @@ class ProjectViewSet(
             _require_container(request, project.parent, Role.EDITOR)
         else:
             self.check_project_access(project, Role.OWNER)
+        # Logged against the parent so that it stays visible; a root project's
+        # entry only belongs to the workspace.
+        target = {
+            "target_type": "project",
+            "target_id": project.pk,
+            "label": project.name,
+            "project": project.parent,
+            "workspace": project.workspace,
+        }
         project.delete()
+        activity.log(request.user, activity.Verb.DELETED, **target)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def check_object_permissions(self, request, obj):
@@ -335,12 +350,26 @@ class ProjectViewSet(
         serializer.is_valid(raise_exception=True)
         new_parent = serializer.validated_data["parent"]
         _require_container(request, new_parent or project.workspace, Role.EDITOR)
+        old_parent = project.parent
         try:
             tree.move(project, new_parent)
         except ValueError as exc:
             raise ValidationError({"parent": str(exc)}) from exc
         invalidate_access_map(request)
         project.refresh_from_db()
+        if old_parent != new_parent:
+            activity.log(
+                request.user,
+                activity.Verb.UPDATED,
+                project,
+                target_type="project",
+                changes={
+                    "parent": [
+                        old_parent.name if old_parent else None,
+                        new_parent.name if new_parent else None,
+                    ]
+                },
+            )
         context = {
             **self.get_serializer_context(),
             "access_map": get_access_map(request),
@@ -376,6 +405,18 @@ class ProjectViewSet(
         target.role = StoredRole.OWNER
         target.save()
         invalidate_access_map(request)
+        activity.log(
+            request.user,
+            activity.Verb.ACCESS_CHANGED,
+            project,
+            target_type="project",
+            changes={
+                "owner": [
+                    current.user.display_name if current else None,
+                    target.user.display_name,
+                ]
+            },
+        )
         return Response(self.get_serializer(project).data)
 
 
@@ -426,6 +467,29 @@ def _effective_members(scope) -> list[dict]:
     for entry in members:
         entry["role"] = entry.pop("rank").stored
     return members
+
+
+def _membership_snapshot(membership) -> dict:
+    return {
+        "role": membership.get_role_display(),
+        "can_view_finance": membership.can_view_finance,
+        "can_edit_finance": membership.can_edit_finance,
+    }
+
+
+def _log_access(actor, membership, changes: dict) -> None:
+    """A rights entry, on the project of the membership or, for a workspace
+    membership, on the workspace alone (project null)."""
+    activity.log(
+        actor,
+        activity.Verb.ACCESS_CHANGED,
+        target_type="membership",
+        target_id=membership.user_id,
+        label=membership.user.display_name,
+        project=membership.project if membership.project_id else None,
+        workspace=membership.workspace if membership.workspace_id else None,
+        changes=changes,
+    )
 
 
 class MembershipViewSet(viewsets.GenericViewSet):
@@ -494,7 +558,7 @@ class MembershipViewSet(viewsets.GenericViewSet):
         if not request.user.email_verified:
             raise PermissionDenied("Confirme ton adresse e-mail avant d'inviter.")
         try:
-            kind, _ = services.invite(
+            kind, result = services.invite(
                 actor=request.user,
                 scope=scope,
                 role=data["role"],
@@ -505,6 +569,10 @@ class MembershipViewSet(viewsets.GenericViewSet):
             )
         except ValueError as exc:
             raise ValidationError({"detail": str(exc)}) from exc
+        if kind == "membership":
+            _log_access(
+                request.user, result, {"role": [None, result.get_role_display()]}
+            )
         detail = (
             "Accès donné."
             if kind == "membership"
@@ -530,7 +598,11 @@ class MembershipViewSet(viewsets.GenericViewSet):
         )
         serializer.is_valid(raise_exception=True)
         self._check_finance_grant(access, serializer.validated_data)
+        before = _membership_snapshot(membership)
         serializer.save()
+        changes = activity.diff(before, _membership_snapshot(membership))
+        if changes:
+            _log_access(request.user, membership, changes)
         return Response(serializer.data)
 
     @extend_schema(responses={204: None})
@@ -540,7 +612,9 @@ class MembershipViewSet(viewsets.GenericViewSet):
             raise PermissionDenied("Le propriétaire ne peut pas être retiré.")
         if membership.user_id != request.user.pk:  # leaving is always allowed
             _require(request, membership.scope, Role.ADMIN)
+        changes = {"role": [membership.get_role_display(), None]}
         membership.delete()
+        _log_access(request.user, membership, changes)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -594,7 +668,10 @@ class InvitationViewSet(viewsets.GenericViewSet):
         invitation = Invitation.find_by_token(serializer.validated_data["token"])
         if invitation is None or not invitation.is_pending:
             raise ValidationError({"detail": "Invitation invalide ou expirée."})
-        services.accept(invitation, request.user)
+        membership = services.accept(invitation, request.user)
+        _log_access(
+            request.user, membership, {"role": [None, membership.get_role_display()]}
+        )
         # Opening a link received at this address proves the address is theirs.
         if invitation.email == request.user.email and not request.user.email_verified:
             request.user.email_verified_at = timezone.now()

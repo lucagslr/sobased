@@ -92,8 +92,11 @@ erDiagram
         bigint id PK
         bigint user_id FK
         enum status "pending, ready, failed"
-        file archive "ZIP JSON + fichiers"
+        file archive "ZIP JSON + fichiers, nom aléatoire"
+        bigint size_bytes
+        string error
         datetime expires_at "7 jours"
+        datetime created_at
     }
     WORKSPACE {
         bigint id PK
@@ -609,14 +612,14 @@ erDiagram
     }
     ACTIVITY_ENTRY {
         bigint id PK
-        bigint workspace_id FK
+        bigint workspace_id FK "CASCADE"
         bigint project_id FK "SET_NULL à la suppression"
         bigint actor_id FK "SET_NULL"
         enum verb "created, updated, status_changed, deleted, shared, access_changed"
-        string target_type
+        string target_type "task, project, event, asset, asset_version, share_link, transaction, budget_line, recurring_expense, membership"
         bigint target_id
         string target_label "instantané du nom"
-        json changes "champ : ancien, nouveau"
+        json changes "champ : [avant, après], valeurs prêtes à afficher"
         datetime created_at
     }
 
@@ -629,7 +632,8 @@ erDiagram
 - `OAUTH_ACCOUNT` : unique `(user, provider)` en v1 (un compte Google et un compte Microsoft par utilisateur).
 - `SYNC_MAPPING` : unique `(calendar, object_type, object_id)` et unique `(calendar, external_id)`. La correspondance est **par utilisateur** (via son calendrier cible) : un même RDV peut être poussé dans le calendrier de chaque participant.
 - `ACTIVITY_ENTRY` et `NOTIFICATION` référencent leur cible par `target_type` + `target_id` / `url` plutôt que par clé étrangère générique : le journal survit à la suppression de l'objet. `NOTIFICATION` garde en plus les libellés dans `payload` (dont `actor_name`) pour rester lisible quand l'acteur ou le projet a disparu. Index `(recipient, read_at)` pour le compteur de non-lues.
-- Rétention : `ACTIVITY_ENTRY` et `SHARE_ACCESS_LOG` purgés après 12 mois, `INVITATION` expirées après 30 jours, `DATA_EXPORT` après 7 jours.
+- Rétention (tâches beat quotidiennes) : `ACTIVITY_ENTRY` et `SHARE_ACCESS_LOG` purgés après 12 mois, `INVITATION` expirées après 30 jours, `DATA_EXPORT` après 7 jours (le fichier avec).
+- Suppression d'un compte : la ligne `USER` reste (`anonymized_at`, `username` = `deleted-<id>`, e-mail et nom vidés, `is_active` faux) pour que le contenu reste signé « Utilisateur supprimé » ; adhésions, notifications, exports, vues, comptes OAuth, assignations et suivis sont supprimés.
 
 ## 8. Tables Django standard
 

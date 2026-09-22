@@ -33,6 +33,13 @@ urlpatterns = [
     ),
     path("me/", views.MeView.as_view(), name="me"),
     path("me/avatar/", views.MyAvatarView.as_view(), name="me-avatar"),
+    path("me/exports/", views.MyExportsView.as_view(), name="me-exports"),
+    path(
+        "me/exports/<int:pk>/download/",
+        views.MyExportDownloadView.as_view(),
+        name="me-export-download",
+    ),
+    path("me/delete/", views.DeleteAccountView.as_view(), name="me-delete"),
     path("users/search/", views.UserSearchView.as_view(), name="user-search"),
     path(
         "users/<str:username>/avatar/",

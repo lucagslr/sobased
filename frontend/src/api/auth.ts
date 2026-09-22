@@ -3,6 +3,7 @@ import { api } from './client'
 import type { components } from './schema'
 
 export type Me = components['schemas']['Me']
+export type DataExport = components['schemas']['DataExport']
 export type PublicUser = components['schemas']['PublicUser']
 export type Theme = NonNullable<Me['theme']>
 
@@ -51,4 +52,10 @@ export const authApi = {
   deleteAvatar: () => api<Me>('/api/me/avatar/', { method: 'DELETE' }),
   searchUsers: (query: string, signal?: AbortSignal) =>
     api<PublicUser[]>(`/api/users/search/?q=${encodeURIComponent(query)}`, { signal }),
+  /** My data (SPEC §16): export requests (ZIP kept 7 days) and account deletion. */
+  exports: () => api<DataExport[]>('/api/me/exports/'),
+  requestExport: () => api<DataExport>('/api/me/exports/', { method: 'POST' }),
+  exportDownloadUrl: (id: number) => `/api/me/exports/${id}/download/`,
+  deleteAccount: (password: string) =>
+    api('/api/me/delete/', { method: 'POST', body: { password } }),
 }

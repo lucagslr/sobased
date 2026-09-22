@@ -22,6 +22,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.activity import services as activity
+from apps.activity.mixins import ActivityMixin
 from apps.core.files import protected_file_response
 from apps.files.models import AssetDerivative, Kind
 from apps.projects.access import Role
@@ -41,9 +43,18 @@ READY = AssetDerivative.DerivativeStatus.READY
 FAILED = AssetDerivative.DerivativeStatus.FAILED
 
 
-class ShareLinkViewSet(ProjectScopedViewSet, viewsets.ModelViewSet):
+class ShareLinkViewSet(ActivityMixin, ProjectScopedViewSet, viewsets.ModelViewSet):
     """Links are an editor's business, reading included (SPEC §10)."""
 
+    activity_type = "share_link"
+    activity_fields = (
+        "title",
+        "expires_at",
+        "max_views",
+        "max_plays",
+        "allow_download",
+    )
+    activity_create_verb = activity.Verb.SHARED
     queryset = ShareLink.objects.select_related(
         "project", "asset", "version__asset", "created_by"
     ).prefetch_related(
@@ -76,6 +87,13 @@ class ShareLinkViewSet(ProjectScopedViewSet, viewsets.ModelViewSet):
         if link.revoked_at is None:
             link.revoked_at = timezone.now()
             link.save(update_fields=["revoked_at", "updated_at"])
+            activity.log(
+                request.user,
+                activity.Verb.STATUS_CHANGED,
+                link,
+                target_type="share_link",
+                changes={"status": ["active", "revoked"]},
+            )
         return Response(self.get_serializer(link).data)
 
     @extend_schema(responses=AccessLogSerializer(many=True))

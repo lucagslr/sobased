@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 12 terminées. Prochaine étape : phase 13 (journal d'activité `ActivityEntry` (schéma §7, SPECIFICATIONS §11) écrit par la couche vue avec une liste de champs clés par modèle, `GET /api/activity/?project=` pour Éditeur et plus, onglet Activité du projet, rétention 12 mois ; export de mes données en ZIP (`profile.json`, adhésions, tâches, commentaires, événements, transactions, mes fichiers) produit en tâche de fond et téléchargé via `protected_file_response()` ; suppression du compte avec mot de passe redemandé, bloquée si propriétaire d'un espace ou d'un projet racine avec d'autres membres, anonymisation (`deleted-<id>`, `anonymized_at`, avatar et jetons OAuth supprimés, adhésions et notifications supprimées) ; PWA (manifest, service worker de cache du shell, icônes) ; purges beat des journaux et des exports).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 13 terminées. Prochaine étape : phase 14 (déploiement : `docker-compose.prod.yml` avec Caddy HTTPS automatique et la même CSP que `Caddyfile.dev` (domaines Google inclus), HSTS, gunicorn, `collectstatic`, build Vite servi par Caddy, `SITE_IS_HTTPS`, `PROTECTED_MEDIA_ACCEL` ; `docs/deploy.md` avec la liste exacte pour Luca (VPS, DNS, SMTP, client OAuth Google avec `<SITE_URL>/api/integrations/google/callback/`, APIs Drive + Calendar + Picker, clé API et app id, application Azure avec `<SITE_URL>/api/integrations/microsoft/callback/`) ; sauvegardes quotidiennes `pg_dump` + fichiers chiffrées vers un stockage externe, rétention 30 jours, script de restauration testé ; `manage.py seed_demo` remplaçant `scripts/dev_scenario.py` ; relecture OWASP (en-têtes, limitation de débit, CSRF, uploads, droits, secrets) ; README final ; tag `v1.0.0`).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -23,7 +23,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 10 | Google Drive | ✅ terminé · [doc](docs/phases/phase-10-google-drive.md) |
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ✅ terminé · [doc](docs/phases/phase-11-calendriers.md) |
 | 12 | Notifications in-app, e-mails, résumé de 8h | ✅ terminé · [doc](docs/phases/phase-12-notifications.md) |
-| 13 | Journal d'activité, export et suppression des données, PWA | ⏳ |
+| 13 | Journal d'activité, export et suppression des données, PWA | ✅ terminé · [doc](docs/phases/phase-13-activite-export-pwa.md) |
 | 14 | Déploiement, sauvegardes, seed, relecture sécurité OWASP, README | ⏳ |
 
 ## Phase 0 : ce qui a été produit
@@ -244,7 +244,20 @@ Détail dans `docs/phases/phase-12-notifications.md`. App `apps/notifications` :
 - Le tampon `last_digest_sent_on` est posé depuis **le même instant** que la décision `due_now(user, now)` ; un second `timezone.now()` dans `send()` faisait envoyer deux fois ou jamais autour de minuit et rendait les tests à date simulée faux.
 - `digest.build()` réutilise `apps/dashboard/services.py` avec un `SimpleNamespace(user=…)` en guise de requête : une section du résumé ne peut pas diverger d'un widget.
 - Dans les tests, les événements s'obtiennent par l'API : `assignee_usernames` sur `/api/tasks/`, `/api/task-comments/?task=<id>` pour une mention, `/api/memberships/` `{project, username, role}` par le propriétaire de l'espace pour un ajout.
-- La phase 13 supprimera les notifications d'un compte anonymisé (`recipient` en cascade) ; `actor` est déjà en `SET_NULL` avec `actor_name` dans `payload`.
+- Un compte anonymisé perd ses notifications (`services.anonymize`) ; `actor` est en `SET_NULL` avec `actor_name` dans `payload`.
+
+## Phase 13 : ce qui a été produit
+
+Détail dans `docs/phases/phase-13-activite-export-pwa.md`. App `apps/activity` : `ActivityEntry` (espace, projet `SET_NULL`, acteur, verbe, cible par type + id + libellé instantané, `changes`) ; `services.log()` seul écrivain, `ActivityMixin` qui enveloppe `create` / `update` / `destroy` des viewsets avec une liste de champs clés par modèle, journalisation explicite des actions (statut de fichier, version, révocation, déplacement, propriété, adhésions) ; `GET /api/activity/?project=` pour Éditeur et plus, montants masqués sans `can_view_finance` ; onglet Activité. `apps/accounts` : `DataExport` + `exports.py` (ZIP en tâche Celery, 7 jours, `protected_file_response()`), `services.anonymize()` (blocages, révocation des jetons hors transaction, nettoyage, `deleted-<id>`, « Utilisateur supprimé »), section Paramètres › Mes données. Purges beat : journal et journaux d'accès 12 mois, invitations expirées 30 jours, exports 7 jours. PWA : manifest, icônes, service worker passe-plat enregistré en production. 1'274 tests backend, 112 front. Migrations : `activity.0001`, `accounts.0002`.
+
+À retenir pour la suite :
+
+- Le mixin d'activité enveloppe les méthodes **HTTP** (`create`, `update`, `destroy`), pas `perform_*` : une méthode définie sur la classe elle-même l'emporte toujours sur celle d'un mixin, quel que soit l'ordre des bases. Un viewset qui redéfinit `destroy()` sans `super()` (projets) journalise donc explicitement.
+- `changes` stocke des valeurs **prêtes à afficher** (noms, ISO, `Decimal` en texte, listes triées) : le front ne recharge jamais l'objet, qui peut avoir disparu. Les libellés français de champs et de valeurs sont dans `utils/activity.ts`.
+- Le journal est filtré par `for_user(Role.EDITOR)` **et** par les cibles « argent » : toute nouvelle cible qui porte un montant doit être ajoutée à `FINANCE_TARGETS`.
+- Sessions : avec `SESSION_ENGINE = cached_db`, supprimer la ligne `django_session` ne déconnecte pas ; passer par `SessionStore(session_key).delete()` (cache + base).
+- La suppression d'un compte laisse la ligne `User` (contenu signé « Utilisateur supprimé ») : les listes d'utilisateurs (recherche, assignés) doivent continuer d'exclure `is_active = false`.
+- La phase 14 doit servir `/sw.js` et `/manifest.webmanifest` depuis le build Vite (ils sont dans `dist/`) et vérifier l'installation sur un vrai téléphone en HTTPS.
 
 ## Dépendances ajoutées hors SPEC §3
 
@@ -266,6 +279,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 13 : l'historique d'un projet racine supprimé reste en base (espace) mais n'est visible nulle part ; pas de journal pour les commentaires, la checklist, les contacts et les fichiers Drive ; export construit d'un bloc (quelques centaines de Mo au plus) ; suppression de compte sans délai de rétractation ; installation PWA **non essayée sur un téléphone** (service worker en production seulement, HTTPS en phase 14).
 - Phase 12 : compteur de la cloche rafraîchi toutes les 60 s (jusqu'à une minute de latence dans la barre latérale) ; pas de purge des notifications lues ; résumé sans les conflits de synchronisation calendrier ; e-mail du résumé seulement avec adresse vérifiée ; aucun SMTP réel exercé (e-mails lus dans les journaux du worker).
 - Phase 11 : **aucun appel réussi aux vrais Google Calendar et Microsoft Graph** (identifiants à fournir) ; tâche horaire toujours poussée comme créneau de 30 min (une durée changée dehors est re-normalisée) ; canal push seulement en HTTPS public ; miroir des calendriers externes limité à −30 j / +180 j ; conflits visibles dans les paramètres seulement.
 - Phase 10 : **aucun appel réussi au vrai Google** (identifiants à fournir par Luca) : flux OAuth, Picker et appels Drive à essayer dès que le client OAuth existe ; partage du dossier appliqué aux membres présents (« Réappliquer » après une arrivée) ; import d'une version Drive en mémoire (quelques centaines de Mo au plus) ; une version Drive ne se lit ni ne se partage tant qu'elle n'est pas importée.

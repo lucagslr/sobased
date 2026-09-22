@@ -1,16 +1,16 @@
 <script setup lang="ts">
 /**
  * Settings shell. The section comes from the URL (/parametres/:section) so it
- * can be linked and survives a reload. Later phases add their sections here:
- * my data (13).
+ * can be linked and survives a reload.
  */
-import { Bell, KeyRound, Layers, Palette, Plug, UserRound } from 'lucide-vue-next'
+import { Bell, Database, KeyRound, Layers, Palette, Plug, UserRound } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import PageHeader from '@/components/ui/PageHeader.vue'
 
 import AppearanceSection from './AppearanceSection.vue'
+import DataSection from './DataSection.vue'
 import IntegrationsSection from './IntegrationsSection.vue'
 import NotificationsSection from './NotificationsSection.vue'
 import ProfileSection from './ProfileSection.vue'
@@ -24,6 +24,7 @@ const SECTIONS = [
   { slug: 'notifications', label: 'Notifications', icon: Bell, component: NotificationsSection },
   { slug: 'integrations', label: 'Intégrations', icon: Plug, component: IntegrationsSection },
   { slug: 'securite', label: 'Sécurité', icon: KeyRound, component: SecuritySection },
+  { slug: 'donnees', label: 'Mes données', icon: Database, component: DataSection },
 ]
 
 const route = useRoute()

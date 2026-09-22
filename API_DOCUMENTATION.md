@@ -31,9 +31,9 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | POST | `/api/auth/password/change/` | connecté | Changement de mot de passe (invalide les autres sessions) |
 | GET, PATCH | `/api/me/` | connecté | Profil, thème, fuseau, préférences de notification |
 | PUT, DELETE | `/api/me/avatar/` | connecté | Avatar (redimensionné par Pillow) |
-| GET, POST | `/api/me/exports/` | connecté | Liste / demande d'export de mes données (tâche Celery) |
-| GET | `/api/me/exports/{id}/download/` | connecté | Téléchargement du ZIP (7 jours) |
-| POST | `/api/me/delete/` | connecté + mot de passe | Suppression du compte (anonymisation). Refusé tant que l'utilisateur est propriétaire d'un espace ou d'un projet partagé non transféré |
+| GET, POST | `/api/me/exports/` | connecté | Mes 10 dernières demandes d'export (`status` `pending` / `ready` / `failed`, `size_bytes`, `error`, `expires_at`, `is_available`) ; `POST` sans corps → 202 et construction en tâche Celery ; 400 tant qu'une demande est en préparation |
+| GET | `/api/me/exports/{id}/download/` | connecté | Le ZIP en pièce jointe (`sobased-export-<date>.zip`, 7 jours) ; 404 si expiré, en échec ou à quelqu'un d'autre |
+| POST | `/api/me/delete/` | connecté | `{password}` redemandé (400 `password` sinon). Anonymise le compte et déconnecte (204). 400 `detail` qui nomme l'espace ou le projet racine à transférer ou supprimer d'abord |
 | GET | `/api/users/search/?q=` | connecté, limité | Autocomplétion par username (2 caractères min.). Renvoie **uniquement** `username`, `display_name`, `avatar_url` |
 | GET | `/api/users/{username}/avatar/` | connecté | Image de l'avatar (par nom d'utilisateur : aucun identifiant numérique exposé) |
 
@@ -212,7 +212,7 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 | GET | `/api/notifications/unread-count/` | connecté | `{unread}` : compteur de la cloche (interrogé toutes les 60 s, pas de WebSocket) |
 | POST | `/api/notifications/{id}/read/` | connecté | Marque lue, renvoie la notification ; celle d'un autre = 404 |
 | POST | `/api/notifications/read-all/` | connecté | 204 |
-| GET | `/api/activity/?project=` | Éditeur | Journal du projet, `include_descendants`, filtres `actor`, `verb` |
+| GET | `/api/activity/?project=` | Éditeur (Lecteur = 403) | Journal du projet, paginé, plus récent d'abord : `verb` (`created`, `updated`, `status_changed`, `deleted`, `shared`, `access_changed`), `actor`, `project` + `project_name`, `target_type`, `target_id`, `target_label`, `changes` `{champ: [avant, après]}`. Paramètres `include_descendants`, `verb`, `target_type`, `actor` (username). Les entrées sur les écritures, budgets et frais récurrents n'apparaissent que sur les projets où le lecteur a `can_view_finance` |
 | GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel. Paramètres : `view` (filtres d'une de mes vues ; celle d'un autre = 404) **ou** `workspace`, `project` (sous-projets inclus), `tag` (répétables) et `only_mine`. Réponse : `{date, widgets}` où `widgets` a une entrée par clé : `overdue`, `today`, `pinned`, `next7`, `to_validate`, `meetings` (RDV en cours ou dans les 14 jours ; `only_mine` = RDV où je participe), `expenses_to_pay`, `missing_receipts`. Chaque entrée : `{available, count, items}` (50 éléments au plus, `count` = total). `available: false` = fonctionnalité d'une phase à venir, le front masque le widget. « Aujourd'hui » est évalué dans le fuseau du profil |
 | GET, POST | `/api/dashboard/views/` | connecté | Mes vues enregistrées, jamais partagées. Le premier `GET` crée « Mon dashboard ». Champs : `name`, `filters` `{workspaces, projects, tags, only_mine}`, `layout` `[{key, size 1-3, tall, hidden}]`, `is_default`, `position` |
 | PATCH, DELETE | `/api/dashboard/views/{id}/` | connecté | La disposition est nettoyée par le serveur (« En retard » toujours premier et visible, tailles bornées, widgets manquants ajoutés). Une seule vue par défaut ; supprimer la vue par défaut en promeut une autre |
