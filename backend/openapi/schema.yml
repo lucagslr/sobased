@@ -2939,6 +2939,82 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/notifications/{id}/read/:
+    post:
+      operationId: notifications_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) notification.
+        required: true
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/read-all/:
+    post:
+      operationId: notifications_read_all_create
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/unread-count/:
+    get:
+      operationId: notifications_unread_count_retrieve
+      tags:
+      - notifications
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCount'
+          description: ''
   /api/project-contacts/:
     get:
       operationId: project_contacts_list
@@ -7318,6 +7394,66 @@ components:
       - project
       - task
       - title
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/NotificationKindEnum'
+          readOnly: true
+        actor:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        project:
+          type: integer
+          readOnly: true
+          nullable: true
+        payload:
+          readOnly: true
+        url:
+          type: string
+          readOnly: true
+        is_read:
+          type: boolean
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actor
+      - created_at
+      - id
+      - is_read
+      - kind
+      - payload
+      - project
+      - read_at
+      - url
+    NotificationKindEnum:
+      enum:
+      - assignment
+      - mention
+      - asset_status
+      - invitation
+      - share_opened
+      type: string
+      description: |-
+        * `assignment` - Tâche assignée
+        * `mention` - Mention
+        * `asset_status` - Statut d'un fichier
+        * `invitation` - Ajout à un projet
+        * `share_opened` - Lien partagé ouvert
     NullEnum:
       enum:
       - null
@@ -7494,6 +7630,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
     PaginatedShareLinkList:
       type: object
       required:
@@ -10043,6 +10204,13 @@ components:
           maxLength: 200
       required:
       - password
+    UnreadCount:
+      type: object
+      properties:
+        unread:
+          type: integer
+      required:
+      - unread
     ValidateItem:
       type: object
       properties:

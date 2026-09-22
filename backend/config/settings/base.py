@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.files",
     "apps.sharing",
     "apps.integrations",
+    "apps.notifications",
     "apps.dashboard",
 ]
 
@@ -172,6 +173,11 @@ CELERY_BEAT_SCHEDULE = {
     "renew-calendar-watches": {
         "task": "apps.integrations.tasks.renew_calendar_watches",
         "schedule": 60 * 60 * 24,
+    },
+    # Daily digest (SPEC §14): every 15 minutes, users whose local hour passed.
+    "send-daily-digests": {
+        "task": "apps.notifications.tasks.send_daily_digests",
+        "schedule": 60 * 15,
     },
 }
 
@@ -316,6 +322,7 @@ SPECTACULAR_SETTINGS = {
         "ProviderEnum": "apps.integrations.models.PROVIDER_CHOICES",
         "AccountStatusEnum": "apps.integrations.models.ACCOUNT_STATUS_CHOICES",
         "MappingStateEnum": "apps.integrations.models.MAPPING_STATE_CHOICES",
+        "NotificationKindEnum": "apps.notifications.models.NOTIFICATION_KIND_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

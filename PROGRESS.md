@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 11 terminées. Prochaine étape : phase 12 (notifications in-app : `Notification` (schéma §7) pour assignation, mention, statut de fichier, invitation, première ouverture d'un lien partagé (`ShareLink.notify_on_open`), cloche avec compteur et liste, marquage lu ; e-mails selon les préférences du profil (`email_on_mention`, `email_on_assignment`) ; résumé quotidien à 8h (`daily_digest_enabled`, `daily_digest_time`, fuseau du profil) avec retard, aujourd'hui, à valider, RDV, frais à payer et justificatifs manquants (`apps/dashboard/services.py`), conflits de synchro ; tâche Celery beat ; désabonnement dans les préférences).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 12 terminées. Prochaine étape : phase 13 (journal d'activité `ActivityEntry` (schéma §7, SPECIFICATIONS §11) écrit par la couche vue avec une liste de champs clés par modèle, `GET /api/activity/?project=` pour Éditeur et plus, onglet Activité du projet, rétention 12 mois ; export de mes données en ZIP (`profile.json`, adhésions, tâches, commentaires, événements, transactions, mes fichiers) produit en tâche de fond et téléchargé via `protected_file_response()` ; suppression du compte avec mot de passe redemandé, bloquée si propriétaire d'un espace ou d'un projet racine avec d'autres membres, anonymisation (`deleted-<id>`, `anonymized_at`, avatar et jetons OAuth supprimés, adhésions et notifications supprimées) ; PWA (manifest, service worker de cache du shell, icônes) ; purges beat des journaux et des exports).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -22,7 +22,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 9 | Liens protégés, filigranes, streaming, journal d'accès | ✅ terminé · [doc](docs/phases/phase-09-liens-partages.md) |
 | 10 | Google Drive | ✅ terminé · [doc](docs/phases/phase-10-google-drive.md) |
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ✅ terminé · [doc](docs/phases/phase-11-calendriers.md) |
-| 12 | Notifications in-app, e-mails, résumé de 8h | ⏳ |
+| 12 | Notifications in-app, e-mails, résumé de 8h | ✅ terminé · [doc](docs/phases/phase-12-notifications.md) |
 | 13 | Journal d'activité, export et suppression des données, PWA | ⏳ |
 | 14 | Déploiement, sauvegardes, seed, relecture sécurité OWASP, README | ⏳ |
 
@@ -234,6 +234,18 @@ Détail dans `docs/phases/phase-11-calendriers.md`. `ExternalCalendar`, `Externa
 - Le canal push Google n'est créé qu'avec `SITE_IS_HTTPS` ; le webhook répond toujours 200 et compare le hash du jeton de canal.
 - La phase 12 peut lire `SyncConflict` (50 derniers par utilisateur) pour le résumé quotidien, et `ShareLink.first_opened_at` / `notify_on_open` pour « première ouverture ».
 
+## Phase 12 : ce qui a été produit
+
+Détail dans `docs/phases/phase-12-notifications.md`. App `apps/notifications` : `Notification` (destinataire, type, acteur, projet, `payload` de libellés, `url` de route front, `read_at`, `emailed_at`) ; `services.notify()` seul point d'entrée (jamais soi-même, jamais un compte inactif, e-mail selon la table de SPECIFICATIONS §10) et cinq événements branchés dans `tasks`, `files`, `projects` et `sharing` ; résumé quotidien `digest.py` (beat 15 min, heure locale, sections des widgets du dashboard, compta seulement avec `can_view_finance`, rien si vide) ; API `/api/notifications/` (liste, compteur, lu, tout lu) ; page Notifications, compteur interrogé toutes les 60 s, badge de la barre latérale, point rouge sur « Plus ». 1'261 tests backend, 106 front. Migration : `notifications.0001`.
+
+À retenir pour la suite :
+
+- Une notification stocke une **route front** (`/projets/12/taches?tache=34`) et les libellés dans `payload` : la page navigue avec le routeur et n'a jamais besoin de recharger l'objet (qui peut avoir disparu). Les e-mails, eux, reçoivent l'URL absolue via `services.absolute()`.
+- Le tampon `last_digest_sent_on` est posé depuis **le même instant** que la décision `due_now(user, now)` ; un second `timezone.now()` dans `send()` faisait envoyer deux fois ou jamais autour de minuit et rendait les tests à date simulée faux.
+- `digest.build()` réutilise `apps/dashboard/services.py` avec un `SimpleNamespace(user=…)` en guise de requête : une section du résumé ne peut pas diverger d'un widget.
+- Dans les tests, les événements s'obtiennent par l'API : `assignee_usernames` sur `/api/tasks/`, `/api/task-comments/?task=<id>` pour une mention, `/api/memberships/` `{project, username, role}` par le propriétaire de l'espace pour un ajout.
+- La phase 13 supprimera les notifications d'un compte anonymisé (`recipient` en cascade) ; `actor` est déjà en `SET_NULL` avec `actor_name` dans `payload`.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -254,16 +266,17 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 12 : compteur de la cloche rafraîchi toutes les 60 s (jusqu'à une minute de latence dans la barre latérale) ; pas de purge des notifications lues ; résumé sans les conflits de synchronisation calendrier ; e-mail du résumé seulement avec adresse vérifiée ; aucun SMTP réel exercé (e-mails lus dans les journaux du worker).
 - Phase 11 : **aucun appel réussi aux vrais Google Calendar et Microsoft Graph** (identifiants à fournir) ; tâche horaire toujours poussée comme créneau de 30 min (une durée changée dehors est re-normalisée) ; canal push seulement en HTTPS public ; miroir des calendriers externes limité à −30 j / +180 j ; conflits visibles dans les paramètres seulement.
 - Phase 10 : **aucun appel réussi au vrai Google** (identifiants à fournir par Luca) : flux OAuth, Picker et appels Drive à essayer dès que le client OAuth existe ; partage du dossier appliqué aux membres présents (« Réappliquer » après une arrivée) ; import d'une version Drive en mémoire (quelques centaines de Mo au plus) ; une version Drive ne se lit ni ne se partage tant qu'elle n'est pas importée.
-- Phase 9 : notification « première ouverture » en phase 12 (`first_opened_at` posé) ; pas de filigrane vidéo / PDF (v1) ; le tag sonore du filigrane audio vérifié par ffmpeg et la durée du fichier, **pas écouté à l'oreille** (à faire par Luca) ; l'écoute publique déclenchée à la souris dans le navigateur intégré seulement.
-- Phase 8 : mode S3 non exercé contre un vrai bucket ; pas de reprise d'upload ni d'envoi multiple ; la vidéo est lue par le navigateur depuis l'original (un `.mov` ProRes ne se lira pas dans la page, téléchargement seulement) ; nombre de pages PDF approximatif côté serveur ; le dessin d'une zone sur une image vérifié à la souris synthétique seulement : **à essayer au doigt par Luca** ; notifications aux suiveurs en phase 12.
+- Phase 9 : pas de filigrane vidéo / PDF (v1) ; le tag sonore du filigrane audio vérifié par ffmpeg et la durée du fichier, **pas écouté à l'oreille** (à faire par Luca) ; l'écoute publique déclenchée à la souris dans le navigateur intégré seulement.
+- Phase 8 : mode S3 non exercé contre un vrai bucket ; pas de reprise d'upload ni d'envoi multiple ; la vidéo est lue par le navigateur depuis l'original (un `.mov` ProRes ne se lira pas dans la page, téléchargement seulement) ; nombre de pages PDF approximatif côté serveur ; le dessin d'une zone sur une image vérifié à la souris synthétique seulement : **à essayer au doigt par Luca**.
 - Phase 7 : le PDF est en DejaVu (police du conteneur), pas en Inter ; pas d'aperçu du justificatif dans le panneau (nouvel onglet ; la visionneuse arrive en phase 8) ; une écriture générée par un frais récurrent ne suit plus le frais une fois créée ; l'upload d'un justificatif a été vérifié avec un PNG synthétique et un vrai fichier via l'API, pas avec l'appareil photo d'un téléphone (bouton « Photographier » à essayer par Luca).
-- Phase 6 : pas de notification à l'invitation à un RDV (résumé quotidien en phase 12, synchro calendrier en phase 11) ; pas d'import / export du carnet ; le glisser d'un RDV dans le calendrier vérifié par événements synthétiques seulement.
+- Phase 6 : pas de notification à l'invitation à un RDV (section « RDV du jour » du résumé quotidien, synchro calendrier) ; pas d'import / export du carnet ; le glisser d'un RDV dans le calendrier vérifié par événements synthétiques seulement.
 - Phase 5 : **le Gantt ne se manipule pas au doigt** (frappe-gantt n'écoute que la souris ; sur téléphone on ouvre la tâche pour changer ses dates) ; Gantt en lecture seule « en bloc » (un glisser refusé par le serveur est annulé) ; dans un kanban qui inclut les sous-projets, l'ordre n'est exact qu'à l'intérieur d'un même projet ; le calendrier global ne crée pas de tâche ; pas de glisser-déposer dans l'arbre des projets (liste de destinations à la place) ; glisser du kanban, du calendrier et du Gantt vérifiés par événements synthétiques : **à essayer une fois à la main**.
 - Phase 4 : le glisser-déposer des widgets n'a été vérifié qu'avec des événements pointeur synthétiques (ordre changé, enregistré, « En retard » resté premier) : **à essayer une fois à la souris et au doigt par Luca** ; pas de réordonnancement des onglets de vues ; le dashboard ne se rafraîchit pas tout seul (rechargé à l'ouverture et après chaque action) ; trois widgets attendent les phases 6 et 7.
 - Phase 3 : heures saisies dans le fuseau du navigateur (pas celui du profil) ; checklist non réordonnable à la souris ; une règle avec `COUNT` repart de zéro après une scission ; une tâche quotidienne ignorée laisse une tâche en retard par jour (conséquence voulue de « jamais de report automatique »).
-- Phase 2 : transfert de propriété par saisie du nom d'utilisateur ; notification d'ajout à un projet par e-mail seulement jusqu'à la phase 12.
+- Phase 2 : transfert de propriété par saisie du nom d'utilisateur.
 
 Limites **anticipées**, à confirmer par test le moment venu :
 

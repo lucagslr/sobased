@@ -159,5 +159,7 @@ def change_status(
     asset.updated_at = timezone.now()
     asset.save(update_fields=["status", "updated_at"])
     asset.followers.add(actor)
-    # Notifications to the followers arrive with phase 12 (in-app bell).
+    from apps.notifications import services as notifications
+
+    notifications.asset_status_changed(asset, change, actor)
     return change

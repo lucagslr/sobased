@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/", include("apps.files.urls")),
     path("api/", include("apps.sharing.urls")),
     path("api/", include("apps.integrations.urls")),
+    path("api/", include("apps.notifications.urls")),
 ]

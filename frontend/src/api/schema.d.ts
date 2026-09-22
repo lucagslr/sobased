@@ -1463,6 +1463,70 @@ export interface paths {
         patch: operations["memberships_partial_update"];
         trace?: never;
     };
+    "/api/notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["notifications_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["notifications_read_all_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/unread-count/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_unread_count_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/project-contacts/": {
         parameters: {
             query?: never;
@@ -3206,6 +3270,28 @@ export interface components {
             date: string;
             project: number;
         };
+        Notification: {
+            readonly id: number;
+            readonly kind: components["schemas"]["NotificationKindEnum"];
+            readonly actor: components["schemas"]["PublicUser"] | null;
+            readonly project: number | null;
+            readonly payload: unknown;
+            readonly url: string;
+            readonly is_read: boolean;
+            /** Format: date-time */
+            readonly read_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `assignment` - Tâche assignée
+         *     * `mention` - Mention
+         *     * `asset_status` - Statut d'un fichier
+         *     * `invitation` - Ajout à un projet
+         *     * `share_opened` - Lien partagé ouvert
+         * @enum {string}
+         */
+        NotificationKindEnum: "assignment" | "mention" | "asset_status" | "invitation" | "share_opened";
         /** @enum {unknown} */
         NullEnum: null;
         /** @description What the "fin dépassée" modal needs: « MARCHIOLY devait se terminer le … ». */
@@ -3299,6 +3385,21 @@ export interface components {
              */
             previous: string | null;
             results: components["schemas"]["Event"][];
+        };
+        PaginatedNotificationList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["Notification"][];
         };
         PaginatedShareLinkList: {
             /** @example 123 */
@@ -4259,6 +4360,9 @@ export interface components {
         };
         UnlockRequest: {
             password: string;
+        };
+        UnreadCount: {
+            unread: number;
         };
         ValidateItem: {
             kind: components["schemas"]["ValidateItemKindEnum"];
@@ -6858,6 +6962,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembershipUpdate"];
+                };
+            };
+        };
+    };
+    notifications_list: {
+        parameters: {
+            query?: {
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedNotificationList"];
+                };
+            };
+        };
+    };
+    notifications_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) notification. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+        };
+    };
+    notifications_read_all_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    notifications_unread_count_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
                 };
             };
         };

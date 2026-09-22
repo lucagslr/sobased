@@ -4,6 +4,7 @@
  * lists the rest (SPEC §15).
  */
 import {
+  Bell,
   Calendar,
   CircleCheckBig,
   FolderTree,
@@ -22,10 +23,13 @@ export interface NavItem {
   shortLabel?: string
   icon: Component
   mobile: boolean
+  /** Shows the unread notifications counter. */
+  badge?: boolean
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, mobile: true },
+  { to: '/notifications', label: 'Notifications', icon: Bell, mobile: false, badge: true },
   { to: '/calendrier', label: 'Calendrier', icon: Calendar, mobile: true },
   { to: '/taches', label: 'Mes tâches', shortLabel: 'Tâches', icon: CircleCheckBig, mobile: true },
   { to: '/projets', label: 'Projets', icon: FolderTree, mobile: true },

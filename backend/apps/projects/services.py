@@ -29,6 +29,13 @@ def _scope_kwargs(scope) -> dict:
     return {"workspace": scope} if isinstance(scope, Workspace) else {"project": scope}
 
 
+def _scope_path(scope) -> str:
+    """Front route of a scope (the notification stores routes, not URLs)."""
+    from apps.workspaces.models import Workspace
+
+    return "/projets" if isinstance(scope, Workspace) else f"/projets/{scope.pk}"
+
+
 def _scope_url(scope) -> str:
     from apps.workspaces.models import Workspace
 
@@ -99,18 +106,9 @@ def invite(
         if Membership.objects.filter(user=user, **_scope_kwargs(scope)).exists():
             raise ValueError("Cette personne est déjà membre. Modifie son rôle.")
         membership = grant(user, scope, role=role, invited_by=actor, **flags)
-        send_templated_email(
-            to=user.email,
-            subject=f"{actor.display_name} t'a ajouté à « {scope.name} »",
-            template="member_added",
-            context={
-                "name": user.display_name,
-                "actor": actor.display_name,
-                "scope_name": scope.name,
-                "role": membership.get_role_display(),
-                "url": _scope_url(scope),
-            },
-        )
+        from apps.notifications import services as notifications
+
+        notifications.member_added(user, scope, membership, actor, _scope_path(scope))
         return "membership", membership
 
     # One pending invitation per (e-mail, scope): inviting again refreshes it.

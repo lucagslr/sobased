@@ -11,13 +11,11 @@ from __future__ import annotations
 import re
 from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
 from apps.core import recurrence
-from apps.core.emails import send_templated_email
 from apps.projects import tree
 from apps.projects.access import member_user_ids
 
@@ -265,41 +263,16 @@ def mentioned_users(body: str, project) -> list:
     return [user for user in members if user.username.lower() in usernames]
 
 
-def _task_url(task: Task) -> str:
-    return f"{settings.SITE_URL}/projets/{task.project_id}/taches?tache={task.pk}"
-
-
 def notify_assignment(task: Task, users, actor) -> None:
-    for user in users:
-        if user.pk == actor.pk or not user.email_on_assignment:
-            continue
-        send_templated_email(
-            to=user.email,
-            subject=f"Nouvelle tâche : {task.title}",
-            template="task_assigned",
-            context={
-                "name": user.display_name,
-                "actor": actor.display_name,
-                "task_title": task.title,
-                "project_name": task.project.name,
-                "url": _task_url(task),
-            },
-        )
+    """In-app for every new assignee, e-mail if they asked (phase 12)."""
+    from apps.notifications import services as notifications
+
+    notifications.task_assigned(task, users, actor)
 
 
 def notify_mentions(comment, actor) -> None:
-    for user in mentioned_users(comment.body, comment.task.project):
-        if user.pk == actor.pk or not user.email_on_mention:
-            continue
-        send_templated_email(
-            to=user.email,
-            subject=f"{actor.display_name} t'a mentionné dans « {comment.task.title} »",
-            template="task_mention",
-            context={
-                "name": user.display_name,
-                "actor": actor.display_name,
-                "task_title": comment.task.title,
-                "excerpt": comment.body[:300],
-                "url": _task_url(comment.task),
-            },
-        )
+    from apps.notifications import services as notifications
+
+    notifications.mentioned(
+        comment, mentioned_users(comment.body, comment.task.project), actor
+    )

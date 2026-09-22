@@ -597,14 +597,15 @@ erDiagram
     }
     NOTIFICATION {
         bigint id PK
-        bigint recipient_id FK
-        enum type "assignment, mention, asset_status, invitation, share_opened"
-        bigint actor_id FK
-        bigint project_id FK
+        bigint recipient_id FK "CASCADE"
+        enum kind "assignment, mention, asset_status, invitation, share_opened"
+        bigint actor_id FK "SET_NULL, nul pour un lien ouvert"
+        bigint project_id FK "SET_NULL"
         json payload "libellés nécessaires à l'affichage"
-        string url "route front"
+        string url "route front, jamais absolue"
         datetime read_at
-        datetime emailed_at
+        datetime emailed_at "posé quand un e-mail est parti"
+        datetime created_at
     }
     ACTIVITY_ENTRY {
         bigint id PK
@@ -627,7 +628,7 @@ erDiagram
 
 - `OAUTH_ACCOUNT` : unique `(user, provider)` en v1 (un compte Google et un compte Microsoft par utilisateur).
 - `SYNC_MAPPING` : unique `(calendar, object_type, object_id)` et unique `(calendar, external_id)`. La correspondance est **par utilisateur** (via son calendrier cible) : un même RDV peut être poussé dans le calendrier de chaque participant.
-- `ACTIVITY_ENTRY` et `NOTIFICATION` référencent leur cible par `target_type` + `target_id` / `url` plutôt que par clé étrangère générique : le journal survit à la suppression de l'objet.
+- `ACTIVITY_ENTRY` et `NOTIFICATION` référencent leur cible par `target_type` + `target_id` / `url` plutôt que par clé étrangère générique : le journal survit à la suppression de l'objet. `NOTIFICATION` garde en plus les libellés dans `payload` (dont `actor_name`) pour rester lisible quand l'acteur ou le projet a disparu. Index `(recipient, read_at)` pour le compteur de non-lues.
 - Rétention : `ACTIVITY_ENTRY` et `SHARE_ACCESS_LOG` purgés après 12 mois, `INVITATION` expirées après 30 jours, `DATA_EXPORT` après 7 jours.
 
 ## 8. Tables Django standard

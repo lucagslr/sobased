@@ -8,6 +8,7 @@ import { RouterLink } from 'vue-router'
 
 import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
 import { NAV_ITEMS } from '@/router/navigation'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useProjectsStore } from '@/stores/projects'
 
 import ProjectTreeNav from './ProjectTreeNav.vue'
@@ -15,6 +16,7 @@ import UserMenu from './UserMenu.vue'
 import WorkspaceSwitcher from './WorkspaceSwitcher.vue'
 
 const projects = useProjectsStore()
+const notifications = useNotificationsStore()
 const workspacePanel = ref(false)
 </script>
 
@@ -34,6 +36,13 @@ const workspacePanel = ref(false)
       >
         <component :is="item.icon" class="size-4" aria-hidden="true" />
         {{ item.label }}
+        <span
+          v-if="item.badge && notifications.unread"
+          class="ml-auto rounded-full bg-fg px-1.5 text-[11px] font-semibold text-surface"
+          :aria-label="`${notifications.unread} non lues`"
+        >
+          {{ notifications.unread > 99 ? '99+' : notifications.unread }}
+        </span>
       </RouterLink>
 
       <!-- The project tree of the selected workspace, under the main links. -->

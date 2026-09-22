@@ -4,13 +4,14 @@
  * - lg and up (>= 1024px): fixed sidebar on the left;
  * - below: content first, tab bar fixed at the bottom (thumb reach).
  */
-import { onMounted } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import MobileTabBar from '@/components/layout/MobileTabBar.vue'
 import OverdueProjectModal from '@/components/layout/OverdueProjectModal.vue'
 import VerifyEmailBanner from '@/components/layout/VerifyEmailBanner.vue'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useProjectsStore } from '@/stores/projects'
 import { useWorkspacesStore } from '@/stores/workspaces'
 
@@ -19,7 +20,9 @@ import { useWorkspacesStore } from '@/stores/workspaces'
 onMounted(() => {
   useWorkspacesStore().load()
   useProjectsStore().load()
+  useNotificationsStore().startPolling() // the bell, every 60 s (SPEC §14)
 })
+onBeforeUnmount(() => useNotificationsStore().stopPolling())
 </script>
 
 <template>

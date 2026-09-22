@@ -1,0 +1,31 @@
+Salut {{ name }},
+
+Voici où tu en es ce {{ day|date:"l j F" }}.
+{% if overdue %}
+EN RETARD
+{% for item in overdue %}- {{ item.title }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}{% if today %}
+AUJOURD'HUI
+{% for item in today %}- {{ item.title }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}{% if meetings %}
+RDV DU JOUR
+{% for item in meetings %}- {{ item.when }} · {{ item.title }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}{% if to_validate %}
+À VALIDER
+{% for item in to_validate %}- {{ item.title }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}{% if to_pay %}
+FRAIS À PAYER CETTE SEMAINE
+{% for item in to_pay %}- {{ item.title }} · CHF {{ item.amount }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}{% if missing_receipts %}
+JUSTIFICATIFS MANQUANTS
+{% for item in missing_receipts %}- {{ item.title }} · CHF {{ item.amount }} · {{ item.project }}
+  {{ site_url }}{{ item.url }}
+{% endfor %}{% endif %}
+{{ site_url }}
+
+Ce résumé se règle (heure, arrêt) dans Paramètres › Notifications.

@@ -44,6 +44,7 @@ ALLOWED = {
     "GoogleCallbackView": "acts on request.user only, signed state",
     "GoogleDisconnectView": "acts on request.user only",
     "PickerConfigView": "acts on request.user only",
+    "NotificationViewSet": "rows of request.user only",
     "MicrosoftConnectView": "acts on request.user only",
     "MicrosoftCallbackView": "acts on request.user only, signed state",
     "MicrosoftDisconnectView": "acts on request.user only",

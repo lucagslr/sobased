@@ -30,6 +30,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Dashboard' },
       },
       {
+        path: 'notifications',
+        name: 'notifications',
+        component: () => import('@/pages/NotificationsPage.vue'),
+        meta: { title: 'Notifications' },
+      },
+      {
         path: 'calendrier',
         name: 'calendar',
         component: () => import('@/pages/CalendarPage.vue'),

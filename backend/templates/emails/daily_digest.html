@@ -1,0 +1,43 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<p>Salut {{ name }},</p>
+<p>Voici où tu en es ce {{ day|date:"l j F" }}.</p>
+{% if overdue %}
+<h3 style="margin:20px 0 6px;font-size:15px;color:#b91c1c;">En retard</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in overdue %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% if today %}
+<h3 style="margin:20px 0 6px;font-size:15px;">Aujourd'hui</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in today %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% if meetings %}
+<h3 style="margin:20px 0 6px;font-size:15px;">RDV du jour</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in meetings %}<li>{{ item.when }} · <a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% if to_validate %}
+<h3 style="margin:20px 0 6px;font-size:15px;">À valider</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in to_validate %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% if to_pay %}
+<h3 style="margin:20px 0 6px;font-size:15px;">Frais à payer cette semaine</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in to_pay %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> · CHF {{ item.amount }} <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% if missing_receipts %}
+<h3 style="margin:20px 0 6px;font-size:15px;">Justificatifs manquants</h3>
+<ul style="margin:0;padding-left:18px;">
+{% for item in missing_receipts %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> · CHF {{ item.amount }} <span style="color:#78716c;">· {{ item.project }}</span></li>
+{% endfor %}</ul>
+{% endif %}
+{% include "emails/_button.html" with url=site_url label="Ouvrir SOBASED" %}
+<p style="font-size:12px;color:#78716c;">Ce résumé se règle (heure, arrêt) dans Paramètres › Notifications.</p>
+{% endblock %}

@@ -5,8 +5,10 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { NAV_ITEMS } from '@/router/navigation'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const route = useRoute()
+const notifications = useNotificationsStore()
 const tabs = NAV_ITEMS.filter((item) => item.mobile)
 const overflow = NAV_ITEMS.filter((item) => !item.mobile)
 
@@ -44,7 +46,14 @@ function isActive(to: string) {
           :class="moreActive ? 'text-fg' : 'text-muted'"
           :aria-current="moreActive ? 'page' : undefined"
         >
-          <Ellipsis class="size-5" aria-hidden="true" />
+          <span class="relative">
+            <Ellipsis class="size-5" aria-hidden="true" />
+            <span
+              v-if="notifications.unread"
+              class="absolute -top-1 -right-1.5 size-2.5 rounded-full bg-danger"
+              :aria-label="`${notifications.unread} notifications non lues`"
+            />
+          </span>
           Plus
         </RouterLink>
       </li>

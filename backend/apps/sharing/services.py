@@ -215,8 +215,10 @@ def count_view(request, link: ShareLink) -> bool:
     link.refresh_from_db(fields=["view_count", "first_opened_at", "last_opened_at"])
     _stamp(request, key)
     log_event(request, link, Event.VIEW)
-    # notify_on_open: the in-app notification to the creator arrives with
-    # phase 12; first_opened_at already tells "someone opened it".
+    if link.first_opened_at == now:
+        from apps.notifications import services as notifications
+
+        notifications.share_link_opened(link)
     return True
 
 

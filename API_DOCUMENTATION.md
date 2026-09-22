@@ -146,7 +146,7 @@ Les exports sont des téléchargements de même origine : le cookie de session s
 | GET | `/api/assets/` | Lecteur | Paginé. Filtres : `project`, `include_descendants`, `workspace`, `kind`, `status`, `tag`, `search` ; `ordering` (`updated_at`, `created_at`, `name`) |
 | POST | `/api/assets/` | Éditeur | `multipart` : `project`, `name`, `file` (devient la v1), `label`, `note`, `tags`. Le `kind` est déduit du contenu du fichier. La référence Drive arrive en phase 10 |
 | GET, PATCH, DELETE | `/api/assets/{id}/` | Lecteur / Éditeur | PATCH : `name`, `kind`, `tags` (jamais `project`). Réponse : `latest_version`, `versions_count`, `is_following` |
-| POST | `/api/assets/{id}/status/` | Éditeur | `{status, note}` : change le statut, écrit l'historique, ajoute l'auteur aux suiveurs (notifications en phase 12) |
+| POST | `/api/assets/{id}/status/` | Éditeur | `{status, note}` : change le statut, écrit l'historique, ajoute l'auteur aux suiveurs et notifie les autres suiveurs (in-app) |
 | GET | `/api/assets/{id}/status-history/` | Lecteur | Qui, quand, ancien → nouveau |
 | POST, DELETE | `/api/assets/{id}/follow/` | Lecteur | Suivre / ne plus suivre |
 | GET, POST | `/api/assets/{id}/versions/` | Lecteur / Éditeur | GET : toutes les versions, la plus récente en premier. POST `multipart` (`file`, `label`, `note`) : numéro automatique pris sous verrou |
@@ -208,9 +208,10 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
-| GET | `/api/notifications/?unread=` | connecté | Mes notifications |
-| GET | `/api/notifications/unread-count/` | connecté | Compteur de la cloche (interrogé toutes les 60 s, pas de WebSocket) |
-| POST | `/api/notifications/{id}/read/` · `/api/notifications/read-all/` | connecté | |
+| GET | `/api/notifications/?unread=true` | connecté | Mes notifications, les plus récentes d'abord (paginé). Champs : `kind` (`assignment`, `mention`, `asset_status`, `invitation`, `share_opened`), `actor` (utilisateur public, nul pour une ouverture de lien ou un compte disparu), `project`, `payload` (libellés : `title`, `project_name`, `excerpt`, `from_status` / `to_status` / `note`, `scope_name` / `role`, `recipient_label`, `actor_name`), `url` (route front), `is_read`, `read_at`, `created_at` |
+| GET | `/api/notifications/unread-count/` | connecté | `{unread}` : compteur de la cloche (interrogé toutes les 60 s, pas de WebSocket) |
+| POST | `/api/notifications/{id}/read/` | connecté | Marque lue, renvoie la notification ; celle d'un autre = 404 |
+| POST | `/api/notifications/read-all/` | connecté | 204 |
 | GET | `/api/activity/?project=` | Éditeur | Journal du projet, `include_descendants`, filtres `actor`, `verb` |
 | GET | `/api/dashboard/summary/` | connecté | Données de tous les widgets en un appel. Paramètres : `view` (filtres d'une de mes vues ; celle d'un autre = 404) **ou** `workspace`, `project` (sous-projets inclus), `tag` (répétables) et `only_mine`. Réponse : `{date, widgets}` où `widgets` a une entrée par clé : `overdue`, `today`, `pinned`, `next7`, `to_validate`, `meetings` (RDV en cours ou dans les 14 jours ; `only_mine` = RDV où je participe), `expenses_to_pay`, `missing_receipts`. Chaque entrée : `{available, count, items}` (50 éléments au plus, `count` = total). `available: false` = fonctionnalité d'une phase à venir, le front masque le widget. « Aujourd'hui » est évalué dans le fuseau du profil |
 | GET, POST | `/api/dashboard/views/` | connecté | Mes vues enregistrées, jamais partagées. Le premier `GET` crée « Mon dashboard ». Champs : `name`, `filters` `{workspaces, projects, tags, only_mine}`, `layout` `[{key, size 1-3, tall, hidden}]`, `is_default`, `position` |

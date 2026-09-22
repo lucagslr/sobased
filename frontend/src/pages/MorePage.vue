@@ -7,8 +7,10 @@ import AppAvatar from '@/components/ui/AppAvatar.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { NAV_ITEMS } from '@/router/navigation'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const auth = useAuthStore()
+const notifications = useNotificationsStore()
 const router = useRouter()
 const items = NAV_ITEMS.filter((item) => !item.mobile)
 
@@ -34,6 +36,12 @@ async function signOut() {
       <RouterLink :to="item.to" class="flex h-14 items-center gap-3 px-4 hover:bg-surface-2">
         <component :is="item.icon" class="size-5 text-muted" aria-hidden="true" />
         <span class="flex-1 font-medium">{{ item.label }}</span>
+        <span
+          v-if="item.badge && notifications.unread"
+          class="rounded-full bg-fg px-2 text-xs font-semibold text-surface"
+        >
+          {{ notifications.unread }}
+        </span>
         <ChevronRight class="size-4 text-muted" aria-hidden="true" />
       </RouterLink>
     </li>
