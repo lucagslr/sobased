@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router'
 
 import { type Asset, type AssetKind, type AssetStatus, filesApi } from '@/api/files'
 import type { Project } from '@/api/projects'
+import DriveLinksList from '@/components/drive/DriveLinksList.vue'
 import AssetRow from '@/components/files/AssetRow.vue'
 import UploadPanel from '@/components/files/UploadPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -110,6 +111,8 @@ const filtered = computed(() => kind.value || status.value || search.value.trim(
   <ul v-else class="divide-y divide-line rounded-xl border border-line bg-surface px-1">
     <AssetRow v-for="asset in assets" :key="asset.id" :asset="asset" />
   </ul>
+
+  <DriveLinksList class="mt-8" :project="project" :can-edit="canEdit" allow-upload />
 
   <UploadPanel
     v-model:open="uploadPanel"

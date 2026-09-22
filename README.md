@@ -2,7 +2,7 @@
 
 Gestion de projets multi-utilisateurs, conçue d'abord pour l'association culturelle 100SATIONS (Genève) : management d'artistes, administration de l'association, et usage personnel (cours, rendus, mandats). Chacun crée ses espaces et ses projets (arbre à 4 niveaux) et invite d'autres personnes avec des droits précis, comme sur Google Drive.
 
-> **État : phase 9 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts, compta avec justificatifs, budget, avances, frais récurrents et exports, fichiers avec versions, visionneuses, commentaires ancrés et statuts de validation, liens de partage protégés avec filigranes, streaming et journal d'accès). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
+> **État : phase 10 sur 14 terminée** (comptes, espaces, arbre de projets, droits, invitations, tâches, dashboards, vues Kanban / Calendrier / Gantt, mode Cartes, RDV et événements, contacts, compta avec justificatifs, budget, avances, frais récurrents et exports, fichiers avec versions, visionneuses, commentaires ancrés et statuts de validation, liens de partage protégés avec filigranes, streaming et journal d'accès, Google Drive : dossier par projet, fichiers attachés via le Picker, versions référencées sur Drive et import). L'avancement réel est dans [PROGRESS.md](PROGRESS.md), l'explication de chaque phase dans [docs/phases/](docs/phases/).
 
 ## Fonctionnalités prévues
 
@@ -59,6 +59,6 @@ Aucun secret dans le code : tout passe par `.env` (modèle documenté dans `.env
 | `MAX_UPLOAD_MB` | Taille max d'un fichier (500 par défaut) |
 | `STORAGE_BACKEND`, `S3_ENDPOINT_URL`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `SIGNED_URL_SECONDS` | `local` (volume partagé avec Caddy) ou `s3` (bucket privé S3-compatible, Infomaniak Object Storage) ; durée des URL signées (60 s) |
 | `AUDIO_WATERMARK_TAG`, `AUDIO_WATERMARK_INTERVAL_S` | Filigrane audio des liens partagés : chemin d'un tag sonore (WAV / MP3, dans le conteneur ; vide = bip discret généré) mixé toutes les N secondes (30) |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_API_KEY`, `GOOGLE_APP_ID` | Drive, Picker, Calendar (intégration désactivée si vide) |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_API_KEY`, `GOOGLE_APP_ID` | Drive, Picker, Calendar (intégration désactivée si vide). Client OAuth « application Web » avec l'URI de redirection `<SITE_URL>/api/integrations/google/callback/`, API Drive et Picker activées, clé API restreinte au Picker, numéro du projet comme app id |
 | `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `MS_TENANT` | Microsoft Graph (désactivée si vide) |
 | `RESTIC_REPOSITORY`, `RESTIC_PASSWORD` | Sauvegardes chiffrées |

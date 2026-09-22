@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.finance",
     "apps.files",
     "apps.sharing",
+    "apps.integrations",
     "apps.dashboard",
 ]
 
@@ -220,6 +221,20 @@ AUDIO_WATERMARK_INTERVAL_S = env_int("AUDIO_WATERMARK_INTERVAL_S", 30)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
+# --- Google (Drive + Picker, Calendar in phase 11) ----------------------------
+# Empty client id or secret = the integration is disabled, cleanly: the API
+# answers enabled=false and the front hides the buttons.
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_API_KEY = env("GOOGLE_API_KEY", "")  # Picker
+GOOGLE_APP_ID = env("GOOGLE_APP_ID", "")  # Picker (project number)
+GOOGLE_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+# Microsoft Graph (phase 11).
+MS_CLIENT_ID = env("MS_CLIENT_ID", "")
+MS_CLIENT_SECRET = env("MS_CLIENT_SECRET", "")
+MS_TENANT = env("MS_TENANT", "common")
+MS_ENABLED = bool(MS_CLIENT_ID and MS_CLIENT_SECRET)
+
 # --- E-mail ----------------------------------------------------------------------
 EMAIL_HOST = env("EMAIL_HOST", "")
 EMAIL_PORT = env_int("EMAIL_PORT", 587)
@@ -288,6 +303,8 @@ SPECTACULAR_SETTINGS = {
         "ShareTargetEnum": "apps.sharing.models.SHARE_TARGET_CHOICES",
         "ShareStateEnum": "apps.sharing.models.SHARE_STATE_CHOICES",
         "ShareEventEnum": "apps.sharing.models.SHARE_EVENT_CHOICES",
+        "ProviderEnum": "apps.integrations.models.PROVIDER_CHOICES",
+        "AccountStatusEnum": "apps.integrations.models.ACCOUNT_STATUS_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

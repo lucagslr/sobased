@@ -136,6 +136,14 @@ export const filesApi = {
     onProgress?: (ratio: number) => void,
     signal?: AbortSignal,
   ) => upload<AssetVersion>(`/api/assets/${assetId}/versions/`, file, fields, onProgress, signal),
+  /** A version that stays on Google Drive (picked file id). */
+  addDriveVersion: (assetId: number, drive_file_id: string, label = '') =>
+    api<AssetVersion>(`/api/assets/${assetId}/versions/`, {
+      method: 'POST',
+      body: { drive_file_id, label },
+    }),
+  importFromDrive: (id: number) =>
+    api<AssetVersion>(`/api/asset-versions/${id}/import-from-drive/`, { method: 'POST' }),
   version: (id: number) => api<AssetVersion>(`/api/asset-versions/${id}/`),
   updateVersion: (id: number, body: { label?: string; note?: string }) =>
     api<AssetVersion>(`/api/asset-versions/${id}/`, { method: 'PATCH', body }),

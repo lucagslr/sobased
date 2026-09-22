@@ -10,18 +10,22 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
+  CloudDownload,
   Download,
+  ExternalLink,
+  HardDriveUpload,
   Info,
   Link2,
   MoreHorizontal,
   Plus,
   Trash2,
 } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import { type Asset, type AssetComment, type AssetVersion, filesApi } from '@/api/files'
+import { integrationsApi } from '@/api/integrations'
 import { type Project, projectsApi } from '@/api/projects'
 import AssetKindIcon from '@/components/files/AssetKindIcon.vue'
 import AssetStatusBadge from '@/components/files/AssetStatusBadge.vue'
@@ -35,6 +39,7 @@ import ShareLinkPanel from '@/components/sharing/ShareLinkPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
+import { useGooglePicker } from '@/composables/useGooglePicker'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import {
@@ -49,6 +54,12 @@ import {
   versionLabel,
 } from '@/utils/files'
 import { atLeast } from '@/utils/roles'
+
+/** What the API stores about a Drive-referenced version (drive_meta). */
+interface DriveMeta {
+  icon_url?: string
+  web_view_url?: string
+}
 
 // Heavy libraries (wavesurfer, pdf.js) only load with their kind of file.
 const AudioViewer = defineAsyncComponent(() => import('@/components/files/AudioViewer.vue'))
@@ -80,6 +91,18 @@ const confirmDelete = ref(false)
 const deleting = ref(false)
 const menu = ref(false)
 const sharePanel = ref(false)
+// Google Drive (SPEC §11): a version may live on Drive; the Picker is only
+// offered when the user connected Drive.
+const picker = useGooglePicker()
+const pickerUsable = ref(false)
+const importing = ref(false)
+onMounted(async () => {
+  try {
+    pickerUsable.value = (await integrationsApi.state()).google.picker
+  } catch {
+    pickerUsable.value = false
+  }
+})
 
 const audio = ref<InstanceType<typeof AudioViewer> | null>(null)
 const video = ref<InstanceType<typeof VideoViewer> | null>(null)
@@ -92,8 +115,11 @@ const role = computed(() => project.value?.my_role ?? null)
 const canComment = computed(() => atLeast(role.value, 'commenter'))
 const canEdit = computed(() => atLeast(role.value, 'editor'))
 const isAdmin = computed(() => atLeast(role.value, 'admin'))
-// The viewer follows the version's real kind (a PNG sent as v2 of a video).
-const viewKind = computed(() => current.value?.kind ?? asset.value?.kind ?? 'other')
+// The viewer follows the version's real kind (a PNG sent as v2 of a video);
+// a Drive-only version has no file here: nothing to view, no anchors.
+const viewKind = computed(() =>
+  current.value?.is_drive ? 'other' : (current.value?.kind ?? asset.value?.kind ?? 'other'),
+)
 const kind = computed(() => anchorKind(viewKind.value))
 const threads = computed(() => sortThreads(buildThreads(comments.value ?? []), kind.value))
 const pending = computed(() => current.value?.derivatives.pending ?? false)
@@ -233,6 +259,34 @@ async function onVersionDeleted(id: number) {
   asset.value = await filesApi.get(assetId.value)
 }
 
+async function addDriveVersion() {
+  if (!asset.value) return
+  const [file] = await picker.pick(false)
+  if (picker.error.value) ui.toast(picker.error.value, 'error')
+  if (!file) return
+  try {
+    const version = await filesApi.addDriveVersion(asset.value.id, file.id)
+    ui.toast(`v${version.number} liée depuis Drive`, 'success')
+    await onVersioned(version)
+  } catch (error) {
+    ui.toast(error instanceof ApiError ? error.message : 'Version Drive non ajoutée.', 'error')
+  }
+}
+
+async function importFromDrive() {
+  if (!current.value) return
+  importing.value = true
+  try {
+    const version = await filesApi.importFromDrive(current.value.id)
+    ui.toast('Copié dans SOBASED : traitement en cours', 'success')
+    onVersionSaved(version)
+  } catch (error) {
+    ui.toast(error instanceof ApiError ? error.message : "L'import a échoué.", 'error')
+  } finally {
+    importing.value = false
+  }
+}
+
 async function removeAsset() {
   if (!asset.value) return
   deleting.value = true
@@ -343,6 +397,14 @@ async function removeAsset() {
               <Link2 class="size-4" aria-hidden="true" /> Partager par lien
             </button>
             <button
+              v-if="canEdit && pickerUsable"
+              type="button"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
+              @click="addDriveVersion"
+            >
+              <HardDriveUpload class="size-4" aria-hidden="true" /> Nouvelle version depuis Drive
+            </button>
+            <button
               v-if="canEdit"
               type="button"
               class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
@@ -384,8 +446,40 @@ async function removeAsset() {
 
     <div v-if="current" class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
       <div class="min-w-0">
+        <div v-if="current.is_drive" class="rounded-xl bg-surface-2 p-8 text-center">
+          <img
+            v-if="(current.drive_meta as DriveMeta)?.icon_url"
+            :src="(current.drive_meta as DriveMeta).icon_url"
+            alt=""
+            class="mx-auto size-10"
+          />
+          <AssetKindIcon v-else :kind="asset.kind" class="mx-auto size-10 text-muted" />
+          <p class="mt-3 text-sm font-medium">{{ current.original_filename }}</p>
+          <p class="mt-1 text-xs text-muted">
+            Sur Google Drive · {{ current.mime_type || 'type inconnu' }}
+            <template v-if="current.size_bytes"> · {{ formatSize(current.size_bytes) }}</template>
+          </p>
+          <div class="mt-4 flex flex-wrap justify-center gap-2">
+            <a
+              v-if="(current.drive_meta as DriveMeta)?.web_view_url"
+              :href="(current.drive_meta as DriveMeta).web_view_url"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex h-8 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-surface-2"
+            >
+              <ExternalLink class="size-4" aria-hidden="true" /> Ouvrir dans Drive
+            </a>
+            <BaseButton v-if="canEdit" size="sm" :loading="importing" @click="importFromDrive">
+              <CloudDownload class="size-4" aria-hidden="true" /> Importer dans SOBASED
+            </BaseButton>
+          </div>
+          <p v-if="canEdit" class="mt-3 text-xs text-muted">
+            L'import copie le fichier ici : lecture dans la page, commentaires ancrés et partage par
+            lien deviennent possibles.
+          </p>
+        </div>
         <ImageViewer
-          v-if="viewKind === 'image'"
+          v-else-if="viewKind === 'image'"
           :version="current"
           :threads="threads"
           :selected-id="selectedId"

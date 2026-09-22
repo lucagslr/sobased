@@ -38,6 +38,12 @@ ALLOWED = {
     "ProjectOverviewView": "effective_access() then for_user() querysets",
     "ProjectCardsView": "built from the AccessMap and for_user() querysets",
     "DashboardViewViewSet": "rows of request.user only",
+    # External accounts of request.user only (Google OAuth, Picker config).
+    "IntegrationsStateView": "acts on request.user only",
+    "GoogleConnectView": "acts on request.user only",
+    "GoogleCallbackView": "acts on request.user only, signed state",
+    "GoogleDisconnectView": "acts on request.user only",
+    "PickerConfigView": "acts on request.user only",
     # Public share pages: no account; the link is found by its secret token,
     # media URLs are signed per session (apps/sharing/services.py).
     "PublicShareView": "public, unguessable token, 410 when not active",

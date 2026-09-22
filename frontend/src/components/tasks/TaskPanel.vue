@@ -59,6 +59,8 @@ import MarkdownView from './MarkdownView.vue'
 import RecurrenceEditor from './RecurrenceEditor.vue'
 import RecurrenceScopeDialog from './RecurrenceScopeDialog.vue'
 import TaskChecklist from './TaskChecklist.vue'
+import DriveLinksList from '@/components/drive/DriveLinksList.vue'
+
 import TaskComments from './TaskComments.vue'
 
 const props = defineProps<{
@@ -411,6 +413,13 @@ function onScopeChosen(scope: RecurrenceScope) {
             :can-tick="canChangeStatus"
           />
         </section>
+        <DriveLinksList
+          v-if="task.project"
+          :key="`drive-${task.id}`"
+          :project="{ id: task.project, drive_status: 'none' }"
+          :task-id="task.id"
+          :can-edit="canEdit"
+        />
         <section>
           <h3 class="mb-3 text-sm font-semibold">Commentaires</h3>
           <TaskComments

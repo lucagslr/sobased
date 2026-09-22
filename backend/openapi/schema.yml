@@ -285,6 +285,30 @@ paths:
                 type: string
                 format: binary
           description: ''
+  /api/asset-versions/{id}/import-from-drive/:
+    post:
+      operationId: asset_versions_import_from_drive_create
+      description: |-
+        Copy a Drive-referenced version into the internal storage
+        (editors): needed to stream it or share it by link.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) asset version.
+        required: true
+      tags:
+      - asset-versions
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetVersion'
+          description: ''
   /api/asset-versions/{id}/peaks/:
     get:
       operationId: asset_versions_peaks_retrieve
@@ -1739,6 +1763,73 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/drive-links/:
+    get:
+      operationId: drive_links_list
+      description: Drive files attached to a project or a task (Picker).
+      parameters:
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: task
+        schema:
+          type: integer
+      tags:
+      - drive-links
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DriveLink'
+          description: ''
+    post:
+      operationId: drive_links_create
+      description: Drive files attached to a project or a task (Picker).
+      tags:
+      - drive-links
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriveLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriveLinkRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveLink'
+          description: ''
+  /api/drive-links/{id}/:
+    delete:
+      operationId: drive_links_destroy
+      description: Drive files attached to a project or a task (Picker).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) drive link.
+        required: true
+      tags:
+      - drive-links
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/events/:
     get:
       operationId: events_list
@@ -2292,6 +2383,83 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/integrations/:
+    get:
+      operationId: integrations_retrieve
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationsState'
+          description: ''
+  /api/integrations/google/:
+    delete:
+      operationId: integrations_google_destroy
+      description: |-
+        Revoke at Google, forget the tokens. Folders owned by this account
+        keep their links; creation and upload are disabled (drive_account
+        becomes null).
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/integrations/google/callback/:
+    get:
+      operationId: integrations_google_callback_retrieve
+      description: |-
+        Google sends the browser back here; the user must be the one who
+        started (signed state), then the tokens are stored encrypted.
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '302':
+          description: No response body
+  /api/integrations/google/connect/:
+    get:
+      operationId: integrations_google_connect_retrieve
+      description: The authorization URL for the requested features (drive, calendar).
+      parameters:
+      - in: query
+        name: features
+        schema:
+          type: string
+        description: drive,calendar
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectUrl'
+          description: ''
+  /api/integrations/google/picker-config/:
+    get:
+      operationId: integrations_google_picker_config_retrieve
+      description: What the Picker needs, with a short-lived access token of the user.
+      tags:
+      - integrations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickerConfig'
+          description: ''
   /api/invitations/:
     get:
       operationId: invitations_list
@@ -2899,6 +3067,81 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/projects/{id}/drive/create-folder/:
+    post:
+      operationId: projects_drive_create_folder_create
+      description: '`/api/projects/{id}/drive/…`: the folder and uploads (editors).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project.
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/{id}/drive/share/:
+    post:
+      operationId: projects_drive_share_create
+      description: Re-apply the sharing with members (after new members joined).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project.
+        required: true
+      tags:
+      - projects
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: ''
+  /api/projects/{id}/drive/upload/:
+    post:
+      operationId: projects_drive_upload_create
+      description: '`/api/projects/{id}/drive/…`: the folder and uploads (editors).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) project.
+        required: true
+      tags:
+      - projects
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriveLink'
+          description: ''
   /api/projects/{id}/move/:
     post:
       operationId: projects_move_create
@@ -4900,6 +5143,14 @@ components:
       - user_agent
       - version
       - version_number
+    AccountStatusEnum:
+      enum:
+      - ok
+      - needs_reauth
+      type: string
+      description: |-
+        * `ok` - Connecté
+        * `needs_reauth` - Reconnexion nécessaire
     Advance:
       type: object
       properties:
@@ -5318,6 +5569,9 @@ components:
       - size_bytes
       - updated_at
       - width
+    BlankEnum:
+      enum:
+      - ''
     Blocker:
       type: object
       description: |-
@@ -5690,6 +5944,14 @@ components:
           minimum: 0
       required:
       - title
+    ConnectUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+      required:
+      - url
     Contact:
       type: object
       properties:
@@ -5995,6 +6257,91 @@ components:
         * `needs_receipt` - À justifier
         * `to_reimburse` - À rembourser
         * `ok` - OK
+    DriveLink:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        task:
+          type: integer
+          nullable: true
+        drive_file_id:
+          type: string
+          maxLength: 200
+        name:
+          type: string
+          readOnly: true
+        mime_type:
+          type: string
+          readOnly: true
+        icon_url:
+          type: string
+          format: uri
+          readOnly: true
+        web_view_url:
+          type: string
+          format: uri
+          readOnly: true
+        thumbnail_url:
+          type: string
+          format: uri
+          readOnly: true
+        size_bytes:
+          type: integer
+          readOnly: true
+          nullable: true
+        added_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - added_by
+      - created_at
+      - drive_file_id
+      - icon_url
+      - id
+      - mime_type
+      - name
+      - project
+      - size_bytes
+      - task
+      - thumbnail_url
+      - web_view_url
+    DriveLinkRequest:
+      type: object
+      properties:
+        project:
+          type: integer
+        task:
+          type: integer
+          nullable: true
+        drive_file_id:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - drive_file_id
+      - project
+    DriveStatusEnum:
+      enum:
+      - none
+      - ok
+      - owner_disconnected
+      - parent_missing
+      type: string
+      description: |-
+        * `none` - none
+        * `ok` - ok
+        * `owner_disconnected` - owner_disconnected
+        * `parent_missing` - parent_missing
     EffectiveMember:
       type: object
       description: 'One person with access to a scope: effective rights and where
@@ -6318,6 +6665,16 @@ components:
       - scope_id
       - scope_name
       - scope_type
+    IntegrationsState:
+      type: object
+      properties:
+        google:
+          $ref: '#/components/schemas/ProviderState'
+        microsoft:
+          $ref: '#/components/schemas/ProviderState'
+      required:
+      - google
+      - microsoft
     Invitation:
       type: object
       properties:
@@ -7338,6 +7695,11 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+        drive_share_with_members:
+          type: boolean
+        create_drive_folder:
+          type: boolean
+          writeOnly: true
     PatchedProjectTypeRequest:
       type: object
       properties:
@@ -7607,6 +7969,22 @@ components:
       description: |-
         * `to_pay` - À payer
         * `paid` - Payé
+    PickerConfig:
+      type: object
+      properties:
+        api_key:
+          type: string
+        client_id:
+          type: string
+        app_id:
+          type: string
+        access_token:
+          type: string
+      required:
+      - access_token
+      - api_key
+      - app_id
+      - client_id
     PinnedItem:
       type: object
       description: A pinned item with enough context for the dashboard widget.
@@ -7750,6 +8128,19 @@ components:
           allOf:
           - $ref: '#/components/schemas/TasksViewEnum'
           readOnly: true
+        drive_folder_id:
+          type: string
+          readOnly: true
+        drive_folder_url:
+          type: string
+          format: uri
+          readOnly: true
+        drive_share_with_members:
+          type: boolean
+        drive_status:
+          allOf:
+          - $ref: '#/components/schemas/DriveStatusEnum'
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -7766,6 +8157,10 @@ components:
       - created_at
       - depth
       - description
+      - drive_folder_id
+      - drive_folder_url
+      - drive_share_with_members
+      - drive_status
       - end_date
       - end_overdue
       - id
@@ -8053,6 +8448,11 @@ components:
           type: integer
           maximum: 2147483647
           minimum: 0
+        drive_share_with_members:
+          type: boolean
+        create_drive_folder:
+          type: boolean
+          writeOnly: true
       required:
       - name
     ProjectStatusEnum:
@@ -8131,6 +8531,34 @@ components:
       required:
       - name
       - workspace
+    ProviderState:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Configured on the server
+        connected:
+          type: boolean
+        email:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        status:
+          oneOf:
+          - $ref: '#/components/schemas/AccountStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        picker:
+          type: boolean
+          description: Google Picker usable
+      required:
+      - connected
+      - email
+      - enabled
+      - features
+      - picker
+      - status
     PublicItem:
       type: object
       description: One playable / viewable thing of the public page.

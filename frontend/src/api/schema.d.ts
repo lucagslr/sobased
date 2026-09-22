@@ -128,6 +128,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/asset-versions/{id}/import-from-drive/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Copy a Drive-referenced version into the internal storage
+         *     (editors): needed to stream it or share it by link.
+         */
+        post: operations["asset_versions_import_from_drive_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/asset-versions/{id}/peaks/": {
         parameters: {
             query?: never;
@@ -741,6 +761,41 @@ export interface paths {
         patch: operations["dashboard_views_partial_update"];
         trace?: never;
     };
+    "/api/drive-links/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Drive files attached to a project or a task (Picker). */
+        get: operations["drive_links_list"];
+        put?: never;
+        /** @description Drive files attached to a project or a task (Picker). */
+        post: operations["drive_links_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/drive-links/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Drive files attached to a project or a task (Picker). */
+        delete: operations["drive_links_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/events/": {
         parameters: {
             query?: never;
@@ -945,6 +1000,97 @@ export interface paths {
         };
         /** @description Used by monitoring and by the deploy script: are Postgres and Redis up? */
         get: operations["health_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["integrations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/google/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Revoke at Google, forget the tokens. Folders owned by this account
+         *     keep their links; creation and upload are disabled (drive_account
+         *     becomes null).
+         */
+        delete: operations["integrations_google_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/google/callback/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Google sends the browser back here; the user must be the one who
+         *     started (signed state), then the tokens are stored encrypted.
+         */
+        get: operations["integrations_google_callback_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/google/connect/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The authorization URL for the requested features (drive, calendar). */
+        get: operations["integrations_google_connect_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/google/picker-config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What the Picker needs, with a short-lived access token of the user. */
+        get: operations["integrations_google_picker_config_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1245,6 +1391,57 @@ export interface paths {
         head?: never;
         /** @description Projects. There is no flat list: navigation uses the `tree` action. */
         patch: operations["projects_partial_update"];
+        trace?: never;
+    };
+    "/api/projects/{id}/drive/create-folder/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description `/api/projects/{id}/drive/…`: the folder and uploads (editors). */
+        post: operations["projects_drive_create_folder_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/drive/share/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Re-apply the sharing with members (after new members joined). */
+        post: operations["projects_drive_share_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/drive/upload/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description `/api/projects/{id}/drive/…`: the folder and uploads (editors). */
+        post: operations["projects_drive_upload_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/projects/{id}/move/": {
@@ -2109,6 +2306,12 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /**
+         * @description * `ok` - Connecté
+         *     * `needs_reauth` - Reconnexion nécessaire
+         * @enum {string}
+         */
+        AccountStatusEnum: "ok" | "needs_reauth";
         Advance: {
             payer_type: components["schemas"]["PayerTypeEnum"];
             payer_id: number;
@@ -2241,6 +2444,8 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        /** @enum {unknown} */
+        BlankEnum: "";
         /**
          * @description A task blocking another one. For a blocker the user cannot see, only
          *     `id` and `is_open` are filled: enough for the padlock, nothing more.
@@ -2379,6 +2584,10 @@ export interface components {
             pinned?: boolean;
             position?: number;
         };
+        ConnectUrl: {
+            /** Format: uri */
+            url: string;
+        };
         Contact: {
             readonly id: number;
             workspace: number;
@@ -2484,6 +2693,37 @@ export interface components {
          * @enum {string}
          */
         DisplayStatusEnum: "to_pay" | "needs_receipt" | "to_reimburse" | "ok";
+        DriveLink: {
+            readonly id: number;
+            project: number;
+            task: number | null;
+            drive_file_id: string;
+            readonly name: string;
+            readonly mime_type: string;
+            /** Format: uri */
+            readonly icon_url: string;
+            /** Format: uri */
+            readonly web_view_url: string;
+            /** Format: uri */
+            readonly thumbnail_url: string;
+            readonly size_bytes: number | null;
+            readonly added_by: components["schemas"]["PublicUser"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        DriveLinkRequest: {
+            project: number;
+            task?: number | null;
+            drive_file_id: string;
+        };
+        /**
+         * @description * `none` - none
+         *     * `ok` - ok
+         *     * `owner_disconnected` - owner_disconnected
+         *     * `parent_missing` - parent_missing
+         * @enum {string}
+         */
+        DriveStatusEnum: "none" | "ok" | "owner_disconnected" | "parent_missing";
         /** @description One person with access to a scope: effective rights and where they come from. */
         EffectiveMember: {
             user: components["schemas"]["PublicUser"];
@@ -2604,6 +2844,10 @@ export interface components {
             scope_id: number;
             scope_name: string;
             role: components["schemas"]["RoleEnum"];
+        };
+        IntegrationsState: {
+            google: components["schemas"]["ProviderState"];
+            microsoft: components["schemas"]["ProviderState"];
         };
         Invitation: {
             readonly id: number;
@@ -3054,6 +3298,8 @@ export interface components {
             color?: string;
             tags?: number[];
             position?: number;
+            drive_share_with_members?: boolean;
+            create_drive_folder?: boolean;
         };
         PatchedProjectTypeRequest: {
             workspace?: number;
@@ -3169,6 +3415,12 @@ export interface components {
          * @enum {string}
          */
         PaymentStatusEnum: "to_pay" | "paid";
+        PickerConfig: {
+            api_key: string;
+            client_id: string;
+            app_id: string;
+            access_token: string;
+        };
         /** @description A pinned item with enough context for the dashboard widget. */
         PinnedItem: {
             readonly id: number;
@@ -3215,6 +3467,11 @@ export interface components {
             readonly can_edit_finance: boolean;
             readonly is_shell: boolean;
             readonly my_tasks_view: components["schemas"]["TasksViewEnum"];
+            readonly drive_folder_id: string;
+            /** Format: uri */
+            readonly drive_folder_url: string;
+            drive_share_with_members: boolean;
+            readonly drive_status: components["schemas"]["DriveStatusEnum"];
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -3312,6 +3569,8 @@ export interface components {
             color?: string;
             tags?: number[];
             position?: number;
+            drive_share_with_members?: boolean;
+            create_drive_folder?: boolean;
         };
         /**
          * @description * `idea` - Idée
@@ -3343,6 +3602,16 @@ export interface components {
             workspace: number;
             name: string;
             position?: number;
+        };
+        ProviderState: {
+            /** @description Configured on the server */
+            enabled: boolean;
+            connected: boolean;
+            email: string;
+            features: string[];
+            status: components["schemas"]["AccountStatusEnum"] | components["schemas"]["BlankEnum"];
+            /** @description Google Picker usable */
+            picker: boolean;
         };
         /** @description One playable / viewable thing of the public page. */
         PublicItem: {
@@ -4121,6 +4390,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    asset_versions_import_from_drive_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) asset version. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetVersion"];
                 };
             };
         };
@@ -5341,6 +5632,73 @@ export interface operations {
             };
         };
     };
+    drive_links_list: {
+        parameters: {
+            query?: {
+                project?: number;
+                task?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriveLink"][];
+                };
+            };
+        };
+    };
+    drive_links_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriveLinkRequest"];
+                "multipart/form-data": components["schemas"]["DriveLinkRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriveLink"];
+                };
+            };
+        };
+    };
+    drive_links_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) drive link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     events_list: {
         parameters: {
             query?: {
@@ -5686,6 +6044,102 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    integrations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationsState"];
+                };
+            };
+        };
+    };
+    integrations_google_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    integrations_google_callback_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    integrations_google_connect_retrieve: {
+        parameters: {
+            query?: {
+                /** @description drive,calendar */
+                features?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectUrl"];
+                };
+            };
+        };
+    };
+    integrations_google_picker_config_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerConfig"];
+                };
             };
         };
     };
@@ -6282,6 +6736,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_drive_create_folder_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_drive_share_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_drive_upload_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) project. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriveLink"];
                 };
             };
         };

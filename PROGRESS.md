@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 9 terminées. Prochaine étape : phase 10 (Google Drive : OAuth par utilisateur avec jetons chiffrés par `apps/core/crypto.py`, dossier Drive par projet créé avec le compte du créateur (D8), Picker pour attacher un fichier Drive à un projet, une tâche ou un asset (`DriveLink`, `AssetVersion.drive_file_id`), import d'une version Drive dans le stockage interne ; tout derrière `GOOGLE_*` en `.env`, client simulé dans les tests tant que Luca n'a pas fourni le projet Google Cloud).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 10 terminées. Prochaine étape : phase 11 (calendriers Google + Outlook / Teams bidirectionnels : `ExternalCalendar`, `ExternalEvent`, `SyncMapping`, `SyncConflict` (schéma §7), scope Calendar ajouté en consentement incrémental sur le compte Google existant, MSAL pour Microsoft, choix des calendriers affichés et du calendrier cible, push de mes tâches assignées et de mes événements (D7), lecture des événements externes dans le calendrier, webhooks Google, tâche Celery de synchro, conflits journalisés ; tout derrière `GOOGLE_*` / `MS_*`, faux clients dans les tests).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -20,7 +20,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 7 | Compta complète et exports | ✅ terminé · [doc](docs/phases/phase-07-compta.md) |
 | 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ✅ terminé · [doc](docs/phases/phase-08-fichiers.md) |
 | 9 | Liens protégés, filigranes, streaming, journal d'accès | ✅ terminé · [doc](docs/phases/phase-09-liens-partages.md) |
-| 10 | Google Drive | ⏳ |
+| 10 | Google Drive | ✅ terminé · [doc](docs/phases/phase-10-google-drive.md) |
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ⏳ |
 | 12 | Notifications in-app, e-mails, résumé de 8h | ⏳ |
 | 13 | Journal d'activité, export et suppression des données, PWA | ⏳ |
@@ -207,6 +207,20 @@ Détail dans `docs/phases/phase-09-liens-partages.md`. App `sharing` (liens, sé
 - Comptage : `services.count_view()` / `count_play()` avec fenêtre de 30 min en session ; `blocking_state()` laisse finir la session qui a consommé le dernier quota. Le résumé quotidien (phase 12) peut lire `first_opened_at` / `notify_on_open` pour la notification « première ouverture ».
 - Le tag sonore par défaut est un bip généré (`sine 1200 Hz, 0.18 s, volume 0.25`) ; un vrai tag (voix « SOBASED ») se met dans `AUDIO_WATERMARK_TAG`, ce qui change `params_hash` et donc recalcule les dérivés à la prochaine ouverture.
 
+## Phase 10 : ce qui a été produit
+
+Détail dans `docs/phases/phase-10-google-drive.md`. App `integrations` (`OAuthAccount`, `DriveLink`, OAuth Google en REST via `requests`, `DriveClient` avec refresh sur 401, dossiers de projet selon D8, partage avec les membres, upload, fichiers du Picker), versions Drive et import dans `files`, section Intégrations, cartes Drive. 1'189 tests backend, 101 front. Migrations : `integrations.0001`, `projects.0003`. **Non exercé contre un vrai compte Google** (projet Google Cloud à fournir).
+
+À retenir pour la suite :
+
+- **Jamais d'appel Google dans un bloc `transaction.atomic`** : `google.refresh()` marque le compte `needs_reauth` quand Google refuse, et cette marque était annulée par le rollback de l'action ratée (trouvé dans le navigateur). Appeler Google d'abord, écrire en base ensuite.
+- `google.transport` est l'unique point de sortie HTTP : les tests le remplacent par `FakeGoogle` (`apps/integrations/tests/conftest.py`), qui imite le sous-ensemble utilisé (jetons, userinfo, révocation, fichiers, upload, permissions, `alt=media`) et sait échouer (`unauthorized_once`, `fail_refresh`). À étendre pour Calendar en phase 11 plutôt qu'écrire un second faux.
+- Le consentement est **incrémental** (`include_granted_scopes=true`) : la phase 11 demande le scope Calendar via `connect/?features=calendar` sans perdre Drive ; `OAuthAccount.scopes` dit ce que le compte permet.
+- Les callbacks `on_commit` ne s'exécutent pas dans les tests : fixture `create_project` avec `django_capture_on_commit_callbacks(execute=True)` pour voir la tâche Celery de création de dossier.
+- `DriveLinkSerializer` a `validators = []` : la contrainte unique (projet, tâche, fichier) serait sinon transformée par DRF en refus avant `perform_create` (et le lecteur recevrait 400 au lieu de 403).
+- La CSP autorise maintenant `apis.google.com` en script : c'est la seule origine de script étrangère, à reporter telle quelle dans le Caddyfile de production (phase 14).
+- Les vues « compte » (`IntegrationsStateView`, `GoogleConnectView`, `GoogleCallbackView`, `GoogleDisconnectView`, `PickerConfigView`) sont allow-listées dans l'audit des routes ; les vues Microsoft de la phase 11 le seront de la même façon.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -218,7 +232,7 @@ Détail dans `docs/phases/phase-09-liens-partages.md`. App `sharing` (liens, sé
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
 | `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7 ; `django-storages[s3]` (SPEC §3), `wavesurfer.js` (SPEC §9) et `pdfjs-dist` (D2), plus `ffmpeg` dans l'image, depuis la phase 8 ; `cryptography` (SPEC §3, Fernet) depuis la phase 9. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7 ; `django-storages[s3]` (SPEC §3), `wavesurfer.js` (SPEC §9) et `pdfjs-dist` (D2), plus `ffmpeg` dans l'image, depuis la phase 8 ; `cryptography` (SPEC §3, Fernet) depuis la phase 9 ; `requests` (SPEC §3) depuis la phase 10. **`google-api-python-client` n'est pas utilisé** : les quelques appels Drive (et Calendar en phase 11) se font en REST avec `requests`, ce qui reste lisible et se simule sans effort dans les tests ; `msal` sera ajouté en phase 11 si le flux Microsoft le justifie. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -227,6 +241,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 10 : **aucun appel réussi au vrai Google** (identifiants à fournir par Luca) : flux OAuth, Picker et appels Drive à essayer dès que le client OAuth existe ; partage du dossier appliqué aux membres présents (« Réappliquer » après une arrivée) ; import d'une version Drive en mémoire (quelques centaines de Mo au plus) ; une version Drive ne se lit ni ne se partage tant qu'elle n'est pas importée.
 - Phase 9 : notification « première ouverture » en phase 12 (`first_opened_at` posé) ; pas de filigrane vidéo / PDF (v1) ; le tag sonore du filigrane audio vérifié par ffmpeg et la durée du fichier, **pas écouté à l'oreille** (à faire par Luca) ; l'écoute publique déclenchée à la souris dans le navigateur intégré seulement.
 - Phase 8 : mode S3 non exercé contre un vrai bucket ; pas de reprise d'upload ni d'envoi multiple ; la vidéo est lue par le navigateur depuis l'original (un `.mov` ProRes ne se lira pas dans la page, téléchargement seulement) ; nombre de pages PDF approximatif côté serveur ; le dessin d'une zone sur une image vérifié à la souris synthétique seulement : **à essayer au doigt par Luca** ; notifications aux suiveurs en phase 12.
 - Phase 7 : le PDF est en DejaVu (police du conteneur), pas en Inter ; pas d'aperçu du justificatif dans le panneau (nouvel onglet ; la visionneuse arrive en phase 8) ; une écriture générée par un frais récurrent ne suit plus le frais une fois créée ; l'upload d'un justificatif a été vérifié avec un PNG synthétique et un vrai fichier via l'API, pas avec l'appareil photo d'un téléphone (bouton « Photographier » à essayer par Luca).
@@ -244,7 +259,7 @@ Limites **anticipées**, à confirmer par test le moment venu :
 
 ## À fournir par Luca (SPEC §20)
 
-Non bloquant avant les phases 10 à 12 et 14 : projet Google Cloud (client OAuth, API Drive, Calendar, Picker), application Azure (`Calendars.ReadWrite`, `offline_access`), SMTP, VPS, nom de domaine. D'ici là : intégrations derrière des variables d'environnement, testées avec des clients simulés. La liste exacte (URL de redirection, scopes) sera dans `docs/deploy.md`.
+Non bloquant (les phases 10 et 11 tournent avec des clients simulés) : projet Google Cloud (client OAuth, API Drive, Calendar, Picker), application Azure (`Calendars.ReadWrite`, `offline_access`), SMTP, VPS, nom de domaine. D'ici là : intégrations derrière des variables d'environnement, testées avec des clients simulés. La liste exacte (URL de redirection, scopes) sera dans `docs/deploy.md`.
 
 ## Environnement de dev constaté (21.09.2026)
 

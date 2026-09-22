@@ -51,6 +51,9 @@ export interface ProjectPayload {
   end_date?: string | null
   color?: string
   tags?: number[]
+  /** Creation: ask for a Google Drive folder (SPEC §11). */
+  create_drive_folder?: boolean
+  drive_share_with_members?: boolean
 }
 
 export interface InvitePayload {

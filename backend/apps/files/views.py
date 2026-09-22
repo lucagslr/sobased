@@ -135,7 +135,7 @@ class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet)
     @action(
         detail=True,
         methods=["get", "post"],
-        parser_classes=[MultiPartParser, FormParser],
+        parser_classes=[MultiPartParser, FormParser, JSONParser],
     )
     def versions(self, request, pk=None):
         """GET: every version, newest first. POST: the next one (editors)."""
@@ -149,18 +149,30 @@ class AssetViewSet(_ReadOnGetMixin, ProjectScopedViewSet, viewsets.ModelViewSet)
             )
         self.check_project_access(asset.project, Role.EDITOR)
         upload = request.FILES.get("file")
-        if upload is None:
+        drive_file_id = request.data.get("drive_file_id", "")
+        if upload is None and not drive_file_id:
             raise ValidationError({"file": ["Aucun fichier reçu."]})
         try:
-            version = services.add_version(
-                asset,
-                upload,
-                request.user,
-                label=request.data.get("label", ""),
-                note=request.data.get("note", ""),
-            )
+            if upload is not None:
+                version = services.add_version(
+                    asset,
+                    upload,
+                    request.user,
+                    label=request.data.get("label", ""),
+                    note=request.data.get("note", ""),
+                )
+            else:
+                version = services.add_drive_version(
+                    asset,
+                    str(drive_file_id),
+                    request.user,
+                    label=request.data.get("label", ""),
+                    note=request.data.get("note", ""),
+                )
         except services.UploadTooLarge as exc:
             raise ValidationError({"file": [str(exc)]}) from exc
+        except services.DriveProblem as exc:
+            raise ValidationError({"drive_file_id": [str(exc)]}) from exc
         fresh = _versions_queryset().get(pk=version.pk)
         return Response(
             AssetVersionSerializer(fresh, context=self.get_serializer_context()).data,
@@ -288,6 +300,22 @@ class AssetVersionViewSet(
         derivative = self._derivative(version, "thumbnail")
         return self._serve(
             derivative.file, "image/webp", cache_control="private, max-age=3600"
+        )
+
+    @extend_schema(request=None, responses={200: AssetVersionSerializer})
+    @action(detail=True, methods=["post"], url_path="import-from-drive")
+    def import_from_drive(self, request, pk=None):
+        """Copy a Drive-referenced version into the internal storage
+        (editors): needed to stream it or share it by link."""
+        version = self.get_object()
+        self.check_project_access(version.asset.project, Role.EDITOR)
+        try:
+            services.import_from_drive(version, request.user)
+        except (services.UploadTooLarge, *services.DriveProblem, ValueError) as exc:
+            raise ValidationError({"detail": str(exc)}) from exc
+        fresh = _versions_queryset().get(pk=version.pk)
+        return Response(
+            AssetVersionSerializer(fresh, context=self.get_serializer_context()).data
         )
 
     # --- Comments -----------------------------------------------------------------

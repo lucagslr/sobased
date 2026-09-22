@@ -117,6 +117,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     can_edit_finance = serializers.SerializerMethodField()
     is_shell = serializers.SerializerMethodField()
     my_tasks_view = serializers.SerializerMethodField()
+    # Google Drive (SPEC §11): creation asks for a folder (default yes when the
+    # creator has Drive connected); the state is read-only, drive_status says
+    # why an action is unavailable (owner disconnected, no folder).
+    create_drive_folder = serializers.BooleanField(write_only=True, required=False)
+    drive_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -143,12 +148,45 @@ class ProjectSerializer(serializers.ModelSerializer):
             "can_edit_finance",
             "is_shell",
             "my_tasks_view",
+            "drive_folder_id",
+            "drive_folder_url",
+            "drive_share_with_members",
+            "drive_status",
+            "create_drive_folder",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "depth", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "depth",
+            "drive_folder_id",
+            "drive_folder_url",
+            "created_at",
+            "updated_at",
+        ]
 
     # --- Computed fields ----------------------------------------------------------
+    @extend_schema_field(
+        serializers.ChoiceField(
+            choices=["none", "ok", "owner_disconnected", "parent_missing"]
+        )
+    )
+    def get_drive_status(self, project) -> str:
+        """none: no folder; ok: folder usable; owner_disconnected: folder exists
+        but its Google account is gone or needs re-auth; parent_missing: a
+        sub-project whose parent has no folder yet."""
+        from apps.integrations import drive
+
+        if project.drive_folder_id:
+            try:
+                drive.folder_owner(project)
+            except drive.DriveUnavailable:
+                return "owner_disconnected"
+            return "ok"
+        if project.parent_id and not project.parent.drive_folder_id:
+            return "parent_missing"
+        return "none"
+
     def _access(self, project):
         return self.context["access_map"].for_project(project.pk)
 

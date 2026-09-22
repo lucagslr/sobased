@@ -196,8 +196,12 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 | POST | `/api/integrations/sync-now/` | connecté, limité | Déclenche une synchro |
 | GET | `/api/integrations/sync-conflicts/` | connecté | Conflits journalisés |
 | POST | `/api/integrations/google/calendar/webhook/` | public, vérifié par `X-Goog-Channel-Token` | Notification push Google → tâche Celery de synchro |
-| POST | `/api/projects/{id}/drive/create-folder/` | Éditeur | Crée le dossier Drive (et ses sous-dossiers types) a posteriori |
-| POST | `/api/projects/{id}/drive/upload/` | Éditeur | Upload vers le dossier Drive du projet |
+| POST | `/api/projects/{id}/drive/create-folder/` | Éditeur | Crée le dossier Drive a posteriori : racine avec les sous-dossiers types (compte de l'acteur), sous-projet dans le dossier du parent (compte propriétaire de l'arbre, D8). 400 avec message si le parent n'a pas de dossier, si le propriétaire est déconnecté ou si le dossier existe |
+| POST | `/api/projects/{id}/drive/upload/` | Éditeur | `multipart` `file` : envoi vers le dossier Drive du projet avec le compte propriétaire ; le résultat est attaché comme `DriveLink` (201) |
+| POST | `/api/projects/{id}/drive/share/` | Éditeur | Réapplique le partage du dossier racine avec les membres ayant connecté Google (`shared_with` = nombre partagé) |
+| GET | `/api/projects/{id}/` | Lecteur | Champs Drive : `drive_folder_id`, `drive_folder_url`, `drive_share_with_members` (modifiable), `drive_status` (`none`, `ok`, `owner_disconnected`, `parent_missing`) ; à la création, `create_drive_folder` (défaut : oui si Drive connecté) |
+| POST | `/api/assets/{id}/versions/` | Éditeur | Aussi en JSON `{drive_file_id, label, note}` : version référencée sur Drive (métadonnées relues avec le compte de l'acteur), `is_drive: true`, pas de `file_url` |
+| POST | `/api/asset-versions/{id}/import-from-drive/` | Éditeur | Copie une version Drive dans le stockage interne (compte qui l'avait choisie, sinon celui de l'acteur) ; la version devient normale, traitement relancé |
 
 ## 10. Notifications, activité, dashboard
 

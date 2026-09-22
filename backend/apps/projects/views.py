@@ -265,9 +265,11 @@ class ProjectViewSet(
         else:
             _require(self.request, data["workspace"], Role.EDITOR)
         siblings = Project.objects.filter(workspace=data["workspace"], parent=parent)
+        wants_folder = data.pop("create_drive_folder", None)
         project = serializer.save(
             created_by=self.request.user, position=siblings.count()
         )
+        self._queue_drive_folder(project, wants_folder)
         if parent is None:
             # Like a Drive file: whoever creates a root project owns it (D5).
             Membership.objects.create(
@@ -275,6 +277,36 @@ class ProjectViewSet(
             )
         invalidate_access_map(self.request)
         serializer.context["access_map"] = get_access_map(self.request)
+
+    def _queue_drive_folder(self, project, wants_folder):
+        """SPEC §11: a root project gets a Drive folder when the creator has
+        Drive connected (option checked by default); a sub-project gets one
+        under its parent's folder. Done after the commit, in Celery: a slow
+        or failing Google never blocks the creation."""
+        from apps.integrations import drive
+        from apps.integrations.tasks import create_project_folder
+
+        account = drive.drive_account(self.request.user)
+        if project.parent_id:
+            if wants_folder is False or not project.parent.drive_folder_id:
+                return
+            account_id = None
+        else:
+            if account is None or wants_folder is False:
+                return
+            account_id = account.pk
+        transaction.on_commit(
+            lambda: create_project_folder.delay(project.pk, account_id)
+        )
+
+    def perform_update(self, serializer):
+        before = serializer.instance.drive_share_with_members
+        serializer.validated_data.pop("create_drive_folder", None)
+        project = serializer.save()
+        if project.drive_share_with_members and not before and project.drive_folder_id:
+            from apps.integrations.tasks import share_project_folder
+
+            transaction.on_commit(lambda: share_project_folder.delay(project.pk))
 
     def destroy(self, request, *args, **kwargs):
         """Sub-project: editor of the PARENT. Root project: owner (D5)."""

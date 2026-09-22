@@ -71,7 +71,19 @@ class Project(TimeStampedModel):
     )
     tags = models.ManyToManyField(Tag, blank=True, related_name="projects")
     position = models.PositiveIntegerField(default=0)
+    # Google Drive (SPEC §11): the folder, its link, and the account that
+    # owns the tree (rule D8: server-side Drive calls use that account).
     drive_folder_id = models.CharField(max_length=200, blank=True)
+    drive_folder_url = models.URLField(max_length=500, blank=True)
+    drive_account = models.ForeignKey(
+        "integrations.OAuthAccount",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="drive_projects",
+    )
+    # Root projects: share the folder with members who connected Google.
+    drive_share_with_members = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

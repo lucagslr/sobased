@@ -127,7 +127,9 @@ erDiagram
         string color
         int position "ordre parmi les frères"
         string drive_folder_id
-        bigint drive_account_id FK "compte Google propriétaire du dossier"
+        string drive_folder_url
+        bigint drive_account_id FK "compte Google propriétaire du dossier, SET_NULL"
+        bool drive_share_with_members "projet racine"
         bigint created_by_id FK
     }
     MEMBERSHIP {

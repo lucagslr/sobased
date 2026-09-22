@@ -1,12 +1,13 @@
 <script setup lang="ts">
 /**
  * Project settings: members and rights, moving the project in the tree, then
- * the irreversible actions. The Drive folder section is added in phase 10.
+ * the Google Drive folder, then the irreversible actions.
  */
 import { computed, ref, watch } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { type Project, projectsApi, type Role } from '@/api/projects'
+import DriveFolderCard from '@/components/drive/DriveFolderCard.vue'
 import MembersPanel from '@/components/projects/MembersPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -136,6 +137,8 @@ async function transfer() {
         @changed="emit('changed')"
       />
     </FormCard>
+
+    <DriveFolderCard :project="project" @changed="emit('changed')" />
 
     <FormCard
       v-if="canMove"

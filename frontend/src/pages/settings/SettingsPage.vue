@@ -2,15 +2,16 @@
 /**
  * Settings shell. The section comes from the URL (/parametres/:section) so it
  * can be linked and survives a reload. Later phases add their sections here:
- * connections (10-11), my data (13).
+ * my data (13).
  */
-import { Bell, KeyRound, Layers, Palette, UserRound } from 'lucide-vue-next'
+import { Bell, KeyRound, Layers, Palette, Plug, UserRound } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import PageHeader from '@/components/ui/PageHeader.vue'
 
 import AppearanceSection from './AppearanceSection.vue'
+import IntegrationsSection from './IntegrationsSection.vue'
 import NotificationsSection from './NotificationsSection.vue'
 import ProfileSection from './ProfileSection.vue'
 import SecuritySection from './SecuritySection.vue'
@@ -21,6 +22,7 @@ const SECTIONS = [
   { slug: 'espaces', label: 'Espaces', icon: Layers, component: WorkspacesSection },
   { slug: 'apparence', label: 'Apparence', icon: Palette, component: AppearanceSection },
   { slug: 'notifications', label: 'Notifications', icon: Bell, component: NotificationsSection },
+  { slug: 'integrations', label: 'Intégrations', icon: Plug, component: IntegrationsSection },
   { slug: 'securite', label: 'Sécurité', icon: KeyRound, component: SecuritySection },
 ]
 

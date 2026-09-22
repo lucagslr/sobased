@@ -16,11 +16,17 @@
 	# as a data: URI, and browsers fetch a data: font as soon as its @font-face
 	# rule exists, used or not. An embedded font cannot call out, so nothing
 	# can leak through it; scripts, connections and frames stay locked down.
+	#
+	# Google Picker (SPEC §11, production too): its script comes from
+	# apis.google.com and is only loaded when the user opens the Picker; the
+	# Picker itself is an iframe of docs.google.com; file icons and thumbnails
+	# come from googleusercontent.com / gstatic.com. Nothing else of Google is
+	# allowed: no analytics, no fonts, no other script host.
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
 		Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
-		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ws://localhost:8080; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://apis.google.com; img-src 'self' data: blob: https://*.googleusercontent.com https://*.gstatic.com; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' ws://localhost:8080 https://www.googleapis.com; frame-src https://docs.google.com https://accounts.google.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 		-Server
 	}
 

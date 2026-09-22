@@ -7,13 +7,15 @@
  *   sidebar is on "Tous les espaces";
  * - edit: pass `project`.
  */
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 
+import { integrationsApi } from '@/api/integrations'
 import type { Project, ProjectNode, ProjectStatus } from '@/api/projects'
 import { projectsApi } from '@/api/projects'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseSwitch from '@/components/ui/BaseSwitch.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import ColorPicker from '@/components/ui/ColorPicker.vue'
 import FormError from '@/components/ui/FormError.vue'
@@ -48,6 +50,16 @@ const form = reactive({
   tags: [] as number[],
 })
 const ready = ref(false)
+// Drive (SPEC §11): the option only shows when the user connected Drive.
+const driveConnected = ref(false)
+const createDriveFolder = ref(true)
+onMounted(async () => {
+  try {
+    driveConnected.value = (await integrationsApi.state()).google.picker
+  } catch {
+    driveConnected.value = false
+  }
+})
 
 // Workspaces where I may create a root project (editor and up).
 const writableWorkspaces = computed(() =>
@@ -98,6 +110,7 @@ async function prepare() {
     })
   }
   if (form.workspace) await workspaces.loadTypes(form.workspace)
+  createDriveFolder.value = true
   ready.value = true
 }
 
@@ -130,6 +143,9 @@ async function save() {
       : await projectsApi.create({
           ...payload,
           ...(props.parent ? { parent: props.parent.id } : { workspace: form.workspace }),
+          ...(driveConnected.value || props.parent
+            ? { create_drive_folder: createDriveFolder.value }
+            : {}),
         })
     await projects.load()
   })
@@ -183,6 +199,16 @@ async function save() {
         can-create
       />
       <BaseTextarea v-model="form.description" label="Description" :rows="4" />
+      <BaseSwitch
+        v-if="!project && (driveConnected || parent)"
+        v-model="createDriveFolder"
+        label="Créer un dossier Google Drive"
+        :description="
+          parent
+            ? 'Dans le dossier Drive du projet parent, quand il en a un.'
+            : 'Avec les sous-dossiers Contrats, Visuels, Audio, Vidéo, Compta, Documents.'
+        "
+      />
     </form>
     <template #footer>
       <BaseButton variant="secondary" @click="open = false">Annuler</BaseButton>
