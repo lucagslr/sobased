@@ -1393,6 +1393,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/share/{token}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The page's data: password gate, or the items with their media URLs. */
+        get: operations["public_share_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/share/{token}/download/{version_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A file of the link, reachable only with a URL signed for this session. */
+        get: operations["public_share_download_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/share/{token}/media/{version_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Stream (audio, watermarked or not), watermarked image, video, PDF. */
+        get: operations["public_share_media_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/share/{token}/peaks/{version_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A file of the link, reachable only with a URL signed for this session. */
+        get: operations["public_share_peaks_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/share/{token}/thumb/{version_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A file of the link, reachable only with a URL signed for this session. */
+        get: operations["public_share_thumb_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/share/{token}/unlock/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Password check: 5 failures per 15 min per link and IP, then 429. */
+        post: operations["public_share_unlock_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/recurring-expenses/": {
         parameters: {
             query?: never;
@@ -1443,6 +1545,77 @@ export interface paths {
          *     the reading side of the finance rights.
          */
         patch: operations["recurring_expenses_partial_update"];
+        trace?: never;
+    };
+    "/api/share-links/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        get: operations["share_links_list"];
+        put?: never;
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        post: operations["share_links_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/share-links/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        get: operations["share_links_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        delete: operations["share_links_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        patch: operations["share_links_partial_update"];
+        trace?: never;
+    };
+    "/api/share-links/{id}/access-log/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        get: operations["share_links_access_log_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/share-links/{id}/revoke/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Links are an editor's business, reading included (SPEC §10). */
+        post: operations["share_links_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/tags/": {
@@ -1926,6 +2099,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccessLog: {
+            readonly id: number;
+            readonly event: components["schemas"]["ShareEventEnum"];
+            readonly version: number | null;
+            readonly version_number: number | null;
+            readonly ip_truncated: string;
+            readonly user_agent: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         Advance: {
             payer_type: components["schemas"]["PayerTypeEnum"];
             payer_id: number;
@@ -2591,6 +2774,21 @@ export interface components {
             /** Format: decimal */
             to_pay: string;
         };
+        PaginatedAccessLogList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["AccessLog"][];
+        };
         PaginatedAssetCommentList: {
             /** @example 123 */
             count: number;
@@ -2650,6 +2848,21 @@ export interface components {
              */
             previous: string | null;
             results: components["schemas"]["Event"][];
+        };
+        PaginatedShareLinkList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["ShareLink"][];
         };
         PaginatedStatusChangeList: {
             /** @example 123 */
@@ -2862,6 +3075,27 @@ export interface components {
             /** Format: date */
             end_date?: string | null;
             is_active?: boolean;
+        };
+        /**
+         * @description Editors' view of a link. The target is fixed at creation; everything
+         *     else may change. `password` is write-only: "" or null removes it.
+         */
+        PatchedShareLinkRequest: {
+            project?: number;
+            target_type?: components["schemas"]["ShareTargetEnum"];
+            version?: number | null;
+            asset?: number | null;
+            assets?: number[];
+            title?: string;
+            password?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            max_views?: number | null;
+            max_plays?: number | null;
+            allow_download?: boolean;
+            watermark?: boolean;
+            recipient_label?: string;
+            notify_on_open?: boolean;
         };
         PatchedTagRequest: {
             workspace?: number;
@@ -3110,6 +3344,36 @@ export interface components {
             name: string;
             position?: number;
         };
+        /** @description One playable / viewable thing of the public page. */
+        PublicItem: {
+            version_id: number;
+            name: string;
+            kind: string;
+            label: string;
+            number: number;
+            mime_type: string;
+            duration_ms: number | null;
+            width: number | null;
+            height: number | null;
+            page_count: number | null;
+            media_url: string | null;
+            download_url: string | null;
+            peaks_url: string | null;
+            thumbnail_url: string | null;
+            /** @description False while a watermark is being built */
+            ready: boolean;
+            error: string;
+        };
+        PublicShare: {
+            title: string;
+            requires_password: boolean;
+            target_type: components["schemas"]["ShareTargetEnum"];
+            allow_download: boolean;
+            watermark: boolean;
+            /** Format: date-time */
+            expires_at: string | null;
+            items: components["schemas"]["PublicItem"][];
+        };
         /**
          * @description The ONLY shape in which a user is exposed to other users (SPEC §4).
          *
@@ -3207,6 +3471,98 @@ export interface components {
         Session: {
             user: components["schemas"]["Me"] | null;
         };
+        /**
+         * @description * `view` - Ouverture
+         *     * `play` - Écoute
+         *     * `download` - Téléchargement
+         *     * `password_failed` - Mot de passe refusé
+         * @enum {string}
+         */
+        ShareEventEnum: "view" | "play" | "download" | "password_failed";
+        ShareItem: {
+            asset: number;
+            readonly asset_name: string;
+            readonly asset_kind: string;
+            position: number;
+        };
+        ShareItemRequest: {
+            asset: number;
+            position?: number;
+        };
+        /**
+         * @description Editors' view of a link. The target is fixed at creation; everything
+         *     else may change. `password` is write-only: "" or null removes it.
+         */
+        ShareLink: {
+            readonly id: number;
+            project: number;
+            readonly project_name: string;
+            readonly project_color: string;
+            target_type: components["schemas"]["ShareTargetEnum"];
+            version: number | null;
+            asset: number | null;
+            readonly items: components["schemas"]["ShareItem"][];
+            title: string;
+            readonly target_label: string;
+            readonly has_password: boolean;
+            /** Format: date-time */
+            expires_at: string | null;
+            max_views: number | null;
+            max_plays: number | null;
+            readonly view_count: number;
+            readonly play_count: number;
+            allow_download: boolean;
+            watermark: boolean;
+            recipient_label: string;
+            notify_on_open: boolean;
+            readonly state: components["schemas"]["ShareStateEnum"];
+            readonly url: string | null;
+            /** Format: date-time */
+            readonly first_opened_at: string | null;
+            /** Format: date-time */
+            readonly last_opened_at: string | null;
+            /** Format: date-time */
+            readonly revoked_at: string | null;
+            readonly created_by: components["schemas"]["PublicUser"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description Editors' view of a link. The target is fixed at creation; everything
+         *     else may change. `password` is write-only: "" or null removes it.
+         */
+        ShareLinkRequest: {
+            project?: number;
+            target_type: components["schemas"]["ShareTargetEnum"];
+            version?: number | null;
+            asset?: number | null;
+            assets?: number[];
+            title?: string;
+            password?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            max_views?: number | null;
+            max_plays?: number | null;
+            allow_download?: boolean;
+            watermark?: boolean;
+            recipient_label?: string;
+            notify_on_open?: boolean;
+        };
+        /**
+         * @description * `active` - Actif
+         *     * `expired` - Expiré
+         *     * `exhausted` - Épuisé
+         *     * `revoked` - Révoqué
+         * @enum {string}
+         */
+        ShareStateEnum: "active" | "expired" | "exhausted" | "revoked";
+        /**
+         * @description * `version` - Une version précise
+         *     * `asset` - Un fichier (dernière version)
+         *     * `playlist` - Une sélection de fichiers
+         * @enum {string}
+         */
+        ShareTargetEnum: "version" | "asset" | "playlist";
         /** @description The meeting a task comes from: « Issue du RDV du 12.10 ». */
         SourceEvent: {
             id: number;
@@ -3410,6 +3766,9 @@ export interface components {
         };
         TransferProjectOwnershipRequest: {
             username: string;
+        };
+        UnlockRequest: {
+            password: string;
         };
         ValidateItem: {
             kind: components["schemas"]["ValidateItemKindEnum"];
@@ -6114,6 +6473,162 @@ export interface operations {
             };
         };
     };
+    public_share_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicShare"];
+                };
+            };
+            /** @description No response body */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No response body */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    public_share_download_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    public_share_media_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    public_share_peaks_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    public_share_thumb_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                version_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    public_share_unlock_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnlockRequest"];
+                "multipart/form-data": components["schemas"]["UnlockRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicShare"];
+                };
+            };
+            /** @description No response body */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     recurring_expenses_list: {
         parameters: {
             query?: {
@@ -6227,6 +6742,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecurringExpense"];
+                };
+            };
+        };
+    };
+    share_links_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                state?: "active" | "exhausted" | "expired" | "revoked";
+                workspace?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedShareLinkList"];
+                };
+            };
+        };
+    };
+    share_links_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkRequest"];
+                "multipart/form-data": components["schemas"]["ShareLinkRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+        };
+    };
+    share_links_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) share link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+        };
+    };
+    share_links_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) share link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    share_links_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) share link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedShareLinkRequest"];
+                "multipart/form-data": components["schemas"]["PatchedShareLinkRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+        };
+    };
+    share_links_access_log_list: {
+        parameters: {
+            query?: {
+                include_descendants?: boolean;
+                /** @description Un numéro de page de l'ensemble des résultats. */
+                page?: number;
+                /** @description Nombre de résultats à retourner par page. */
+                page_size?: number;
+                project?: number;
+                state?: string;
+                workspace?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) share link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAccessLogList"];
+                };
+            };
+        };
+    };
+    share_links_revoke_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un(une) valeur entière unique identifiant ce(cette) share link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
                 };
             };
         };

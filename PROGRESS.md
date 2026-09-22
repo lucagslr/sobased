@@ -2,7 +2,7 @@
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
-**Dernière mise à jour : 23.09.2026 · Phases 0 à 8 terminées. Prochaine étape : phase 9 (liens protégés : jeton haché + copie chiffrée, mot de passe optionnel, expiration, quotas de vues / lectures, téléchargement autorisé ou non, filigrane image et audio par dérivés `wm_image` / `wm_audio` avec `params_hash`, streaming sans téléchargement, journal d'accès avec IP tronquée, notification à l'ouverture, playlists ; page publique hors app).**
+**Dernière mise à jour : 23.09.2026 · Phases 0 à 9 terminées. Prochaine étape : phase 10 (Google Drive : OAuth par utilisateur avec jetons chiffrés par `apps/core/crypto.py`, dossier Drive par projet créé avec le compte du créateur (D8), Picker pour attacher un fichier Drive à un projet, une tâche ou un asset (`DriveLink`, `AssetVersion.drive_file_id`), import d'une version Drive dans le stockage interne ; tout derrière `GOOGLE_*` en `.env`, client simulé dans les tests tant que Luca n'a pas fourni le projet Google Cloud).**
 
 Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca). Le code est commenté en anglais : docstring de module + le « pourquoi » des choix non évidents.
 
@@ -19,7 +19,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 | 6 | Événements et RDV, contacts | ✅ terminé · [doc](docs/phases/phase-06-evenements-rdv-contacts.md) |
 | 7 | Compta complète et exports | ✅ terminé · [doc](docs/phases/phase-07-compta.md) |
 | 8 | Fichiers, versions, commentaires horodatés, annotations, statuts de validation | ✅ terminé · [doc](docs/phases/phase-08-fichiers.md) |
-| 9 | Liens protégés, filigranes, streaming, journal d'accès | ⏳ |
+| 9 | Liens protégés, filigranes, streaming, journal d'accès | ✅ terminé · [doc](docs/phases/phase-09-liens-partages.md) |
 | 10 | Google Drive | ⏳ |
 | 11 | Google Calendar + Outlook / Teams bidirectionnel | ⏳ |
 | 12 | Notifications in-app, e-mails, résumé de 8h | ⏳ |
@@ -192,6 +192,21 @@ Détail dans `docs/phases/phase-08-fichiers.md`. App `files` (assets, versions n
 - Le mode S3 (`STORAGE_BACKEND=s3`) est branché (django-storages, URL signées `SIGNED_URL_SECONDS`) mais pas exercé contre un vrai bucket.
 - Scénario de dev : `scripts/dev_scenario.py` génère de vrais fichiers (PNG par Pillow, WAV, PDF écrit à la main, MP4 par ffmpeg) ; le nettoyage (`phase4_cleanup.py` dans le scratchpad) supprime aussi les fichiers via les signaux `post_delete`.
 
+## Phase 9 : ce qui a été produit
+
+Détail dans `docs/phases/phase-09-liens-partages.md`. App `sharing` (liens, sélections, journal), `apps/core/crypto.py` (Fernet), filigranes image (Pillow) et audio (ffmpeg, Celery), page publique `/s/<jeton>` hors app, panneau de partage, tableaux de liens (global, projet), journal d'accès. 1'167 tests backend, 101 tests front. Migration : `sharing.0001`.
+
+À retenir pour la suite :
+
+- **Le navigateur intégré est connecté avec le compte de Luca (`lucagslr`)** : cookie de session HttpOnly, impossible à remplacer par JS. Pour vérifier avec des données jetables, ajouter ce compte comme admin de l'espace du scénario (`Membership(user=lucagslr, workspace=100SATIONS, role=admin)`) ; le nettoyage supprime l'espace, donc l'adhésion. Ne jamais le déconnecter.
+- **Nouvelle app avec des tâches Celery = `docker compose restart worker beat`** avant de tester, sinon « unregistered task » (le worker autodécouvre au démarrage).
+- Un `watch` sur un booléen ne redéclenche pas un sondage : pour attendre un traitement, reboucler dans la fonction de chargement (`SharePage.load()`).
+- Prettier peut couper un `@click` à deux instructions sur deux lignes sans `;`, ce que le compilateur Vue refuse alors que `vue-tsc` passe : toujours une méthode pour deux instructions.
+- `apps/core/crypto.py` (`encrypt` / `decrypt`, clé validée au premier usage) est prêt pour les jetons OAuth des phases 10 et 11 ; `config/settings/test.py` fixe une clé de test.
+- Les vues publiques sont allow-listées dans `test_route_audit.py` avec leur justification (jeton secret, URL signées par session).
+- Comptage : `services.count_view()` / `count_play()` avec fenêtre de 30 min en session ; `blocking_state()` laisse finir la session qui a consommé le dernier quota. Le résumé quotidien (phase 12) peut lire `first_opened_at` / `notify_on_open` pour la notification « première ouverture ».
+- Le tag sonore par défaut est un bip généré (`sine 1200 Hz, 0.18 s, volume 0.25`) ; un vrai tag (voix « SOBASED ») se met dans `AUDIO_WATERMARK_TAG`, ce qui change `params_hash` et donc recalcule les dérivés à la prochaine ouverture.
+
 ## Dépendances ajoutées hors SPEC §3
 
 | Paquet | Où | Raison |
@@ -203,7 +218,7 @@ Détail dans `docs/phases/phase-08-fichiers.md`. App `files` (assets, versions n
 | `black`, `isort`, `flake8` | back, dev | Qualité (D10) |
 | `markdown-it` (+ `@types/markdown-it`) | front | Markdown simple et sûr, HTML désactivé (D2) |
 
-`django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7 ; `django-storages[s3]` (SPEC §3), `wavesurfer.js` (SPEC §9) et `pdfjs-dist` (D2), plus `ffmpeg` dans l'image, depuis la phase 8. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
+`django-filter` et `python-dateutil`, prévus par SPEC §3, sont installés depuis la phase 3 ; `vuedraggable` (SPEC §3) depuis la phase 4 ; `@fullcalendar/*` (core, vue3, daygrid, timegrid, list, interaction : tous sous licence MIT, aucun module payant) et `frappe-gantt` (SPEC §3) depuis la phase 5 ; `openpyxl` et `WeasyPrint` (SPEC §3, avec ses bibliothèques système dans le `Dockerfile`) depuis la phase 7 ; `django-storages[s3]` (SPEC §3), `wavesurfer.js` (SPEC §9) et `pdfjs-dist` (D2), plus `ffmpeg` dans l'image, depuis la phase 8 ; `cryptography` (SPEC §3, Fernet) depuis la phase 9. **TypeScript est épinglé en `~5.9`** : la v7 ne fournit plus l'API JS dont `vue-tsc` et `openapi-typescript` dépendent.
 
 ## Limites connues
 
@@ -212,6 +227,7 @@ Constatées :
 - Swagger UI (`/api/docs/`) abandonné : scripts CDN incompatibles avec la CSP. `/api/schema/` suffit.
 - Verrouillage par nom d'utilisateur : un tiers peut bloquer une connexion pendant 1 h en ratant 10 mots de passe (compromis assumé).
 - Adresse de contact de la page Confidentialité à préciser par Luca.
+- Phase 9 : notification « première ouverture » en phase 12 (`first_opened_at` posé) ; pas de filigrane vidéo / PDF (v1) ; le tag sonore du filigrane audio vérifié par ffmpeg et la durée du fichier, **pas écouté à l'oreille** (à faire par Luca) ; l'écoute publique déclenchée à la souris dans le navigateur intégré seulement.
 - Phase 8 : mode S3 non exercé contre un vrai bucket ; pas de reprise d'upload ni d'envoi multiple ; la vidéo est lue par le navigateur depuis l'original (un `.mov` ProRes ne se lira pas dans la page, téléchargement seulement) ; nombre de pages PDF approximatif côté serveur ; le dessin d'une zone sur une image vérifié à la souris synthétique seulement : **à essayer au doigt par Luca** ; notifications aux suiveurs en phase 12.
 - Phase 7 : le PDF est en DejaVu (police du conteneur), pas en Inter ; pas d'aperçu du justificatif dans le panneau (nouvel onglet ; la visionneuse arrive en phase 8) ; une écriture générée par un frais récurrent ne suit plus le frais une fois créée ; l'upload d'un justificatif a été vérifié avec un PNG synthétique et un vrai fichier via l'API, pas avec l'appareil photo d'un téléphone (bouton « Photographier » à essayer par Luca).
 - Phase 6 : pas de notification à l'invitation à un RDV (résumé quotidien en phase 12, synchro calendrier en phase 11) ; pas d'import / export du carnet ; le glisser d'un RDV dans le calendrier vérifié par événements synthétiques seulement.
@@ -222,8 +238,7 @@ Constatées :
 
 Limites **anticipées**, à confirmer par test le moment venu :
 
-- Le streaming « sans téléchargement » décourage la copie sans pouvoir l'empêcher.
-- Pas de filigrane sur PDF et vidéo en v1.
+- Le streaming « sans téléchargement » décourage la copie sans pouvoir l'empêcher (confirmé en phase 9 : le filigrane est la vraie dissuasion).
 - Une version Drive ne peut pas être partagée par lien sans import préalable dans le stockage interne.
 - Le calendrier Microsoft de la HEG peut être bloqué par la politique de consentement du tenant de l'école.
 

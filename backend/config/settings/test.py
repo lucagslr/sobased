@@ -14,3 +14,5 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 MEDIA_ROOT = "/tmp/sobased-test-media"
 # Without Caddy in front, files are streamed by Django itself.
 PROTECTED_MEDIA_ACCEL = False
+# A fixed, valid Fernet key: share URLs must round-trip in tests.
+FERNET_KEY = "b2xEbIwAHf7KJv-jf6qtpvlPZKdV6KaRFjkDcHb1ZlA="

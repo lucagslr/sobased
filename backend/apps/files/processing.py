@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from django.core.files.base import ContentFile
@@ -98,8 +99,19 @@ def pdf_page_count(path: Path) -> int | None:
 # --- Derivatives ---------------------------------------------------------------
 
 
-def _store(version: AssetVersion, kind: str, content: bytes, ext: str, mime: str):
-    derivative, _ = AssetDerivative.objects.get_or_create(version=version, kind=kind)
+def store_derivative(
+    version: AssetVersion,
+    kind: str,
+    content: bytes,
+    ext: str,
+    mime: str,
+    params_hash: str = "",
+):
+    """Save (or replace) a derivative and mark it ready. `params_hash`
+    distinguishes the watermarked variants (sharing) of one kind."""
+    derivative, _ = AssetDerivative.objects.get_or_create(
+        version=version, kind=kind, params_hash=params_hash
+    )
     if derivative.file:
         derivative.file.delete(save=False)
     derivative.file.save(f"d.{ext}", ContentFile(content), save=False)
@@ -121,11 +133,26 @@ def describe(exc: Exception) -> str:
     return f"{type(exc).__name__}: {str(exc)[:120]}"
 
 
-def _fail(version: AssetVersion, kind: str, error: str):
-    derivative, _ = AssetDerivative.objects.get_or_create(version=version, kind=kind)
+def fail_derivative(
+    version: AssetVersion, kind: str, error: str, params_hash: str = ""
+):
+    derivative, _ = AssetDerivative.objects.get_or_create(
+        version=version, kind=kind, params_hash=params_hash
+    )
     derivative.status = AssetDerivative.DerivativeStatus.FAILED
     derivative.error = error[:200]
     derivative.save()
+
+
+@contextmanager
+def local_copy(version: AssetVersion):
+    """The version's file on the local disk, for tools that want a path
+    (Pillow, ffmpeg): the storage may be S3 in production."""
+    with tempfile.TemporaryDirectory() as folder:
+        local = Path(folder) / ("source." + version.file.name.rsplit(".", 1)[-1])
+        with version.file.open("rb") as source, open(local, "wb") as target:
+            shutil.copyfileobj(source, target)
+        yield local
 
 
 def image_thumbnail(path: Path) -> bytes:
@@ -227,22 +254,18 @@ def process_version(version: AssetVersion) -> None:
         return
     kind = version.kind
     errors: list[str] = []
-    with tempfile.TemporaryDirectory() as folder:
-        # Work on a local copy: the storage may be S3 in production.
-        local = Path(folder) / ("source." + version.file.name.rsplit(".", 1)[-1])
-        with version.file.open("rb") as source, open(local, "wb") as target:
-            shutil.copyfileobj(source, target)
+    with local_copy(version) as local:
         version.sha256 = version.sha256 or sha256_of(local)
 
         if kind == Kind.IMAGE:
             try:
                 version.__dict__.update(image_metadata(local))
-                _store(
+                store_derivative(
                     version, "thumbnail", image_thumbnail(local), "webp", "image/webp"
                 )
             except Exception as exc:  # noqa: BLE001 - recorded, never fatal
                 errors.append(f"image: {describe(exc)}")
-                _fail(version, "thumbnail", describe(exc))
+                fail_derivative(version, "thumbnail", describe(exc))
         elif kind == Kind.DOCUMENT:
             version.page_count = pdf_page_count(local)
         elif kind in (Kind.AUDIO, Kind.VIDEO):
@@ -251,7 +274,7 @@ def process_version(version: AssetVersion) -> None:
                 for name in ("peaks", "stream_mp3", "thumbnail")[
                     : 3 if kind == Kind.VIDEO else 2
                 ]:
-                    _fail(version, name, "ffmpeg absent")
+                    fail_derivative(version, name, "ffmpeg absent")
             else:
                 try:
                     version.__dict__.update(probe(local))
@@ -262,13 +285,13 @@ def process_version(version: AssetVersion) -> None:
                     ("stream_mp3", stream_mp3, "mp3", "audio/mpeg"),
                 ):
                     try:
-                        _store(version, name, builder(local), ext, mime)
+                        store_derivative(version, name, builder(local), ext, mime)
                     except Exception as exc:  # noqa: BLE001
                         errors.append(f"{name}: {describe(exc)}")
-                        _fail(version, name, describe(exc))
+                        fail_derivative(version, name, describe(exc))
                 if kind == Kind.VIDEO:
                     try:
-                        _store(
+                        store_derivative(
                             version,
                             "thumbnail",
                             video_thumbnail(local),
@@ -277,7 +300,7 @@ def process_version(version: AssetVersion) -> None:
                         )
                     except Exception as exc:  # noqa: BLE001
                         errors.append(f"thumbnail: {describe(exc)}")
-                        _fail(version, "thumbnail", describe(exc))
+                        fail_derivative(version, "thumbnail", describe(exc))
     version.processed_at = timezone.now()
     version.processing_error = "; ".join(errors)[:200]
     version.save(

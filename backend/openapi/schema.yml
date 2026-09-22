@@ -3106,6 +3106,177 @@ paths:
                 items:
                   $ref: '#/components/schemas/ProjectNode'
           description: ''
+  /api/public/share/{token}/:
+    get:
+      operationId: public_share_retrieve
+      description: 'The page''s data: password gate, or the items with their media
+        URLs.'
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicShare'
+          description: ''
+        '404':
+          description: No response body
+        '410':
+          description: No response body
+  /api/public/share/{token}/download/{version_id}/:
+    get:
+      operationId: public_share_download_retrieve
+      description: A file of the link, reachable only with a URL signed for this session.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/public/share/{token}/media/{version_id}/:
+    get:
+      operationId: public_share_media_retrieve
+      description: Stream (audio, watermarked or not), watermarked image, video, PDF.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/public/share/{token}/peaks/{version_id}/:
+    get:
+      operationId: public_share_peaks_retrieve
+      description: A file of the link, reachable only with a URL signed for this session.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+          description: ''
+  /api/public/share/{token}/thumb/{version_id}/:
+    get:
+      operationId: public_share_thumb_retrieve
+      description: A file of the link, reachable only with a URL signed for this session.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - public
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/public/share/{token}/unlock/:
+    post:
+      operationId: public_share_unlock_create
+      description: 'Password check: 5 failures per 15 min per link and IP, then 429.'
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlockRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UnlockRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicShare'
+          description: ''
+        '410':
+          description: No response body
   /api/recurring-expenses/:
     get:
       operationId: recurring_expenses_list
@@ -3240,6 +3411,218 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/share-links/:
+    get:
+      operationId: share_links_list
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: state
+        schema:
+          type: string
+          enum:
+          - active
+          - exhausted
+          - expired
+          - revoked
+      - in: query
+        name: workspace
+        schema:
+          type: integer
+      tags:
+      - share-links
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShareLinkList'
+          description: ''
+    post:
+      operationId: share_links_create
+      description: Links are an editor's business, reading included (SPEC §10).
+      tags:
+      - share-links
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShareLinkRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLink'
+          description: ''
+  /api/share-links/{id}/:
+    get:
+      operationId: share_links_retrieve
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) share link.
+        required: true
+      tags:
+      - share-links
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLink'
+          description: ''
+    patch:
+      operationId: share_links_partial_update
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) share link.
+        required: true
+      tags:
+      - share-links
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShareLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedShareLinkRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLink'
+          description: ''
+    delete:
+      operationId: share_links_destroy
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) share link.
+        required: true
+      tags:
+      - share-links
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/share-links/{id}/access-log/:
+    get:
+      operationId: share_links_access_log_list
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) share link.
+        required: true
+      - in: query
+        name: include_descendants
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      - in: query
+        name: project
+        schema:
+          type: integer
+      - in: query
+        name: state
+        schema:
+          type: string
+      - in: query
+        name: workspace
+        schema:
+          type: number
+      tags:
+      - share-links
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccessLogList'
+          description: ''
+  /api/share-links/{id}/revoke/:
+    post:
+      operationId: share_links_revoke_create
+      description: Links are an editor's business, reading included (SPEC §10).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) share link.
+        required: true
+      tags:
+      - share-links
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLink'
+          description: ''
   /api/tags/:
     get:
       operationId: tags_list
@@ -4481,6 +4864,42 @@ paths:
           description: ''
 components:
   schemas:
+    AccessLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          allOf:
+          - $ref: '#/components/schemas/ShareEventEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+          nullable: true
+        version_number:
+          type: integer
+          readOnly: true
+          nullable: true
+        ip_truncated:
+          type: string
+          readOnly: true
+        user_agent:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - ip_truncated
+      - user_agent
+      - version
+      - version_number
     Advance:
       type: object
       properties:
@@ -6327,6 +6746,31 @@ components:
       - own
       - to_pay
       - with_children
+    PaginatedAccessLogList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessLog'
     PaginatedAssetCommentList:
       type: object
       required:
@@ -6427,6 +6871,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
+    PaginatedShareLinkList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShareLink'
     PaginatedStatusChangeList:
       type: object
       required:
@@ -6918,6 +7387,58 @@ components:
           format: date
           nullable: true
         is_active:
+          type: boolean
+    PatchedShareLinkRequest:
+      type: object
+      description: |-
+        Editors' view of a link. The target is fixed at creation; everything
+        else may change. `password` is write-only: "" or null removes it.
+      properties:
+        project:
+          type: integer
+        target_type:
+          $ref: '#/components/schemas/ShareTargetEnum'
+        version:
+          type: integer
+          nullable: true
+        asset:
+          type: integer
+          nullable: true
+        assets:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        title:
+          type: string
+          maxLength: 200
+        password:
+          type: string
+          writeOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        max_views:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        max_plays:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        allow_download:
+          type: boolean
+        watermark:
+          type: boolean
+        recipient_label:
+          type: string
+          maxLength: 120
+        notify_on_open:
           type: boolean
     PatchedTagRequest:
       type: object
@@ -7610,6 +8131,97 @@ components:
       required:
       - name
       - workspace
+    PublicItem:
+      type: object
+      description: One playable / viewable thing of the public page.
+      properties:
+        version_id:
+          type: integer
+        name:
+          type: string
+        kind:
+          type: string
+        label:
+          type: string
+        number:
+          type: integer
+        mime_type:
+          type: string
+        duration_ms:
+          type: integer
+          nullable: true
+        width:
+          type: integer
+          nullable: true
+        height:
+          type: integer
+          nullable: true
+        page_count:
+          type: integer
+          nullable: true
+        media_url:
+          type: string
+          nullable: true
+        download_url:
+          type: string
+          nullable: true
+        peaks_url:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        ready:
+          type: boolean
+          description: False while a watermark is being built
+        error:
+          type: string
+      required:
+      - download_url
+      - duration_ms
+      - error
+      - height
+      - kind
+      - label
+      - media_url
+      - mime_type
+      - name
+      - number
+      - page_count
+      - peaks_url
+      - ready
+      - thumbnail_url
+      - version_id
+      - width
+    PublicShare:
+      type: object
+      properties:
+        title:
+          type: string
+        requires_password:
+          type: boolean
+        target_type:
+          $ref: '#/components/schemas/ShareTargetEnum'
+        allow_download:
+          type: boolean
+        watermark:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicItem'
+      required:
+      - allow_download
+      - expires_at
+      - items
+      - requires_password
+      - target_type
+      - title
+      - watermark
     PublicUser:
       type: object
       description: |-
@@ -7848,6 +8460,253 @@ components:
           nullable: true
       required:
       - user
+    ShareEventEnum:
+      enum:
+      - view
+      - play
+      - download
+      - password_failed
+      type: string
+      description: |-
+        * `view` - Ouverture
+        * `play` - Écoute
+        * `download` - Téléchargement
+        * `password_failed` - Mot de passe refusé
+    ShareItem:
+      type: object
+      properties:
+        asset:
+          type: integer
+        asset_name:
+          type: string
+          readOnly: true
+        asset_kind:
+          type: string
+          readOnly: true
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - asset
+      - asset_kind
+      - asset_name
+      - position
+    ShareItemRequest:
+      type: object
+      properties:
+        asset:
+          type: integer
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - asset
+    ShareLink:
+      type: object
+      description: |-
+        Editors' view of a link. The target is fixed at creation; everything
+        else may change. `password` is write-only: "" or null removes it.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        project:
+          type: integer
+        project_name:
+          type: string
+          readOnly: true
+        project_color:
+          type: string
+          readOnly: true
+        target_type:
+          $ref: '#/components/schemas/ShareTargetEnum'
+        version:
+          type: integer
+          nullable: true
+        asset:
+          type: integer
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShareItem'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        target_label:
+          type: string
+          readOnly: true
+        has_password:
+          type: boolean
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        max_views:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        max_plays:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        view_count:
+          type: integer
+          readOnly: true
+        play_count:
+          type: integer
+          readOnly: true
+        allow_download:
+          type: boolean
+        watermark:
+          type: boolean
+        recipient_label:
+          type: string
+          maxLength: 120
+        notify_on_open:
+          type: boolean
+        state:
+          allOf:
+          - $ref: '#/components/schemas/ShareStateEnum'
+          readOnly: true
+        url:
+          type: string
+          nullable: true
+          readOnly: true
+        first_opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/PublicUser'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - allow_download
+      - asset
+      - created_at
+      - created_by
+      - expires_at
+      - first_opened_at
+      - has_password
+      - id
+      - items
+      - last_opened_at
+      - max_plays
+      - max_views
+      - notify_on_open
+      - play_count
+      - project
+      - project_color
+      - project_name
+      - recipient_label
+      - revoked_at
+      - state
+      - target_label
+      - target_type
+      - title
+      - url
+      - version
+      - view_count
+      - watermark
+    ShareLinkRequest:
+      type: object
+      description: |-
+        Editors' view of a link. The target is fixed at creation; everything
+        else may change. `password` is write-only: "" or null removes it.
+      properties:
+        project:
+          type: integer
+        target_type:
+          $ref: '#/components/schemas/ShareTargetEnum'
+        version:
+          type: integer
+          nullable: true
+        asset:
+          type: integer
+          nullable: true
+        assets:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        title:
+          type: string
+          maxLength: 200
+        password:
+          type: string
+          writeOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        max_views:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        max_plays:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        allow_download:
+          type: boolean
+        watermark:
+          type: boolean
+        recipient_label:
+          type: string
+          maxLength: 120
+        notify_on_open:
+          type: boolean
+      required:
+      - target_type
+    ShareStateEnum:
+      enum:
+      - active
+      - expired
+      - exhausted
+      - revoked
+      type: string
+      description: |-
+        * `active` - Actif
+        * `expired` - Expiré
+        * `exhausted` - Épuisé
+        * `revoked` - Révoqué
+    ShareTargetEnum:
+      enum:
+      - version
+      - asset
+      - playlist
+      type: string
+      description: |-
+        * `version` - Une version précise
+        * `asset` - Un fichier (dernière version)
+        * `playlist` - Une sélection de fichiers
     SourceEvent:
       type: object
       description: 'The meeting a task comes from: « Issue du RDV du 12.10 ».'
@@ -8441,6 +9300,15 @@ components:
           minLength: 1
       required:
       - username
+    UnlockRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - password
     ValidateItem:
       type: object
       properties:

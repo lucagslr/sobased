@@ -551,3 +551,46 @@ print(
     "dossier",
     dossier.pk,
 )
+
+# --- Phase 9: share links -------------------------------------------------------------
+from apps.core import crypto  # noqa: E402
+from apps.sharing import services as share_services  # noqa: E402
+from apps.sharing.models import ShareLink, ShareLinkItem  # noqa: E402
+
+
+def share(project_, title, target_type, author, **fields):
+    token = share_services.new_token()
+    link = ShareLink(
+        project=project_,
+        title=title,
+        target_type=target_type,
+        token_hash=share_services.token_hash(token),
+        token_encrypted=crypto.encrypt(token),
+        created_by=author,
+        **fields,
+    )
+    link.save()
+    print("SHARE", title, f"{token}")
+    return link
+
+
+share(
+    album,
+    "Écoute privée · Mix titre 3",
+    "asset",
+    demo,
+    asset=mix,
+    recipient_label="Radio X",
+)
+locked = share(
+    visuels, "Cover pour la presse", "asset", demo, asset=cover, allow_download=True
+)
+share_services.set_password(locked, "presse2026")
+locked.save(update_fields=["password_hash"])
+gone = share(
+    shorty, "Ancien dossier", "asset", demo, asset=dossier, expires_at=timezone.now()
+)
+mixed = share(shorty, "Sélection SHORTY7G", "playlist", demo, recipient_label="Usine")
+for position, item in enumerate([mix, cover, dossier]):
+    ShareLinkItem.objects.create(share_link=mixed, asset=item, position=position)
+print("SHARE_LINKS", ShareLink.objects.count())

@@ -13,16 +13,16 @@ import * as pdfjs from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import type { AssetVersion } from '@/api/files'
 import type { Thread } from '@/utils/files'
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
-const props = defineProps<{
-  version: AssetVersion
-  threads: Thread[]
-  selectedId: number | null
-}>()
+// `src` is any URL the browser may fetch with its cookies: a member's
+// version file, or a public share's signed media URL.
+const props = withDefaults(
+  defineProps<{ src: string; threads?: Thread[]; selectedId?: number | null }>(),
+  { threads: () => [], selectedId: null },
+)
 const emit = defineEmits<{ page: [page: number]; select: [id: number] }>()
 
 const root = ref<HTMLElement | null>(null)
@@ -114,9 +114,9 @@ async function load() {
   visibleRatios.clear()
   await doc?.loadingTask.destroy()
   doc = null
-  if (!props.version.file_url) return
+  if (!props.src) return
   try {
-    doc = await pdfjs.getDocument({ url: props.version.file_url, withCredentials: true }).promise
+    doc = await pdfjs.getDocument({ url: props.src, withCredentials: true }).promise
     const first = await doc.getPage(1)
     const viewport = first.getViewport({ scale: 1 })
     ratio.value = viewport.height / viewport.width
@@ -130,7 +130,7 @@ async function load() {
 }
 
 onMounted(load)
-watch(() => props.version.id, load)
+watch(() => props.src, load)
 onBeforeUnmount(() => {
   observer?.disconnect()
   visibility?.disconnect()

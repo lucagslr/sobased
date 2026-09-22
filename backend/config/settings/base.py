@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.tasks",
     "apps.finance",
     "apps.files",
+    "apps.sharing",
     "apps.dashboard",
 ]
 
@@ -199,6 +200,22 @@ if STORAGE_BACKEND == "s3":
     PROTECTED_MEDIA_ACCEL = False
 MAX_UPLOAD_MB = env_int("MAX_UPLOAD_MB", 500)
 AVATAR_MAX_MB = 10
+
+# --- Share links (SPEC §10) --------------------------------------------------
+# Fernet key: encrypts OAuth tokens (phase 10-11) and the copy of each share
+# token that lets editors re-display the URL. apps.core.crypto validates it.
+FERNET_KEY = env("FERNET_KEY", "")
+# Media URLs of a public page are signed for this long, bound to the session.
+SHARE_MEDIA_TOKEN_SECONDS = 6 * 3600
+# One view per session and link, one play per session and version, per window.
+SHARE_COUNT_WINDOW_SECONDS = 30 * 60
+# Password attempts per link and IP (SPECIFICATIONS §6).
+SHARE_UNLOCK_MAX_FAILURES = 5
+SHARE_UNLOCK_WINDOW_SECONDS = 15 * 60
+# Audio watermark: a sound tag (file path, WAV/MP3) mixed every N seconds;
+# empty = a discreet generated beep.
+AUDIO_WATERMARK_TAG = env("AUDIO_WATERMARK_TAG", "")
+AUDIO_WATERMARK_INTERVAL_S = env_int("AUDIO_WATERMARK_INTERVAL_S", 30)
 # Large uploads are streamed to temporary files, never held in memory.
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
@@ -238,6 +255,8 @@ REST_FRAMEWORK = {
         "verify_email": "5/hour",
         "user_search": "30/min",
         "invitation_lookup": "30/min",
+        "share_page": "60/min",
+        "share_unlock": "30/min",
     },
     # One proxy (Caddy) sits in front: trust the last X-Forwarded-For entry.
     "NUM_PROXIES": 1,
@@ -266,6 +285,9 @@ SPECTACULAR_SETTINGS = {
         "DisplayStatusEnum": "apps.finance.models.DISPLAY_STATUS_CHOICES",
         "AssetKindEnum": "apps.files.models.ASSET_KIND_CHOICES",
         "AssetStatusEnum": "apps.files.models.ASSET_STATUS_CHOICES",
+        "ShareTargetEnum": "apps.sharing.models.SHARE_TARGET_CHOICES",
+        "ShareStateEnum": "apps.sharing.models.SHARE_STATE_CHOICES",
+        "ShareEventEnum": "apps.sharing.models.SHARE_EVENT_CHOICES",
         "TasksViewEnum": "apps.projects.models.TASKS_VIEW_CHOICES",
         "WidgetKeyEnum": "apps.dashboard.models.WIDGET_KEYS",
     },

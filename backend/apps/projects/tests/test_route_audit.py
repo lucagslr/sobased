@@ -38,6 +38,14 @@ ALLOWED = {
     "ProjectOverviewView": "effective_access() then for_user() querysets",
     "ProjectCardsView": "built from the AccessMap and for_user() querysets",
     "DashboardViewViewSet": "rows of request.user only",
+    # Public share pages: no account; the link is found by its secret token,
+    # media URLs are signed per session (apps/sharing/services.py).
+    "PublicShareView": "public, unguessable token, 410 when not active",
+    "PublicUnlockView": "public, password attempts limited",
+    "PublicMediaView": "public, session-bound signed URL",
+    "PublicDownloadView": "public, session-bound signed URL, allow_download",
+    "PublicPeaksView": "public, session-bound signed URL",
+    "PublicThumbnailView": "public, session-bound signed URL",
     # Bookkeeping aggregations and exports: every transaction comes from
     # Transaction.objects.for_user(request, finance="view") (finance/views.py).
     "FinanceSummaryView": "for_user(finance=view) querysets only",

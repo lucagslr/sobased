@@ -166,16 +166,17 @@ Les exports sont des téléchargements de même origine : le cookie de session s
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
-| GET | `/api/share-links/` | Éditeur | Vue par projet (`project`, `include_descendants`) ou globale ; filtre `state` (actif, expiré, révoqué, épuisé) |
-| POST | `/api/share-links/` | Éditeur | Cible (version, asset, playlist), mot de passe, expiration, quotas, téléchargement, filigrane, label destinataire, notification à l'ouverture |
-| GET, PATCH | `/api/share-links/{id}/` | Éditeur | Le détail renvoie l'URL complète |
+| GET | `/api/share-links/` | Éditeur | Paginé. Vue par projet (`project`, `include_descendants`), par espace (`workspace`) ou globale ; filtre `state` (`active`, `expired`, `exhausted`, `revoked`, calculé en SQL). Un lecteur ne voit aucun lien |
+| POST | `/api/share-links/` | Éditeur | `target_type` + `version` / `asset` / (`project` + `assets[]`), `title`, `password` (écriture seule, 4 caractères min.), `expires_at` (futur), `max_views`, `max_plays`, `allow_download`, `watermark`, `recipient_label`, `notify_on_open`. Le projet est celui de la cible ; une sélection ne contient que des assets du projet ou de ses descendants |
+| GET, PATCH | `/api/share-links/{id}/` | Éditeur | Le détail renvoie `url` (déchiffrée), `state`, `has_password`, `target_label`, `items`, compteurs et dates d'ouverture. La cible ne change jamais ; `password: ""` retire le mot de passe |
 | POST | `/api/share-links/{id}/revoke/` | Éditeur | Révocation immédiate |
 | DELETE | `/api/share-links/{id}/` | Éditeur | Supprime le lien et son journal |
 | GET | `/api/share-links/{id}/access-log/` | Éditeur | Journal : date, type, IP tronquée, user agent |
-| GET | `/api/public/share/{token}/` | public | État du lien : `requires_password`, ou contenu (titres, types, durées, URL média signées) si déverrouillé. `410` si expiré, révoqué ou épuisé |
-| POST | `/api/public/share/{token}/unlock/` | public, limité | Vérifie le mot de passe, ouvre la session du lien |
-| GET | `/api/public/share/{token}/media/{version_id}/?t=` | session du lien + jeton signé court | Flux MP3 (avec filigrane si activé), image filigranée, PDF. `Range` géré. Compte les écoutes |
-| GET | `/api/public/share/{token}/download/{version_id}/` | session du lien, si `allow_download` | Fichier original |
+| GET | `/api/public/share/{token}/` | public (60/min par IP) | 404 jeton inconnu ; **410** `{detail, state}` si expiré, révoqué ou épuisé ; sinon `requires_password` (items vides) ou le contenu : `items[] {version_id, name, kind, label, number, mime_type, duration_ms, width, height, page_count, media_url, download_url, peaks_url, thumbnail_url, ready, error}`. Compte une vue par session et par lien (30 min) |
+| POST | `/api/public/share/{token}/unlock/` | public | `{password}` ; 5 échecs par 15 min par lien et par IP → 429 ; chaque refus est journalisé. Réussite : la session retient le lien et le contenu est renvoyé |
+| GET | `/api/public/share/{token}/media/{version_id}/?t=` | URL signée (lien + version + session, 6 h) | Audio : flux MP3 128 kbps filigrané (`wm_audio`) ou simple ; image : WebP filigrané ou original ; vidéo, PDF : original en ligne. 403 hors session, 409 « Préparation de l'écoute… » tant que le filigrane audio n'est pas prêt. Une écoute est comptée quand le début du flux est demandé (pas de `Range` ou `bytes=0-`) |
+| GET | `/api/public/share/{token}/download/{version_id}/?t=` | URL signée, si `allow_download` | Original en pièce jointe, journalisé |
+| GET | `/api/public/share/{token}/peaks/{version_id}/?t=` · `thumb/{version_id}/?t=` | URL signée | Forme d'onde et miniature de la phase 8 pour la page publique |
 
 ## 9. Intégrations (`integrations`)
 

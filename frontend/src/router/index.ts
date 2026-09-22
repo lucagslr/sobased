@@ -3,7 +3,6 @@
  *
  * meta.public    : reachable without a session (legal page, e-mail links...)
  * meta.guestOnly : sign-in pages; a signed-in user is sent to the dashboard
- * meta.phase     : placeholder pages say in which phase the feature arrives
  */
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
@@ -18,8 +17,6 @@ declare module 'vue-router' {
     phase?: number
   }
 }
-
-const comingSoon = () => import('@/pages/ComingSoonPage.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -78,8 +75,8 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'liens',
         name: 'share-links',
-        component: comingSoon,
-        meta: { title: 'Liens partagés', phase: 9 },
+        component: () => import('@/pages/ShareLinksPage.vue'),
+        meta: { title: 'Liens partagés' },
       },
       {
         path: 'parametres/:section?',
@@ -92,6 +89,19 @@ const routes: RouteRecordRaw[] = [
         name: 'more',
         component: () => import('@/pages/MorePage.vue'),
         meta: { title: 'Plus' },
+      },
+    ],
+  },
+  {
+    // Public share pages: their own bare layout, no session needed.
+    path: '/s',
+    component: () => import('@/layouts/ShareLayout.vue'),
+    children: [
+      {
+        path: ':token',
+        name: 'share',
+        component: () => import('@/pages/share/SharePage.vue'),
+        meta: { title: 'Partage', public: true },
       },
     ],
   },

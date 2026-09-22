@@ -27,6 +27,7 @@ import ProjectContactsTab from './ProjectContactsTab.vue'
 import ProjectEventsTab from './ProjectEventsTab.vue'
 import ProjectFilesTab from './ProjectFilesTab.vue'
 import ProjectFinanceTab from './ProjectFinanceTab.vue'
+import ProjectLinksTab from './ProjectLinksTab.vue'
 import ProjectOverviewTab from './ProjectOverviewTab.vue'
 import ProjectSettingsTab from './ProjectSettingsTab.vue'
 import ProjectTasksTab from './ProjectTasksTab.vue'
@@ -57,11 +58,17 @@ const ALL_TABS = [
   { slug: 'fichiers', label: 'Fichiers' },
   { slug: 'compta', label: 'Compta' },
   { slug: 'contacts', label: 'Contacts' },
+  { slug: 'liens', label: 'Liens' },
   { slug: 'parametres', label: 'Paramètres' },
 ]
-// Money is only for those with can_view_finance (SPEC §13).
+// Money is only for those with can_view_finance (SPEC §13); share links
+// are an editor's business (SPEC §10).
 const TABS = computed(() =>
-  ALL_TABS.filter((tab) => tab.slug !== 'compta' || full.value?.can_view_finance),
+  ALL_TABS.filter(
+    (tab) =>
+      (tab.slug !== 'compta' || full.value?.can_view_finance) &&
+      (tab.slug !== 'liens' || canEdit.value),
+  ),
 )
 const currentTab = computed(() =>
   TABS.value.some((tab) => tab.slug === route.params.tab) ? String(route.params.tab) : 'apercu',
@@ -182,6 +189,7 @@ watch(projectId, load, { immediate: true })
     <ProjectFilesTab v-else-if="currentTab === 'fichiers'" :project="full" />
     <ProjectFinanceTab v-else-if="currentTab === 'compta'" :project="full" />
     <ProjectContactsTab v-else-if="currentTab === 'contacts'" :project="full" />
+    <ProjectLinksTab v-else-if="currentTab === 'liens'" :project="full" />
     <ProjectSettingsTab
       v-else
       :project="full"

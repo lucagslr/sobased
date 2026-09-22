@@ -421,6 +421,8 @@ erDiagram
         bool watermark
         string recipient_label
         bool notify_on_open
+        datetime first_opened_at
+        datetime last_opened_at
         datetime revoked_at
         bigint created_by_id FK
     }
@@ -456,7 +458,10 @@ erDiagram
 - `ASSET` : index `(project, status)` pour le widget « À valider ».
 - `ASSET_COMMENT` : `rect_*` en `decimal(6,3)` (pour cent) ; une réponse (`parent` non nul) n'a pas d'ancre ; `resolved_at` / `resolved_by` ne vivent que sur la racine.
 - `ASSET_DERIVATIVE` : unique `(version, kind, params_hash)` = cache des dérivés.
-- `SHARE_LINK` : tous les assets ciblés appartiennent à `project` ou à ses descendants. Jeton `secrets.token_urlsafe(32)` (32 octets). Seul le hash sert à la recherche ; la copie chiffrée permet de réafficher l'URL aux Éditeurs sans stocker le jeton en clair.
+- `SHARE_LINK` : tous les assets ciblés appartiennent à `project` ou à ses descendants. Jeton `secrets.token_urlsafe(32)` (32 octets). Seul le hash sert à la recherche ; la copie chiffrée (Fernet, `FERNET_KEY`) permet de réafficher l'URL aux Éditeurs sans stocker le jeton en clair. L'état (actif / expiré / épuisé / révoqué) est calculé, jamais stocké. `password_hash` utilise les hacheurs Django (Argon2).
+- `SHARE_LINK_ITEM` : unique `(share_link, asset)`.
+- `SHARE_ACCESS_LOG` : index `(share_link, created_at)` ; `version` en `SET_NULL` (le journal survit à une version supprimée).
+- Les filigranes sont des `ASSET_DERIVATIVE` de kind `wm_image` / `wm_audio`, `params_hash` = SHA-256 du texte, ou du tag et de l'intervalle.
 
 ## 6. Compta
 

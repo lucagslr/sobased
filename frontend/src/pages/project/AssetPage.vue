@@ -12,6 +12,7 @@ import {
   BellOff,
   Download,
   Info,
+  Link2,
   MoreHorizontal,
   Plus,
   Trash2,
@@ -30,6 +31,7 @@ import StatusPanel from '@/components/files/StatusPanel.vue'
 import UploadPanel from '@/components/files/UploadPanel.vue'
 import VersionPanel from '@/components/files/VersionPanel.vue'
 import VideoViewer from '@/components/files/VideoViewer.vue'
+import ShareLinkPanel from '@/components/sharing/ShareLinkPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
@@ -77,6 +79,7 @@ const uploadPanel = ref(false)
 const confirmDelete = ref(false)
 const deleting = ref(false)
 const menu = ref(false)
+const sharePanel = ref(false)
 
 const audio = ref<InstanceType<typeof AudioViewer> | null>(null)
 const video = ref<InstanceType<typeof VideoViewer> | null>(null)
@@ -334,6 +337,14 @@ async function removeAsset() {
             <button
               v-if="canEdit"
               type="button"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
+              @click="sharePanel = true"
+            >
+              <Link2 class="size-4" aria-hidden="true" /> Partager par lien
+            </button>
+            <button
+              v-if="canEdit"
+              type="button"
               class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-surface-2"
               @click="confirmDelete = true"
             >
@@ -414,7 +425,7 @@ async function removeAsset() {
           v-else-if="viewKind === 'document'"
           ref="pdf"
           :key="current.id"
-          :version="current"
+          :src="current.file_url ?? ''"
           :threads="threads"
           :selected-id="selectedId"
           @select="select"
@@ -474,6 +485,15 @@ async function removeAsset() {
       :is-last="versions.length === 1"
       @saved="onVersionSaved"
       @deleted="onVersionDeleted"
+    />
+    <ShareLinkPanel
+      v-if="current"
+      v-model:open="sharePanel"
+      :target="{
+        asset,
+        versionId: current.id,
+        versionLabel: versionLabel(current.number, current.label),
+      }"
     />
     <UploadPanel
       v-model:open="uploadPanel"
