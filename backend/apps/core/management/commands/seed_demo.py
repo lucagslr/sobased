@@ -297,7 +297,7 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
         clip, "Tournage", 4, days=2, type="shooting", location="Vieille ville"
     )
     tournage_event.contacts.add(realisateur)
-    event(album, "Ecoute du master", 1, hour=15, location="Studio")
+    event(album, "Ecoute du master", 1, hour=15, type="studio", location="Studio")
     event(
         shorty, "Date live L'Usine", 21, type="live", location="L'Usine"
     ).contacts.add(booker)
@@ -819,7 +819,7 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
         "Soutenance intermédiaire",
         14,
         hour=10,
-        type="other",
+        type="defense",
         location="HEG, salle 1",
     )
     cours = event(secu, "Cours 63-31", 2, hour=8, type="class", location="HEG, salle 4")
