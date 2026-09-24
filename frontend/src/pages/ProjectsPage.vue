@@ -4,11 +4,12 @@
  * with Passé / En cours / À venir columns). The choice is a display
  * preference of this device.
  */
-import { FolderTree, Layers, LayoutGrid, ListTree, Plus } from 'lucide-vue-next'
+import { FolderTree, LayoutGrid, ListTree, Plus } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ProjectNode, Workspace } from '@/api/projects'
+import WorkspaceChips from '@/components/layout/WorkspaceChips.vue'
 import ProjectCardsView from '@/components/projects/ProjectCardsView.vue'
 import ProjectFormPanel from '@/components/projects/ProjectFormPanel.vue'
 import ProjectTreeRow from '@/components/projects/ProjectTreeRow.vue'
@@ -16,7 +17,6 @@ import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
 import WorkspaceGroupHeader from '@/components/projects/WorkspaceGroupHeader.vue'
 import TaskPanel from '@/components/tasks/TaskPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import ColorDot from '@/components/ui/ColorDot.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SegmentedControl from '@/components/ui/SegmentedControl.vue'
@@ -85,11 +85,6 @@ function openCreateIn(workspace: Workspace) {
   projectPanel.value = true
 }
 
-const chipClass = 'flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors'
-function chipTone(active: boolean): string {
-  return active ? 'border-fg bg-fg text-surface' : 'border-line text-muted hover:text-fg'
-}
-
 const taskPanelOpen = computed({
   get: () => taskId.value !== null,
   set: (value) => !value && closeTask(),
@@ -110,35 +105,7 @@ const taskPanelOpen = computed({
     </BaseButton>
   </PageHeader>
 
-  <!-- The workspace filter, on the page itself (the sidebar switcher does the same). -->
-  <div
-    v-if="workspaces.items.length"
-    class="mb-4 flex flex-wrap items-center gap-2"
-    role="group"
-    aria-label="Filtrer par espace"
-  >
-    <button
-      type="button"
-      :class="[chipClass, chipTone(workspaces.selection === 'all')]"
-      :aria-pressed="workspaces.selection === 'all'"
-      @click="workspaces.select('all')"
-    >
-      <Layers class="size-3.5" aria-hidden="true" /> Tous les espaces
-    </button>
-    <button
-      v-for="workspace in workspaces.items"
-      :key="workspace.id"
-      type="button"
-      :class="[chipClass, chipTone(workspaces.selection === workspace.id)]"
-      :aria-pressed="workspaces.selection === workspace.id"
-      @click="workspaces.select(workspace.id)"
-    >
-      <ColorDot :color="workspace.color" /> {{ workspace.name }}
-    </button>
-    <BaseButton variant="ghost" size="sm" @click="workspacePanel = true">
-      <Plus class="size-4" aria-hidden="true" /> Nouvel espace
-    </BaseButton>
-  </div>
+  <div class="mb-4"><WorkspaceChips @create="workspacePanel = true" /></div>
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <SegmentedControl v-model="mode" label="Affichage des projets" :options="MODES" />

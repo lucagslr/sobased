@@ -18,6 +18,7 @@ import {
 } from '@/api/finance'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import ChoiceChips from '@/components/ui/ChoiceChips.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import SegmentedControl from '@/components/ui/SegmentedControl.vue'
 import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
@@ -55,17 +56,18 @@ const PERIODS: { value: PeriodPreset; label: string }[] = [
   { value: 'year', label: 'Année' },
   { value: 'all', label: 'Tout' },
 ]
-const kindOptions = [
-  { value: '', label: 'Dépenses et recettes' },
+const kindOptions: { value: '' | 'expense' | 'income'; label: string }[] = [
+  { value: '', label: 'Tout' },
   { value: 'expense', label: KIND_LABELS.expense + 's' },
   { value: 'income', label: KIND_LABELS.income + 's' },
 ]
-const statusOptions = [
-  { value: '', label: 'Tous les statuts' },
-  { value: 'needs_receipt', label: 'À justifier' },
-  { value: 'to_pay', label: 'À payer' },
-  { value: 'to_reimburse', label: 'À rembourser' },
-]
+const statusOptions: { value: '' | 'needs_receipt' | 'to_pay' | 'to_reimburse'; label: string }[] =
+  [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'to_pay', label: 'À payer' },
+    { value: 'needs_receipt', label: 'À justifier' },
+    { value: 'to_reimburse', label: 'À rembourser' },
+  ]
 const categoryOptions = computed(() => [
   { value: '', label: 'Toutes les catégories' },
   ...categories.value.map((c) => ({ value: String(c.id), label: c.name })),
@@ -146,10 +148,17 @@ function exportUrl(kind: 'xlsx' | 'pdf' | 'receipts') {
       <SkeletonBlock v-for="n in 4" :key="n" class="h-20" />
     </div>
 
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <BaseSelect v-model="kind" label="Nature" :options="kindOptions" />
-      <BaseSelect v-model="category" label="Catégorie" :options="categoryOptions" />
-      <BaseSelect v-model="status" label="Statut" :options="statusOptions" />
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <ChoiceChips v-model="status" label="Statut" :options="statusOptions" />
+      <ChoiceChips v-model="kind" label="Nature" :options="kindOptions" />
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <BaseSelect
+        v-if="categoryOptions.length > 1"
+        v-model="category"
+        label="Catégorie"
+        :options="categoryOptions"
+      />
       <label class="block">
         <span class="mb-1.5 block text-sm font-medium">Recherche</span>
         <span class="relative block">

@@ -13,9 +13,10 @@ import CategoryTotals from '@/components/finance/CategoryTotals.vue'
 import RecurringExpenseList from '@/components/finance/RecurringExpenseList.vue'
 import TransactionPanel from '@/components/finance/TransactionPanel.vue'
 import TransactionsTable from '@/components/finance/TransactionsTable.vue'
-import WorkspaceSwitcher from '@/components/layout/WorkspaceSwitcher.vue'
+import WorkspaceChips from '@/components/layout/WorkspaceChips.vue'
 import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import ChoiceChips from '@/components/ui/ChoiceChips.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SegmentedControl from '@/components/ui/SegmentedControl.vue'
 import { useTransactionPanel } from '@/composables/useTransactionPanel'
@@ -48,7 +49,48 @@ watch(
 const workspaceId = computed(() =>
   workspaces.selection === 'all' ? undefined : workspaces.selection,
 )
-const scope = computed<TransactionFilters>(() => ({ workspace: workspaceId.value }))
+
+// --- Project filter: a root project (with everything below it), then optionally
+// one of its sub-projects. Only projects where I may see the money.
+const rootId = ref<number | 'all'>('all')
+const subId = ref('')
+const rootOptions = computed(() => [
+  { value: 'all' as number | 'all', label: 'Tous les projets' },
+  ...projects.nodes
+    .filter(
+      (n) =>
+        n.parent === null &&
+        n.can_view_finance &&
+        (!workspaceId.value || n.workspace === workspaceId.value),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+    .map((n) => ({ value: n.id as number | 'all', label: n.name, color: n.color })),
+])
+/** Descendants of the chosen root, deepest indented, for the second filter. */
+const subOptions = computed(() => {
+  if (rootId.value === 'all') return []
+  const list: { value: string; label: string }[] = []
+  const walk = (parent: number, depth: number) => {
+    for (const child of projects.childrenOf(parent)) {
+      if (!child.can_view_finance) continue
+      list.push({ value: String(child.id), label: '· '.repeat(depth) + child.name })
+      walk(child.id, depth + 1)
+    }
+  }
+  walk(rootId.value, 1)
+  return list
+})
+watch(workspaceId, () => (rootId.value = 'all'))
+watch(rootId, () => (subId.value = ''))
+
+const scope = computed<TransactionFilters>(() => {
+  const project = subId.value
+    ? Number(subId.value)
+    : rootId.value === 'all'
+      ? undefined
+      : rootId.value
+  return project ? { project, include_descendants: true } : { workspace: workspaceId.value }
+})
 // Projects where I may write money, in the current scope.
 const editableProjects = computed(() =>
   projects.nodes
@@ -85,9 +127,16 @@ const panelOpen = computed({
     :subtitle="workspaces.current ? workspaces.current.name : 'Tous les espaces'"
   />
 
-  <!-- Below 1024px there is no sidebar: the workspace filter lives here. -->
-  <div class="mb-4 lg:hidden">
-    <WorkspaceSwitcher @create="workspacePanel = true" />
+  <div class="mb-3"><WorkspaceChips @create="workspacePanel = true" /></div>
+  <div v-if="rootOptions.length > 1" class="mb-4 flex flex-wrap items-center gap-3">
+    <ChoiceChips v-model="rootId" label="Filtrer par projet" :options="rootOptions" />
+    <BaseSelect
+      v-if="subOptions.length"
+      v-model="subId"
+      label="Sous-projet"
+      class="w-full sm:w-64"
+      :options="[{ value: '', label: 'Tout le projet' }, ...subOptions]"
+    />
   </div>
 
   <div class="mb-5">

@@ -7,6 +7,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 ### Ajouté
 
 - Espaces et projets mieux distingués (retour de Luca) : filtre par espace en tête de la page Projets (puces « Tous les espaces », un espace, « Nouvel espace »), arbre et cartes regroupés par espace avec un en-tête (rôle, nombre de projets, « Voir cet espace seul » / « Tous les espaces », « + Projet »), arbre de la barre latérale groupé par espace avec « Quitter l'espace », espace toujours affiché dans le formulaire de projet avec la règle « un projet vit dans un espace », premières étapes sur le dashboard et la page Projets quand aucun espace n'existe.
+- Compta globale plus simple à filtrer : puces par espace, puces par projet racine (sous-projets inclus) avec un sélecteur de sous-projet, statut et nature en un clic ; composant de puces réutilisé par la page Projets.
 
 ## [1.1.0] - 2026-09-24
 
