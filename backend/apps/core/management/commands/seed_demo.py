@@ -1,6 +1,8 @@
 """`manage.py seed_demo`: a demo dataset to discover Faiblegraine (SPEC §19).
 
-Three users (demo: owner of two workspaces with every feature exercised;
+Three users (demo: owner of two workspaces with every feature exercised:
+three artists with albums, singles, clips and concerts, the association's
+admin, a school with courses, exams and a bachelor thesis;
 ana: commenter of the whole association workspace with a view on the money;
 helder: guest of one sub-project), projects on four levels, tasks in every
 state, meetings, contacts, bookkeeping, generated files (PNG, WAV, PDF, MP4)
@@ -36,6 +38,7 @@ from django.db import transaction as db_transaction
 from django.utils import timezone
 from PIL import Image, ImageDraw
 
+from apps.activity import services as activity_services
 from apps.contacts.models import Contact, ProjectContact
 from apps.core import crypto
 from apps.events import services as event_services
@@ -43,10 +46,11 @@ from apps.events.models import Event
 from apps.files import services as file_services
 from apps.files.models import Asset, AssetComment
 from apps.finance.models import BudgetLine, Category, RecurringExpense, Transaction
+from apps.notifications import services as notification_services
 from apps.projects.models import Membership, Project
 from apps.sharing import services as share_services
 from apps.sharing.models import ShareLink, ShareLinkItem
-from apps.tasks.models import ChecklistItem, Task
+from apps.tasks.models import ChecklistItem, Task, TaskComment
 from apps.workspaces.models import Workspace
 
 DEMO_USERS = ["demo", "ana", "helder"]
@@ -646,6 +650,332 @@ def seed(out, password: str = "", sessions: bool = False) -> None:
     for position, item in enumerate([mix, cover, dossier]):
         ShareLinkItem.objects.create(share_link=mixed, asset=item, position=position)
     out("SHARE_LINKS", ShareLink.objects.count())
+
+    # --- More life (24.09.2026): two more artists with concerts, school work,
+    # notifications and a journal, so that every screen has something to show.
+    memosa = project(asso, "MEMOSA", "Artiste", color="#FCA5A5", status="in_progress")
+    Membership.objects.create(user=demo, project=memosa, role="owner")
+    ep = project(
+        asso,
+        "EP « Nuit blanche »",
+        "Album",
+        memosa,
+        color="#FDBA74",
+        status="in_progress",
+        start_date=today - timedelta(days=90),
+        end_date=today - timedelta(days=5),  # overdue: the end-date modal
+    )
+    project(
+        asso,
+        "Clip « Nuit blanche »",
+        "Clip",
+        ep,
+        color="#C4B5FD",
+        status="planned",
+        start_date=today + timedelta(days=20),
+        end_date=today + timedelta(days=35),
+    )
+    docks = project(
+        asso,
+        "Concert Les Docks",
+        "Date live",
+        memosa,
+        color="#F9A8D4",
+        status="in_progress",
+        start_date=today + timedelta(days=12),
+        end_date=today + timedelta(days=12),
+    )
+    project(
+        asso,
+        "Tournée printemps 2027",
+        "Date live",
+        memosa,
+        color="#A5B4FC",
+        status="idea",
+        start_date=today + timedelta(days=180),
+        end_date=today + timedelta(days=200),
+    )
+    lea = project(asso, "LÉA K", "Artiste", color="#99F6E4", status="in_progress")
+    Membership.objects.create(user=demo, project=lea, role="owner")
+    rivage = project(
+        asso,
+        "Single « Rivage »",
+        "Single",
+        lea,
+        color="#5EEAD4",
+        status="done",
+        start_date=today - timedelta(days=80),
+        end_date=today - timedelta(days=20),
+    )
+    antigel = project(
+        asso,
+        "Festival Antigel",
+        "Date live",
+        lea,
+        color="#FDE68A",
+        status="planned",
+        start_date=today + timedelta(days=40),
+        end_date=today + timedelta(days=40),
+    )
+    comm = project(
+        asso,
+        "Communication Rivage",
+        "Communication",
+        lea,
+        color="#BFDBFE",
+        status="in_progress",
+    )
+    bachelor = project(
+        heg,
+        "Travail de bachelor",
+        "Travail de bachelor",
+        color="#DDD6FE",
+        status="in_progress",
+        start_date=today - timedelta(days=30),
+        end_date=today + timedelta(days=120),
+    )
+    rendu = project(
+        heg,
+        "Rendu intermédiaire",
+        "Rendu",
+        bachelor,
+        color="#C7D2FE",
+        start_date=today + timedelta(days=14),
+        end_date=today + timedelta(days=14),
+    )
+    secu = project(
+        heg, "63-31 Sécurité", "Cours", color="#FBCFE8", status="in_progress"
+    )
+    project(
+        heg,
+        "Examen 63-31",
+        "Examen",
+        secu,
+        color="#FECDD3",
+        start_date=today + timedelta(days=25),
+        end_date=today + timedelta(days=25),
+    )
+
+    # Tasks: late, today, this week, later, without date, done, in every column.
+    task(docks, "Envoyer le rider technique aux Docks", due=-2, priority=5)
+    task(rivage, "Relancer la SUISA pour « Rivage »", due=-6, priority=3)
+    task(ep, "Payer l'acompte du studio", due=-1, priority=4)
+    task(antigel, "Appeler le booker d'Antigel", due=0, priority=4)
+    teaser = task(
+        comm, "Poster le teaser « Rivage »", due=0, priority=3, status="in_progress"
+    )
+    task(memosa, "Préparer la répétition de ce soir", due=0, priority=2)
+    stems = task(ep, "Envoyer les stems au mixeur", due=1, priority=4)
+    stems.assignees.add(ana)
+    setlist = task(docks, "Valider la setlist", due=4, status="to_validate")
+    for position, (title, done) in enumerate(
+        [
+            ("Intro", True),
+            ("Nuit blanche", True),
+            ("Rappel : Rivage (feat. LÉA K)", False),
+        ]
+    ):
+        ChecklistItem.objects.create(
+            task=setlist, title=title, done=done, position=position
+        )
+    task(comm, "Commander les affiches", due=5, status="to_validate", priority=3)
+    task(admin, "Déposer le dossier Pro Helvetia", due=30, priority=5)
+    task(secu, "Réviser le chapitre 4", due=0, priority=2)
+    task(rendu, "Rendre le rapport intermédiaire", due=14, priority=5)
+    done_task = task(docks, "Réserver la salle de répétition", due=-8, status="done")
+    done_task.completed_at = timezone.now() - timedelta(days=9)
+    done_task.save(update_fields=["completed_at"])
+    task(ep, "Choisir l'ordre des titres", status="in_progress")
+    task(lea, "Mettre à jour la bio")
+    task(
+        bachelor, "Lire les trois articles de référence", due=9, priority=3
+    ).assignees.add(ana)
+
+    # Meetings and concerts: today, soon, past, and a weekly class.
+    point = event(
+        memosa, "Point label MEMOSA", 0, hour=15, location="Bureau 100SATIONS"
+    )
+    point.participants.add(ana)
+    event(memosa, "Répétition MEMOSA", 0, hour=19, location="Salle Les Forges")
+    concert = event(
+        docks,
+        "Concert Les Docks",
+        12,
+        hour=20,
+        type="live",
+        location="Les Docks, Lausanne",
+    )
+    event(
+        antigel,
+        "Festival Antigel : scène Le Groove",
+        40,
+        hour=21,
+        type="live",
+        location="Genève",
+    )
+    event(rivage, "Sortie du single « Rivage »", -20, type="release")
+    event(
+        rendu,
+        "Soutenance intermédiaire",
+        14,
+        hour=10,
+        type="other",
+        location="HEG, salle 1",
+    )
+    cours = event(secu, "Cours 63-31", 2, hour=8, type="class", location="HEG, salle 4")
+    event_services.start_series(cours, "FREQ=WEEKLY;BYDAY=TU", demo.timezone)
+
+    julie = contact(
+        asso,
+        "Roth",
+        first_name="Julie",
+        job="Programmatrice",
+        organization="Les Docks",
+        email="julie@example.org",
+    )
+    ProjectContact.objects.create(project=docks, contact=julie, role_label="Booking")
+    concert.contacts.add(julie)
+    karim = contact(
+        asso, "Benali", first_name="Karim", job="Manager", phone="+41 78 000 00 00"
+    )
+    ProjectContact.objects.create(project=lea, contact=karim, role_label="Management")
+    contact(asso, "", organization="Antigel", job="Festival", email="prog@example.org")
+
+    # Money on the new projects: a fee to come, an advance, a missing receipt.
+    tx(docks, "Cachet Les Docks", 1200, days_ago=-12, kind="income", category="Cachet")
+    tx(
+        docks,
+        "Transport backline",
+        180,
+        days_ago=2,
+        category="Transport",
+        payment_status="paid",
+        paid_by_user=ana,
+        to_reimburse=True,
+    )
+    tx(
+        memosa,
+        "Location salle de répétition",
+        300,
+        days_ago=4,
+        category="Location",
+        payment_status="paid",
+    )
+    tx(
+        rivage,
+        "Distribution digitale",
+        45,
+        days_ago=25,
+        category="Streaming",
+        payment_status="paid",
+    )
+    tx(ep, "Studio Les Forges · 3 jours", 1800, days_ago=1, category="Studio")
+    tx(comm, "Impression affiches", 240, days_ago=-5, category="Communication")
+    BudgetLine.objects.create(
+        project=ep, category=cat(asso, "Studio"), kind="expense", amount=Decimal("2500")
+    )
+    BudgetLine.objects.create(
+        project=docks,
+        category=cat(asso, "Cachet"),
+        kind="income",
+        amount=Decimal("1200"),
+    )
+
+    cover_ep, _ = asset(
+        ep,
+        "Cover EP Nuit blanche",
+        "cover-ep.png",
+        png_bytes("#0f172a", text="NUIT BLANCHE"),
+        demo,
+        "v1",
+        status="to_validate",
+    )
+    asset(
+        memosa,
+        "Répétition · Nuit blanche (live)",
+        "repet.wav",
+        wav_bytes(8),
+        demo,
+        "prise 2",
+    )
+
+    # Notifications for demo: assigned by Ana, mentioned, a file validated, a
+    # link opened. Then a few journal entries spread over the last days.
+    notification_services.task_assigned(stems, [demo], ana)
+    mention = TaskComment.objects.create(
+        task=setlist, author=ana, body="@demo la setlist est prête, tu valides ?"
+    )
+    notification_services.mentioned(mention, [demo], ana)
+    file_services.change_status(
+        cover_ep, "approved", ana, note="Validée pour l'impression"
+    )
+    opened = share(
+        ep,
+        "Cover EP pour le label",
+        "asset",
+        demo,
+        asset=cover_ep,
+        recipient_label="Label",
+    )
+    opened.notify_on_open = True
+    opened.first_opened_at = timezone.now() - timedelta(hours=3)
+    opened.save(update_fields=["notify_on_open", "first_opened_at"])
+    notification_services.share_link_opened(opened)
+
+    journal = [
+        (demo, activity_services.Verb.CREATED, ep, "project", {}, 12),
+        (demo, activity_services.Verb.CREATED, concert, "event", {}, 10),
+        (
+            ana,
+            activity_services.Verb.UPDATED,
+            docks,
+            "project",
+            {"end_date": [None, str(docks.end_date)]},
+            6,
+        ),
+        (
+            ana,
+            activity_services.Verb.STATUS_CHANGED,
+            teaser,
+            "task",
+            {"status": ["todo", "in_progress"]},
+            2,
+        ),
+        (demo, activity_services.Verb.SHARED, opened, "share_link", {}, 1),
+        (
+            ana,
+            activity_services.Verb.STATUS_CHANGED,
+            cover_ep,
+            "asset",
+            {"status": ["to_validate", "approved"]},
+            0,
+        ),
+    ]
+    for actor, verb, target, target_type, changes, days_ago in journal:
+        entry = activity_services.log(
+            actor, verb, target, target_type=target_type, changes=changes
+        )
+        entry.__class__.objects.filter(pk=entry.pk).update(
+            created_at=timezone.now() - timedelta(days=days_ago, minutes=days_ago * 7)
+        )
+    activity_services.log(
+        demo,
+        activity_services.Verb.ACCESS_CHANGED,
+        target_type="membership",
+        target_id=helder.pk,
+        label=helder.display_name,
+        project=clip,
+        changes={"role": [None, "Éditeur"]},
+    )
+    out(
+        "MORE",
+        "projects",
+        Project.objects.count(),
+        "tasks",
+        Task.objects.count(),
+        "events",
+        Event.objects.count(),
+    )
 
 
 class Command(BaseCommand):
