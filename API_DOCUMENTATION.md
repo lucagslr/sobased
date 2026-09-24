@@ -48,7 +48,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | DELETE | `/api/workspaces/{id}/` | Propriétaire | Suppression (confirmation par saisie du nom) |
 | POST | `/api/workspaces/{id}/transfer-ownership/` | Propriétaire | Transfert à un membre ; l'ancien propriétaire devient Admin |
 | POST | `/api/workspaces/{id}/leave/` | membre non propriétaire | Quitter l'espace |
-| GET, POST | `/api/project-types/?workspace=` | lecture : tout accès · écriture : Admin | Types de projet de l'espace |
+| GET, POST | `/api/project-types/?workspace=` | lecture : tout accès · écriture : Admin | Types de projet de l'espace : `name`, `category` (famille fixe : `structure`, `music`, `video`, `live`, `release`, `communication`, `admin`, `studies`, `client`, `personal`, `other`), `position`. Le formulaire demande la famille puis le type |
 | PATCH, DELETE | `/api/project-types/{id}/` | Admin | Suppression : réaffectation obligatoire si le type est utilisé |
 | GET, POST | `/api/tags/?workspace=` | lecture : tout accès · écriture : Éditeur (espace ou n'importe quel projet de l'espace) | Tags de l'espace |
 | PATCH, DELETE | `/api/tags/{id}/` | Éditeur au niveau espace | |

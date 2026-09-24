@@ -7,6 +7,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [S
 ### Ajouté
 
 - Espaces et projets mieux distingués (retour de Luca) : filtre par espace en tête de la page Projets (puces « Tous les espaces », un espace, « Nouvel espace »), arbre et cartes regroupés par espace avec un en-tête (rôle, nombre de projets, « Voir cet espace seul » / « Tous les espaces », « + Projet »), arbre de la barre latérale groupé par espace avec « Quitter l'espace », espace toujours affiché dans le formulaire de projet avec la règle « un projet vit dans un espace », premières étapes sur le dashboard et la page Projets quand aucun espace n'existe.
+- Types de projet en deux niveaux : onze familles fixes (Artistes & structures, Production musicale, Audiovisuel, Live & événements, Sortie & promotion, Communication & contenu, Administratif & financement, Études, Mandats & clients, Personnel, Autre) et 79 types par défaut, éditables par espace ; le formulaire demande la famille puis le type ; les espaces existants reçoivent les nouveaux types. Types de RDV élargis et groupés (rendez-vous, live, studio et production, sortie et promotion, études).
 - Compta globale plus simple à filtrer : puces par espace, puces par projet racine (sous-projets inclus) avec un sélecteur de sous-projet, statut et nature en un clic ; composant de puces réutilisé par la page Projets.
 
 ## [1.1.0] - 2026-09-24

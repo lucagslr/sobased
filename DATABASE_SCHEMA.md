@@ -108,6 +108,7 @@ erDiagram
         bigint id PK
         bigint workspace_id FK
         string name "unique par espace"
+        enum category "structure, music, video, live, release, communication, admin, studies, client, personal, other"
         int position
     }
     TAG {

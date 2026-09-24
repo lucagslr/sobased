@@ -38,6 +38,7 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 ## Décisions prises
 
 - **24.09.2026 : l'application s'appelle Faiblegraine** (ex-SOBASED). Nom de marque partout (interface, e-mails, PWA, exports, docs), identifiant technique `faiblegraine` (projet Compose, images, clés de stockage local, valeurs par défaut de base de données). `SPEC.md` et le questionnaire gardent l'ancien nom avec une note ; le dossier local et le dépôt GitHub restent à renommer par Luca. Les volumes de dev ont été copiés (`sobased_*` → `faiblegraine_*`), la base de dev garde son nom interne `sobased` dans `.env`.
+- **24.09.2026 : types de projet en deux niveaux.** `ProjectType.category` (famille fixe en code, `ProjectCategory`) + type éditable par espace ; 79 types par défaut pour couvrir label, producteur, cinéaste, étudiant, indépendant. Migration `workspaces.0003` : les espaces existants reçoivent les types manquants et la famille des anciens, leurs types personnalisés passent en « Autre » après les défauts. Types de RDV élargis (`events.0002`).
 - **24.09.2026 : lieu d'hébergement configurable.** `HOSTING_LOCATION` (`ch` / `eu`), `HOSTING_PROVIDER` et `PRIVACY_CONTACT_EMAIL` alimentent la page Confidentialité via `GET /api/site/` : un hébergement chez LWS (France) se déclare dans `.env` sans toucher au code.
 
 Proposées en phase 0 (détail dans `docs/PLAN.md` §5). **Validées en bloc par Luca le 21.09.2026** (« c'est bon tu peux y aller »), sans remarque.
