@@ -9,13 +9,13 @@ Même situation qu'en phase 10 : toute la logique est testée contre des **faux 
 | Table | Rôle |
 |---|---|
 | `ExternalCalendar` | Un calendrier d'un compte connecté : id externe, nom, couleur, principal, **`is_displayed`** (lecture dans la vue calendrier, visible par son propriétaire seul), **`is_target`** (reçoit mes objets ; **un seul par utilisateur**, tous fournisseurs confondus), `sync_cursor` (syncToken Google ou deltaLink Graph), canal `watch` Google (id, resource, hash du jeton, expiration), `last_synced_at`, `last_error`. |
-| `ExternalEvent` | Miroir en lecture seule d'un événement d'un calendrier affiché ; les objets poussés par SOBASED n'y sont jamais dupliqués. |
+| `ExternalEvent` | Miroir en lecture seule d'un événement d'un calendrier affiché ; les objets poussés par Faiblegraine n'y sont jamais dupliqués. |
 | `SyncMapping` | Objet local (`task` / `event`) ↔ événement externe du calendrier cible : `etag`, **`pushed_hash`** (empreinte de ce qui a été envoyé), `pushed_at`, `external_updated_at`, `state` (`active` / `detached`). |
 | `SyncConflict` | Les deux côtés avaient changé : gagnant (`local` / `external`) et les deux jeux de valeurs. |
 
 ## 2. Fournisseurs (`calendars.py`, `microsoft.py`)
 
-Une petite interface commune (`list_calendars`, `insert`, `update`, `delete`, `changes`, `watch`, `stop_watch`) avec des formes normalisées : un événement entrant est `{id, deleted, title, start, end, all_day, updated, etag, location}` avec des datetimes conscients, dans la convention SOBASED (journée entière à minuit UTC, fin **inclusive** pour les événements ; Google et Graph ont une fin exclusive, convertie dans les deux sens).
+Une petite interface commune (`list_calendars`, `insert`, `update`, `delete`, `changes`, `watch`, `stop_watch`) avec des formes normalisées : un événement entrant est `{id, deleted, title, start, end, all_day, updated, etag, location}` avec des datetimes conscients, dans la convention Faiblegraine (journée entière à minuit UTC, fin **inclusive** pour les événements ; Google et Graph ont une fin exclusive, convertie dans les deux sens).
 
 - **Google Calendar API v3** (REST via le `DriveClient` de la phase 10 : même jeton, mêmes rafraîchissements) : `calendarList`, `events` (insert / patch / delete), lecture **incrémentale par `syncToken`** (première lecture sur la fenêtre −30 j / +180 j avec `singleEvents`, `showDeleted`), **410 → `CursorInvalid`** et relecture complète ; `events/watch` (canal push) seulement si `SITE_URL` est en HTTPS, `channels/stop` au renouvellement.
 - **Microsoft** : OAuth v2.0 (`login.microsoftonline.com/{tenant}`, scopes `offline_access User.Read Calendars.ReadWrite`) en REST simple plutôt qu'avec MSAL (trois requêtes), `GraphClient` avec rafraîchissement sur 401 ; Graph `me/calendars`, `me/calendars/{id}/events`, `me/events/{id}`, **`calendarView/delta`** sur la fenêtre (le `deltaLink` est le curseur), `@removed` = suppression. Pas de push : polling.
@@ -24,7 +24,7 @@ Une petite interface commune (`list_calendars`, `insert`, `update`, `delete`, `c
 
 **Ce qui est poussé** (D7) : les événements dont l'utilisateur est participant ou créateur, et les tâches qui lui sont assignées avec une échéance, dans la fenêtre. Tâche → « ☐ Titre » (30 min se terminant à l'échéance, ou journée entière), « ☑ Titre » une fois terminée ; annulée, désassignée, supprimée, ou événement dont il ne participe plus → **événement externe supprimé** et correspondance retirée. Hors fenêtre : rien n'est touché. Récurrences : chaque occurrence matérialisée est un événement simple (pas de RRULE externe).
 
-**Ce qui remonte** : pour un objet mappé, titre et dates si l'utilisateur est **Éditeur** du projet ; un assigné non éditeur peut **déplacer la date** de sa tâche, pas son titre (le titre externe est remis en ligne au push suivant) ; sans aucun droit, les valeurs locales sont repoussées. Le préfixe « ☐ » / « ☑ » est retiré du titre remonté. Une **suppression externe détache** la correspondance : l'objet SOBASED n'est jamais supprimé et n'est plus poussé.
+**Ce qui remonte** : pour un objet mappé, titre et dates si l'utilisateur est **Éditeur** du projet ; un assigné non éditeur peut **déplacer la date** de sa tâche, pas son titre (le titre externe est remis en ligne au push suivant) ; sans aucun droit, les valeurs locales sont repoussées. Le préfixe « ☐ » / « ☑ » est retiré du titre remonté. Une **suppression externe détache** la correspondance : l'objet Faiblegraine n'est jamais supprimé et n'est plus poussé.
 
 **Boucles** : après chaque envoi, l'empreinte (`sha256` de titre / début / fin / journée entière) est mémorisée ; un changement entrant à empreinte identique est notre écho. Après un changement absorbé, l'empreinte est recalculée sur l'objet local ; si elle diffère de l'entrant (partie refusée, créneau re-normalisé), elle est vidée pour forcer un push correctif.
 
@@ -58,7 +58,7 @@ Avec des identifiants factices et un faux compte Google porteur du scope calendr
 ## 8. Limites
 
 - **Aucun appel réussi aux vrais Google Calendar et Microsoft Graph** : flux OAuth Microsoft (application Azure avec l'URI `<SITE_URL>/api/integrations/microsoft/callback/`), scope Calendar Google, `syncToken`, `calendarView/delta` et canaux push à essayer dès que les identifiants existent. Le tenant HEG peut refuser le consentement (limite anticipée, SPEC).
-- Une tâche horaire est toujours un créneau de 30 minutes : si l'utilisateur l'allonge dans son calendrier, SOBASED prend la nouvelle fin comme échéance puis remet un créneau de 30 min au push suivant.
+- Une tâche horaire est toujours un créneau de 30 minutes : si l'utilisateur l'allonge dans son calendrier, Faiblegraine prend la nouvelle fin comme échéance puis remet un créneau de 30 min au push suivant.
 - Le canal push Google n'existe qu'en HTTPS public (`SITE_IS_HTTPS`) ; en dev c'est le polling de 5 minutes.
 - Les événements externes miroir suivent la fenêtre −30 j / +180 j ; au-delà, rien n'est affiché.
 - Les notifications de conflit restent dans les paramètres (pas de bandeau ni d'e-mail) ; la phase 12 pourra les inclure dans le résumé quotidien.

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: SOBASED API
+  title: Faiblegraine API
   version: 1.0.0
 paths:
   /api/activity/:
@@ -2492,7 +2492,7 @@ paths:
       operationId: integrations_calendars_list
       description: |-
         My external calendars: which ones to display, which one receives my
-        SOBASED objects (one target per user).
+        Faiblegraine objects (one target per user).
       tags:
       - integrations
       security:
@@ -2511,7 +2511,7 @@ paths:
       operationId: integrations_calendars_partial_update
       description: |-
         My external calendars: which ones to display, which one receives my
-        SOBASED objects (one target per user).
+        Faiblegraine objects (one target per user).
       parameters:
       - in: path
         name: id
@@ -4279,6 +4279,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShareLink'
+          description: ''
+  /api/site/:
+    get:
+      operationId: site_retrieve
+      description: |-
+        Public constants the privacy page displays (SPEC §16): where the data
+        is hosted and whom to write to. Nothing about any user.
+      tags:
+      - site
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteInfo'
           description: ''
   /api/tags/:
     get:
@@ -7271,6 +7288,14 @@ components:
         * `commenter` - Commentateur
         * `editor` - Éditeur
         * `admin` - Admin
+    HostingLocationEnum:
+      enum:
+      - ch
+      - eu
+      type: string
+      description: |-
+        * `ch` - Suisse
+        * `eu` - UE
     InheritedGrant:
       type: object
       properties:
@@ -9874,6 +9899,22 @@ components:
         * `version` - Une version précise
         * `asset` - Un fichier (dernière version)
         * `playlist` - Une sélection de fichiers
+    SiteInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        hosting_location:
+          $ref: '#/components/schemas/HostingLocationEnum'
+        hosting_provider:
+          type: string
+        contact_email:
+          type: string
+      required:
+      - contact_email
+      - hosting_location
+      - hosting_provider
+      - name
     SourceEvent:
       type: object
       description: 'The meeting a task comes from: « Issue du RDV du 12.10 ».'
@@ -10691,7 +10732,7 @@ components:
       - external
       type: string
       description: |-
-        * `local` - SOBASED
+        * `local` - Faiblegraine
         * `external` - Calendrier externe
     Workspace:
       type: object

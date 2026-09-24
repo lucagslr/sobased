@@ -1,4 +1,4 @@
-# SOBASED : spécifications détaillées de comportement
+# Faiblegraine : spécifications détaillées de comportement
 
 [SPEC.md](SPEC.md) reste la **source de vérité** du périmètre. Ce document la complète : il fixe, règle par règle, le comportement attendu là où le cahier des charges laisse une marge d'interprétation. En cas de contradiction, SPEC.md l'emporte et ce fichier est corrigé.
 
@@ -107,7 +107,7 @@ Précisions :
 - Cible *asset* = toujours la dernière version au moment de l'ouverture. Cible *playlist* = liste ordonnée d'assets.
 - **Session du lien** : à l'ouverture (après mot de passe s'il y en a un), le serveur enregistre le lien dans la session anonyme du visiteur. Les URL média portent un jeton signé (lien + version + session, validité 6 h). Une URL copiée dans un autre navigateur ne fonctionne pas.
 - **Comptage** : une *vue* par session et par lien (fenêtre de 30 min) ; une *écoute* par session et par version quand le début du flux est demandé (fenêtre de 30 min). Les quotas sont vérifiés à la délivrance des URL média.
-- **Filigrane image** : texte en diagonale répété, semi-transparent (label destinataire, sinon « SOBASED · confidentiel »), dérivé mis en cache par `(version, texte)`.
+- **Filigrane image** : texte en diagonale répété, semi-transparent (label destinataire, sinon « Faiblegraine · confidentiel »), dérivé mis en cache par `(version, texte)`.
 - **Filigrane audio** : tag sonore (`AUDIO_WATERMARK_TAG`, fichier fourni ; bip discret par défaut) mixé toutes les `AUDIO_WATERMARK_INTERVAL_S` secondes (30 par défaut) par ffmpeg, en tâche Celery. Tant que le dérivé n'est pas prêt, la page affiche « Préparation de l'écoute… ».
 - **Sans téléchargement** : flux MP3 128 kbps uniquement, pas de bouton, `Content-Disposition: inline`, `controlsList="nodownload"`. **Limite assumée** : un utilisateur outillé peut toujours capturer un flux qu'il a le droit d'écouter. Le filigrane est la vraie dissuasion.
 - PDF et vidéo : consultables sur la page publique, sans filigrane en v1.
@@ -117,7 +117,7 @@ Précisions :
 ## 7. Google Drive
 
 - Scope `drive.file` + Picker. Conséquence structurante : l'application n'accède qu'aux fichiers **qu'elle a créés ou que l'utilisateur a choisis via le Picker, pour le compte de cet utilisateur**.
-- Le dossier d'un arbre appartient au compte Google de la personne qui a créé le dossier racine (`Project.drive_account`). Les sous-dossiers des sous-projets et les uploads « vers le Drive du projet » passent côté serveur par **ce** compte, quel que soit l'utilisateur SOBASED qui agit (droits SOBASED vérifiés d'abord). **[À valider]**
+- Le dossier d'un arbre appartient au compte Google de la personne qui a créé le dossier racine (`Project.drive_account`). Les sous-dossiers des sous-projets et les uploads « vers le Drive du projet » passent côté serveur par **ce** compte, quel que soit l'utilisateur Faiblegraine qui agit (droits Faiblegraine vérifiés d'abord). **[À valider]**
 - Option par projet racine : « Partager le dossier Drive avec les membres ayant connecté Google » (Lecteur → lecteur Drive, Éditeur+ → éditeur Drive).
 - Si le compte propriétaire du dossier est déconnecté : les liens existants restent affichés, création de dossier et upload Drive sont désactivés avec un message clair ; le stockage interne continue de fonctionner.
 - Sous-dossiers types créés sous le dossier racine uniquement : Contrats, Visuels, Audio, Vidéo, Compta, Documents.
@@ -127,7 +127,7 @@ Précisions :
 - **Ce qui est poussé** dans le calendrier cible d'un utilisateur : les événements dont il est participant ou créateur, et les tâches qui lui sont assignées et qui ont une échéance. Pas tout le contenu des projets (sinon le calendrier personnel devient illisible). **[À valider]**
 - Tâche avec heure : événement de 30 min se terminant à l'échéance, titre « ☐ Titre ». Sans heure : journée entière. Tâche terminée : « ☑ Titre ». Tâche annulée ou désassignée : événement externe supprimé.
 - Récurrences : chaque occurrence matérialisée est poussée comme un événement simple (pas de RRULE côté externe), ce qui garde la synchro bidirectionnelle simple et fiable.
-- **Remontée** : titre, début, fin / échéance, journée entière. L'utilisateur doit avoir Éditeur sur le projet (ou être assigné, pour la date d'une tâche) ; sinon la modification externe est écrasée au prochain cycle. Une suppression côté externe ne supprime **jamais** l'objet SOBASED : la correspondance passe à `detached` et n'est plus poussée.
+- **Remontée** : titre, début, fin / échéance, journée entière. L'utilisateur doit avoir Éditeur sur le projet (ou être assigné, pour la date d'une tâche) ; sinon la modification externe est écrasée au prochain cycle. Une suppression côté externe ne supprime **jamais** l'objet Faiblegraine : la correspondance passe à `detached` et n'est plus poussée.
 - **Boucles** : après chaque envoi, l'etag et une empreinte des champs sont mémorisés ; un changement entrant identique est ignoré.
 - **Conflit** : les deux côtés ont changé depuis la dernière synchro → le plus récent gagne (`updated` externe contre `updated_at` local), l'autre valeur est conservée dans `SyncConflict`.
 - **Transport** : Google `syncToken` + canal `watch` renouvelé chaque jour si `SITE_URL` est en HTTPS public, sinon polling 5 min. Microsoft Graph : `calendarView/delta` sur une fenêtre −30 j / +180 j, polling 5 min. `410 Gone` / jeton de synchro invalide → resynchronisation complète.

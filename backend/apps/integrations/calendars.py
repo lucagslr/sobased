@@ -5,7 +5,7 @@ Both speak in the same normalised shapes:
 - a calendar: {"id", "name", "color", "primary"}
 - an incoming event: {"id", "deleted", "title", "start", "end", "all_day",
   "updated", "etag", "location"} with aware datetimes; an all-day event
-  keeps SOBASED's convention (midnight UTC, inclusive end for events);
+  keeps Faiblegraine's convention (midnight UTC, inclusive end for events);
 - an outgoing payload: {"title", "start", "end", "all_day"}.
 
 Google Calendar API v3 with syncToken (and push channels when the site is
@@ -157,7 +157,7 @@ class GoogleCalendarProvider:
         all_day = "date" in start_raw
         if all_day:
             start = _midnight(parse_date(start_raw["date"]))
-            # Google's end is exclusive: back to SOBASED's inclusive end.
+            # Google's end is exclusive: back to Faiblegraine's inclusive end.
             end = _midnight(
                 parse_date(end_raw.get("date", start_raw["date"]))
             ) - timedelta(days=1)

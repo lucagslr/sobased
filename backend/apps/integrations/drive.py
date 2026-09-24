@@ -3,7 +3,7 @@
 Rule D8: the folder tree of a project belongs to the Google account of
 whoever created the root folder (`Project.drive_account`). Sub-folders and
 uploads "to the project's Drive" are made server-side with THAT account,
-whatever SOBASED user acts (their SOBASED rights are checked first by the
+whatever Faiblegraine user acts (their Faiblegraine rights are checked first by the
 views). Without a connected account, everything else keeps working with
 the internal storage.
 """

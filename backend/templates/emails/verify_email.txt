@@ -1,6 +1,6 @@
 Salut {{ name }},
 
-Confirme ton adresse e-mail pour pouvoir inviter des personnes et recevoir des invitations sur SOBASED :
+Confirme ton adresse e-mail pour pouvoir inviter des personnes et recevoir des invitations sur Faiblegraine :
 
 {{ url }}
 

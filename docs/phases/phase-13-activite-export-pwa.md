@@ -23,7 +23,7 @@ Ce que couvre cette phase (SPEC §14, §15, §16 ; SPECIFICATIONS §11) : un **j
 
 - `DataExport` : `user`, `status` (`pending`, `ready`, `failed`), `archive` (ZIP sous `exports/<user>/<aléatoire>.zip`), `size_bytes`, `error`, `expires_at` (7 jours), `created_at`. Le fichier est supprimé du stockage par un `post_delete` (purge et suppression de compte passent par des suppressions en masse).
 - `exports.write_archive(user, fichier)` : `LISEZMOI.txt`, `profile.json`, `memberships.json`, `tasks.json` (créées par moi ou qui me sont assignées), `comments.json` (commentaires de tâches et de fichiers), `events.json` (créés par moi), `transactions.json` (saisies par moi), `fichiers/` (les versions que j'ai déposées, nommées `<asset>-v<n>-<nom d'origine>`), `justificatifs/`, `avatar.*`. Tout est lu via l'API de stockage (S3 compris), écrit dans un fichier temporaire puis rangé par `archive.save()`.
-- API : `GET /api/me/exports/` (mes 10 dernières demandes), `POST` (202, tâche Celery `build_export` après commit ; **une seule en préparation à la fois**), `GET /api/me/exports/{id}/download/` (`protected_file_response()` en pièce jointe `sobased-export-<date>.zip` ; 404 si expiré, en échec ou à quelqu'un d'autre).
+- API : `GET /api/me/exports/` (mes 10 dernières demandes), `POST` (202, tâche Celery `build_export` après commit ; **une seule en préparation à la fois**), `GET /api/me/exports/{id}/download/` (`protected_file_response()` en pièce jointe `faiblegraine-export-<date>.zip` ; 404 si expiré, en échec ou à quelqu'un d'autre).
 
 ## 3. Suppression du compte (`accounts/services.py`)
 

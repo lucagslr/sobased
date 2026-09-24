@@ -144,8 +144,8 @@ async function disconnect() {
           </BaseButton>
         </div>
         <p class="mt-3 text-xs text-muted">
-          SOBASED n'accède qu'aux fichiers qu'il crée (dossiers de projet, envois) et à ceux que tu
-          choisis dans le sélecteur Google. Les jetons sont stockés chiffrés.
+          Faiblegraine n'accède qu'aux fichiers qu'il crée (dossiers de projet, envois) et à ceux
+          que tu choisis dans le sélecteur Google. Les jetons sont stockés chiffrés.
         </p>
       </template>
       <template v-else>
@@ -209,8 +209,8 @@ async function disconnect() {
       :loading="busy"
       @confirm="disconnect"
     >
-      Les dossiers Drive déjà créés restent accessibles par leur lien, mais SOBASED ne pourra plus
-      créer de dossier ni envoyer de fichier avec ce compte.
+      Les dossiers Drive déjà créés restent accessibles par leur lien, mais Faiblegraine ne pourra
+      plus créer de dossier ni envoyer de fichier avec ce compte.
     </ConfirmDialog>
     <ConfirmDialog
       v-model:open="confirmMsDisconnect"
@@ -220,8 +220,8 @@ async function disconnect() {
       :loading="busy"
       @confirm="disconnectMicrosoft"
     >
-      Les calendriers Outlook disparaissent de SOBASED ; les événements déjà créés dans Outlook y
-      restent.
+      Les calendriers Outlook disparaissent de Faiblegraine ; les événements déjà créés dans Outlook
+      y restent.
     </ConfirmDialog>
   </div>
 </template>

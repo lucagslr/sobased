@@ -155,7 +155,7 @@ async function load() {
     }
     project.value = loadedProject as Project
     asset.value = loadedAsset
-    document.title = `${loadedAsset.name} · SOBASED`
+    document.title = `${loadedAsset.name} · Faiblegraine`
     versions.value = await filesApi.versions(assetId.value)
     const wanted = Number(route.query.v)
     currentId.value =
@@ -278,7 +278,7 @@ async function importFromDrive() {
   importing.value = true
   try {
     const version = await filesApi.importFromDrive(current.value.id)
-    ui.toast('Copié dans SOBASED : traitement en cours', 'success')
+    ui.toast('Copié dans Faiblegraine : traitement en cours', 'success')
     onVersionSaved(version)
   } catch (error) {
     ui.toast(error instanceof ApiError ? error.message : "L'import a échoué.", 'error')
@@ -470,7 +470,7 @@ async function removeAsset() {
               <ExternalLink class="size-4" aria-hidden="true" /> Ouvrir dans Drive
             </a>
             <BaseButton v-if="canEdit" size="sm" :loading="importing" @click="importFromDrive">
-              <CloudDownload class="size-4" aria-hidden="true" /> Importer dans SOBASED
+              <CloudDownload class="size-4" aria-hidden="true" /> Importer dans Faiblegraine
             </BaseButton>
           </div>
           <p v-if="canEdit" class="mt-3 text-xs text-muted">

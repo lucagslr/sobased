@@ -1078,7 +1078,7 @@ export interface paths {
         };
         /**
          * @description My external calendars: which ones to display, which one receives my
-         *     SOBASED objects (one target per user).
+         *     Faiblegraine objects (one target per user).
          */
         get: operations["integrations_calendars_list"];
         put?: never;
@@ -1104,7 +1104,7 @@ export interface paths {
         head?: never;
         /**
          * @description My external calendars: which ones to display, which one receives my
-         *     SOBASED objects (one target per user).
+         *     Faiblegraine objects (one target per user).
          */
         patch: operations["integrations_calendars_partial_update"];
         trace?: never;
@@ -2154,6 +2154,26 @@ export interface paths {
         put?: never;
         /** @description Links are an editor's business, reading included (SPEC §10). */
         post: operations["share_links_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Public constants the privacy page displays (SPEC §16): where the data
+         *     is hosted and whom to write to. Nothing about any user.
+         */
+        get: operations["site_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3251,6 +3271,12 @@ export interface components {
          * @enum {string}
          */
         GrantableRoleEnum: "viewer" | "commenter" | "editor" | "admin";
+        /**
+         * @description * `ch` - Suisse
+         *     * `eu` - UE
+         * @enum {string}
+         */
+        HostingLocationEnum: "ch" | "eu";
         InheritedGrant: {
             scope_type: components["schemas"]["ScopeTypeEnum"];
             scope_id: number;
@@ -4300,6 +4326,12 @@ export interface components {
          * @enum {string}
          */
         ShareTargetEnum: "version" | "asset" | "playlist";
+        SiteInfo: {
+            name: string;
+            hosting_location: components["schemas"]["HostingLocationEnum"];
+            hosting_provider: string;
+            contact_email: string;
+        };
         /** @description The meeting a task comes from: « Issue du RDV du 12.10 ». */
         SourceEvent: {
             id: number;
@@ -4593,7 +4625,7 @@ export interface components {
             hidden: boolean;
         };
         /**
-         * @description * `local` - SOBASED
+         * @description * `local` - Faiblegraine
          *     * `external` - Calendrier externe
          * @enum {string}
          */
@@ -8358,6 +8390,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+        };
+    };
+    site_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteInfo"];
                 };
             };
         };

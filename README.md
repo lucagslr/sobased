@@ -1,4 +1,4 @@
-# SOBASED
+# Faiblegraine
 
 Gestion de projets multi-utilisateurs, conçue d'abord pour l'association culturelle 100SATIONS (Genève) : management d'artistes, administration de l'association, et usage personnel (cours, rendus, mandats). Chacun crée ses espaces et ses projets (arbre à 4 niveaux) et invite d'autres personnes avec des droits précis, comme sur Google Drive.
 
@@ -17,7 +17,7 @@ Gestion de projets multi-utilisateurs, conçue d'abord pour l'association cultur
 - **Google Drive** (dossier par projet, sélecteur, versions Drive), **Google Calendar et Outlook / Teams** synchronisés dans les deux sens.
 - **Notifications** in-app et par e-mail, **résumé quotidien** à l'heure choisie.
 - **Journal d'activité** par projet, **export de mes données**, **suppression du compte** (anonymisation), site **installable** (PWA).
-- Conformité **nLPD / RGPD** : hébergement en Suisse, Argon2, jetons chiffrés, IP tronquées, aucun traceur, sauvegardes chiffrées ([docs/securite.md](docs/securite.md)).
+- Conformité **nLPD / RGPD** : hébergement en Suisse (ou dans l'UE, indiqué sur la page Confidentialité), Argon2, jetons chiffrés, IP tronquées, aucun traceur, sauvegardes chiffrées ([docs/securite.md](docs/securite.md)).
 
 ## Documentation
 
@@ -59,7 +59,7 @@ Le site est servi sur `http://localhost:8080` (les migrations s'appliquent toute
 Jeu de données de démonstration (comptes `demo`, `ana` et `helder`, supprimable avec `--remove`) :
 
 ```bash
-docker compose exec backend python manage.py seed_demo --password 'demo-sobased'
+docker compose exec backend python manage.py seed_demo --password 'demo-faiblegraine'
 ```
 
 ## Production
@@ -78,6 +78,7 @@ Aucun secret dans le code : tout passe par `.env` (modèle documenté dans [.env
 | `REDIS_URL` | Cache, sessions, Celery |
 | `FERNET_KEY` | Chiffrement des jetons OAuth et de la copie des jetons de liens partagés (`python -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`) |
 | `REGISTRATION_OPEN` | `true` : inscription libre · `false` : sur invitation seulement |
+| `HOSTING_LOCATION`, `HOSTING_PROVIDER`, `PRIVACY_CONTACT_EMAIL` | Page Confidentialité : `ch` (Suisse) ou `eu` (pays de l'UE), nom de l'hébergeur, adresse de contact |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` | SMTP |
 | `MAX_UPLOAD_MB`, `PROTECTED_MEDIA_ACCEL` | Taille max d'un fichier (500) ; fichiers protégés diffusés par Caddy (`true`) |
 | `STORAGE_BACKEND`, `S3_ENDPOINT_URL`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `SIGNED_URL_SECONDS` | `local` (volume partagé avec Caddy) ou `s3` (bucket privé S3-compatible, Infomaniak Object Storage) ; durée des URL signées (60 s) |

@@ -2,12 +2,12 @@
 # Restores a backup made by scripts/backup.sh: the database is REPLACED and
 # the uploaded files are REPLACED. Stops the app during the operation.
 #
-#   scripts/restore.sh backups/sobased-20260923-030000.tar.gz.enc
+#   scripts/restore.sh backups/faiblegraine-20260923-030000.tar.gz.enc
 set -eu
 cd "$(dirname "$0")/.."
 # ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
 export ENV_FILE=${ENV_FILE:-.env}
-COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-faiblegraine} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 ARCHIVE=${1:?usage: restore.sh <archive.tar.gz.enc>}
 
 env_value() { grep -E "^$1=" "$ENV_FILE" | head -n 1 | cut -d= -f2- ; }

@@ -1,5 +1,7 @@
 # SOBASED : cahier des charges pour Claude Code
 
+> **Nom du produit : Faiblegraine** (renommé le 24.09.2026). « SOBASED » dans ce document désigne la même application ; le code, l'interface et les autres documents utilisent le nouveau nom.
+
 ## 1. Ton rôle et ta façon de travailler
 
 Tu es le développeur principal de SOBASED. Ce fichier est la source de vérité. Lis-le en entier avant d'écrire la moindre ligne.

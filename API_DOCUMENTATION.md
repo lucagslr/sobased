@@ -1,4 +1,4 @@
-# SOBASED : référence de l'API
+# Faiblegraine : référence de l'API
 
 API REST Django REST Framework, servie sous `/api/` sur le même domaine que le front. Ce document liste les endpoints **cibles** (phases 1 à 14). La référence exacte et toujours à jour est le schéma OpenAPI généré par drf-spectacular : `GET /api/schema/` (pas de Swagger UI : ses scripts viennent d'un CDN, ce que la CSP interdit).
 
@@ -32,7 +32,7 @@ API REST Django REST Framework, servie sous `/api/` sur le même domaine que le 
 | GET, PATCH | `/api/me/` | connecté | Profil, thème, fuseau, préférences de notification |
 | PUT, DELETE | `/api/me/avatar/` | connecté | Avatar (redimensionné par Pillow) |
 | GET, POST | `/api/me/exports/` | connecté | Mes 10 dernières demandes d'export (`status` `pending` / `ready` / `failed`, `size_bytes`, `error`, `expires_at`, `is_available`) ; `POST` sans corps → 202 et construction en tâche Celery ; 400 tant qu'une demande est en préparation |
-| GET | `/api/me/exports/{id}/download/` | connecté | Le ZIP en pièce jointe (`sobased-export-<date>.zip`, 7 jours) ; 404 si expiré, en échec ou à quelqu'un d'autre |
+| GET | `/api/me/exports/{id}/download/` | connecté | Le ZIP en pièce jointe (`faiblegraine-export-<date>.zip`, 7 jours) ; 404 si expiré, en échec ou à quelqu'un d'autre |
 | POST | `/api/me/delete/` | connecté | `{password}` redemandé (400 `password` sinon). Anonymise le compte et déconnecte (204). 400 `detail` qui nomme l'espace ou le projet racine à transférer ou supprimer d'abord |
 | GET | `/api/users/search/?q=` | connecté, limité | Autocomplétion par username (2 caractères min.). Renvoie **uniquement** `username`, `display_name`, `avatar_url` |
 | GET | `/api/users/{username}/avatar/` | connecté | Image de l'avatar (par nom d'utilisateur : aucun identifiant numérique exposé) |
@@ -221,6 +221,7 @@ Désactivées proprement (`enabled: false`) tant que les variables d'environneme
 
 | Méthode | Chemin | Accès | Description |
 |---|---|---|---|
+| GET | `/api/site/` | public | Constantes de la page Confidentialité : `name`, `hosting_location` (`ch` / `eu`), `hosting_provider`, `contact_email` |
 | GET | `/api/health/` | public | Base + Redis joignables (supervision, déploiement) |
 | GET | `/api/schema/` | connecté | OpenAPI 3 |
 | — | `/admin/` | superutilisateur | Admin Django, support uniquement |

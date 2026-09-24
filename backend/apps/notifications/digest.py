@@ -154,7 +154,7 @@ def send(user, now: datetime | None = None) -> bool:
     if digest is not None:
         send_templated_email(
             to=user.email,
-            subject=f"SOBASED · ton résumé du {today.strftime('%d.%m.%Y')}",
+            subject=f"Faiblegraine · ton résumé du {today.strftime('%d.%m.%Y')}",
             template="daily_digest",
             context={"name": user.display_name, "day": today, **digest["sections"]},
         )

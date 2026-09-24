@@ -146,7 +146,7 @@ class Migration(migrations.Migration):
                     "winner",
                     models.CharField(
                         choices=[
-                            ("local", "SOBASED"),
+                            ("local", "Faiblegraine"),
                             ("external", "Calendrier externe"),
                         ],
                         max_length=10,

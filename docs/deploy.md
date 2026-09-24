@@ -1,4 +1,4 @@
-# Déployer SOBASED
+# Déployer Faiblegraine
 
 Ce guide couvre un serveur unique (VPS) qui héberge tout : PostgreSQL, Redis, Django, Celery, Caddy. C'est la cible de SPEC §17 (coût minimal, données en Suisse).
 
@@ -7,7 +7,7 @@ Ce guide couvre un serveur unique (VPS) qui héberge tout : PostgreSQL, Redis, D
 | Élément | Recommandation | Pourquoi |
 |---|---|---|
 | **VPS** | 2 vCPU, 4 Go de RAM, 40 Go de disque, Debian 12 ou Ubuntu 24.04, chez un hébergeur suisse (Infomaniak Public Cloud, Hostpoint, Exoscale à Genève / Zurich) | nLPD : données hébergées en Suisse. ffmpeg et WeasyPrint aiment avoir 4 Go |
-| **Nom de domaine** | `sobased.100sations.ch` (ou autre) avec un enregistrement **A** (et AAAA si IPv6) vers l'IP du VPS | Caddy obtient le certificat Let's Encrypt tout seul, à condition que le DNS pointe déjà sur le serveur |
+| **Nom de domaine** | `faiblegraine.100sations.ch` (ou autre) avec un enregistrement **A** (et AAAA si IPv6) vers l'IP du VPS | Caddy obtient le certificat Let's Encrypt tout seul, à condition que le DNS pointe déjà sur le serveur |
 | **SMTP** | Infomaniak Mail, ou tout SMTP avec TLS ; adresse d'envoi dédiée (`no-reply@…`) | Vérification d'e-mail, invitations, notifications, résumé quotidien |
 | **Sauvegarde externe** | Infomaniak Swiss Backup (Swift / S3) ou un SFTP ailleurs qu'au VPS | Les archives chiffrées quittent la machine chaque nuit |
 | **Google Cloud** (optionnel) | Projet avec client OAuth « Application Web », API Drive, Calendar et Picker, une clé API | Drive et Google Calendar |
@@ -18,9 +18,9 @@ Sur le VPS : Docker Engine + le plugin Compose (`apt install docker.io docker-co
 ## 2. Installation
 
 ```bash
-sudo mkdir -p /srv/sobased && sudo chown $USER /srv/sobased
-git clone https://github.com/lucagslr/sobased.git /srv/sobased
-cd /srv/sobased
+sudo mkdir -p /srv/faiblegraine && sudo chown $USER /srv/faiblegraine
+git clone https://github.com/lucagslr/faiblegraine.git /srv/faiblegraine
+cd /srv/faiblegraine
 cp .env.example .env
 nano .env
 ```
@@ -31,12 +31,13 @@ Dans `.env`, au minimum :
 |---|---|
 | `DJANGO_SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_urlsafe(50))"` |
 | `DJANGO_DEBUG` | `false` |
-| `DJANGO_ALLOWED_HOSTS` | `sobased.100sations.ch` |
-| `SITE_URL` | `https://sobased.100sations.ch` |
+| `DJANGO_ALLOWED_HOSTS` | `faiblegraine.100sations.ch` |
+| `SITE_URL` | `https://faiblegraine.100sations.ch` |
 | `DOMAIN`, `ACME_EMAIL` | le domaine, et ton e-mail pour Let's Encrypt |
 | `POSTGRES_PASSWORD` | un mot de passe long (`openssl rand -base64 30`) |
 | `FERNET_KEY` | `python3 -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"` ; **à sauvegarder ailleurs** : sans elle, les jetons Google / Microsoft et les liens partagés sont perdus |
 | `REGISTRATION_OPEN` | `false` dès que les membres sont inscrits (inscription sur invitation seulement) |
+| `HOSTING_LOCATION`, `HOSTING_PROVIDER`, `PRIVACY_CONTACT_EMAIL` | ce que la page Confidentialité affiche : `ch` pour un serveur en Suisse, `eu` pour un pays de l'UE (LWS par exemple) ; le nom de l'hébergeur ; l'adresse à laquelle écrire pour une question sur ses données |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | ton SMTP |
 | `BACKUP_PASSPHRASE` | une phrase longue, **copiée hors du serveur** (gestionnaire de mots de passe) |
 | `BACKUP_REMOTE` | le remote rclone (voir §5), vide pour commencer |
@@ -64,15 +65,15 @@ docker compose -f docker-compose.prod.yml exec backend python manage.py seed_dem
 ## 3. Mettre à jour
 
 ```bash
-cd /srv/sobased && make deploy
+cd /srv/faiblegraine && make deploy
 ```
 
 (`git pull`, build, migrations, statiques, redémarrage ; les fichiers envoyés et la base sont dans des volumes Docker et ne bougent pas.) Journaux : `make prod-logs`.
 
 **Déploiement automatique sur tag** (`.github/workflows/deploy.yml`) : quand un tag `v*` est poussé sur GitHub, l'action se connecte en SSH au serveur et y lance `scripts/deploy.sh` sur ce tag. À configurer une fois :
 
-1. Sur le serveur, un utilisateur `deploy` (membre du groupe `docker`, propriétaire de `/srv/sobased`) et une paire de clés dédiée : `ssh-keygen -t ed25519 -f deploy_key -N ""`, clé publique dans `/home/deploy/.ssh/authorized_keys`.
-2. Sur GitHub, **Settings › Environments › production** (tu peux y exiger une validation manuelle), puis les secrets `DEPLOY_HOST` (IP ou nom du serveur), `DEPLOY_USER` (`deploy`), `DEPLOY_SSH_KEY` (le contenu de `deploy_key`, la clé privée) et `DEPLOY_PATH` (`/srv/sobased`).
+1. Sur le serveur, un utilisateur `deploy` (membre du groupe `docker`, propriétaire de `/srv/faiblegraine`) et une paire de clés dédiée : `ssh-keygen -t ed25519 -f deploy_key -N ""`, clé publique dans `/home/deploy/.ssh/authorized_keys`.
+2. Sur GitHub, **Settings › Environments › production** (tu peux y exiger une validation manuelle), puis les secrets `DEPLOY_HOST` (IP ou nom du serveur), `DEPLOY_USER` (`deploy`), `DEPLOY_SSH_KEY` (le contenu de `deploy_key`, la clé privée) et `DEPLOY_PATH` (`/srv/faiblegraine`).
 3. `git tag -a v1.0.1 -m "…" && git push origin v1.0.1` → l'onglet Actions montre le déploiement. Sans ces secrets, le job est simplement ignoré.
 
 ## 4. Google et Microsoft
@@ -81,11 +82,11 @@ Les intégrations sont **désactivées tant que les variables sont vides** : l'a
 
 ### Google (Drive, sélecteur de fichiers, Google Calendar)
 
-1. [console.cloud.google.com](https://console.cloud.google.com) → nouveau projet « SOBASED ».
+1. [console.cloud.google.com](https://console.cloud.google.com) → nouveau projet « Faiblegraine ».
 2. **API et services › Bibliothèque** : activer **Google Drive API**, **Google Calendar API** et **Google Picker API**.
-3. **Écran de consentement OAuth** : type Externe, nom « SOBASED », domaine autorisé `100sations.ch`, scopes : `…/auth/userinfo.email`, `…/auth/drive.file`, `…/auth/calendar`. Tant que l'application est « en test », ajouter les adresses Google des membres comme testeurs (100 max) ; sinon demander la validation Google.
-4. **Identifiants › Créer › ID client OAuth** : type **Application Web**, origine JavaScript autorisée `https://sobased.100sations.ch`, URI de redirection autorisée **`https://sobased.100sations.ch/api/integrations/google/callback/`** (le slash final compte). → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-5. **Identifiants › Créer › Clé API**, restreinte à l'API Picker et au site (référents HTTP `https://sobased.100sations.ch/*`). → `GOOGLE_API_KEY`.
+3. **Écran de consentement OAuth** : type Externe, nom « Faiblegraine », domaine autorisé `100sations.ch`, scopes : `…/auth/userinfo.email`, `…/auth/drive.file`, `…/auth/calendar`. Tant que l'application est « en test », ajouter les adresses Google des membres comme testeurs (100 max) ; sinon demander la validation Google.
+4. **Identifiants › Créer › ID client OAuth** : type **Application Web**, origine JavaScript autorisée `https://faiblegraine.100sations.ch`, URI de redirection autorisée **`https://faiblegraine.100sations.ch/api/integrations/google/callback/`** (le slash final compte). → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+5. **Identifiants › Créer › Clé API**, restreinte à l'API Picker et au site (référents HTTP `https://faiblegraine.100sations.ch/*`). → `GOOGLE_API_KEY`.
 6. Le **numéro du projet** (page d'accueil du projet, « Numéro du projet ») → `GOOGLE_APP_ID`.
 7. `make deploy` (ou `docker compose -f docker-compose.prod.yml up -d` suffit : les variables sont lues au démarrage).
 
@@ -93,14 +94,14 @@ Chaque membre connecte ensuite son propre compte dans **Paramètres › Intégra
 
 ### Microsoft (Outlook / Teams)
 
-1. [entra.microsoft.com](https://entra.microsoft.com) → **Inscriptions d'applications › Nouvelle inscription** : nom « SOBASED », comptes pris en charge **« Comptes dans un annuaire organisationnel et comptes Microsoft personnels »**, plateforme **Web**, URI de redirection **`https://sobased.100sations.ch/api/integrations/microsoft/callback/`**.
+1. [entra.microsoft.com](https://entra.microsoft.com) → **Inscriptions d'applications › Nouvelle inscription** : nom « Faiblegraine », comptes pris en charge **« Comptes dans un annuaire organisationnel et comptes Microsoft personnels »**, plateforme **Web**, URI de redirection **`https://faiblegraine.100sations.ch/api/integrations/microsoft/callback/`**.
 2. **Certificats et secrets › Nouveau secret client** (noter la date d'expiration : à renouveler). → `MS_CLIENT_SECRET` ; l'« ID d'application (client) » → `MS_CLIENT_ID`.
 3. **Autorisations d'API › Microsoft Graph › Autorisations déléguées** : `User.Read`, `Calendars.ReadWrite`, `offline_access`.
 4. `MS_TENANT=common` (comptes personnels et professionnels) ou l'ID de ton locataire.
 
 ### Canal push Google Calendar
 
-Avec un domaine HTTPS public, SOBASED crée un canal `watch` : Google prévient dès qu'un événement change (sinon lecture toutes les 5 minutes). Rien à configurer, mais le domaine doit être **vérifié** dans la Google Search Console pour que Google accepte l'URL de webhook (`Domain verification` dans la console Cloud).
+Avec un domaine HTTPS public, Faiblegraine crée un canal `watch` : Google prévient dès qu'un événement change (sinon lecture toutes les 5 minutes). Rien à configurer, mais le domaine doit être **vérifié** dans la Google Search Console pour que Google accepte l'URL de webhook (`Domain verification` dans la console Cloud).
 
 ## 5. Sauvegardes
 
@@ -109,17 +110,17 @@ Avec un domaine HTTPS public, SOBASED crée un canal `watch` : Google prévient 
 ```bash
 # rclone : un remote vers Infomaniak Swiss Backup (Swift) ou tout S3 / SFTP
 rclone config          # crée par exemple « swissbackup »
-# dans .env : BACKUP_REMOTE=swissbackup:sobased
+# dans .env : BACKUP_REMOTE=swissbackup:faiblegraine
 make backup            # essai
 crontab -e
-# 0 3 * * * /srv/sobased/scripts/backup.sh >> /var/log/sobased-backup.log 2>&1
+# 0 3 * * * /srv/faiblegraine/scripts/backup.sh >> /var/log/faiblegraine-backup.log 2>&1
 ```
 
 Restauration (remplace la base et les fichiers, arrête l'application pendant l'opération) :
 
 ```bash
-rclone copy swissbackup:sobased/sobased-20260923-030000.tar.gz.enc backups/   # si l'archive n'est plus locale
-make restore ARCHIVE=backups/sobased-20260923-030000.tar.gz.enc
+rclone copy swissbackup:faiblegraine/faiblegraine-20260923-030000.tar.gz.enc backups/   # si l'archive n'est plus locale
+make restore ARCHIVE=backups/faiblegraine-20260923-030000.tar.gz.enc
 ```
 
 Le script de restauration a été testé de bout en bout (sauvegarde, modification, restauration, vérification) sur la pile de développement ; **refais l'essai une fois sur le VPS** avec une archive fraîche, avant d'avoir besoin de lui. Garde `BACKUP_PASSPHRASE` et `FERNET_KEY` hors du serveur : une sauvegarde sans elles ne sert à rien.
@@ -155,10 +156,10 @@ Avant d'acheter le serveur, la pile de production peut tourner sur une machine d
 cp .env.example .env.prod-local
 ```
 
-Dans `.env.prod-local` : `DJANGO_DEBUG=false`, `DOMAIN=sobased.localhost`, `SITE_URL=https://sobased.localhost`, `DJANGO_ALLOWED_HOSTS=sobased.localhost`, des secrets générés (voir §2), `BACKUP_DIR=./backups-prod-local`. Puis :
+Dans `.env.prod-local` : `DJANGO_DEBUG=false`, `DOMAIN=faiblegraine.localhost`, `SITE_URL=https://faiblegraine.localhost`, `DJANGO_ALLOWED_HOSTS=faiblegraine.localhost`, des secrets générés (voir §2), `BACKUP_DIR=./backups-prod-local`. Puis :
 
 ```bash
-SKIP_PULL=1 ENV_FILE=.env.prod-local COMPOSE_PROJECT=sobased-prod scripts/deploy.sh
+SKIP_PULL=1 ENV_FILE=.env.prod-local COMPOSE_PROJECT=faiblegraine-prod scripts/deploy.sh
 ```
 
-(sous Git Bash, préfixer par `MSYS_NO_PATHCONV=1`). Le site répond sur `https://sobased.localhost` : Caddy signe lui-même le certificat pour les noms en `.localhost`, le navigateur affiche donc un avertissement à accepter (« Paramètres avancés › Continuer »), ce qui n'arrive pas avec un vrai domaine. Sans SMTP, les e-mails (vérification, invitations) se lisent dans `docker compose -p sobased-prod -f docker-compose.prod.yml logs worker`. Les mêmes variables `ENV_FILE` / `COMPOSE_PROJECT` valent pour `scripts/backup.sh` et `scripts/restore.sh`. Pour tout arrêter et effacer : `docker compose -p sobased-prod -f docker-compose.prod.yml down -v`.
+(sous Git Bash, préfixer par `MSYS_NO_PATHCONV=1`). Le site répond sur `https://faiblegraine.localhost` : Caddy signe lui-même le certificat pour les noms en `.localhost`, le navigateur affiche donc un avertissement à accepter (« Paramètres avancés › Continuer »), ce qui n'arrive pas avec un vrai domaine. Sans SMTP, les e-mails (vérification, invitations) se lisent dans `docker compose -p faiblegraine-prod -f docker-compose.prod.yml logs worker`. Les mêmes variables `ENV_FILE` / `COMPOSE_PROJECT` valent pour `scripts/backup.sh` et `scripts/restore.sh`. Pour tout arrêter et effacer : `docker compose -p faiblegraine-prod -f docker-compose.prod.yml down -v`.

@@ -1,7 +1,7 @@
 # Development stack. Everything runs in containers so that dev takes the same
 # path as production: one origin (Caddy), session cookies, X-Accel-Redirect.
 # Site: http://localhost:8080
-name: sobased
+name: faiblegraine
 
 x-backend: &backend
   build:

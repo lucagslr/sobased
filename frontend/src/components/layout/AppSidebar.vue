@@ -22,7 +22,7 @@ const workspacePanel = ref(false)
 
 <template>
   <aside class="flex-col border-r border-line bg-surface">
-    <div class="px-6 pt-7 pb-5 text-sm font-semibold tracking-[0.18em]">SOBASED</div>
+    <div class="px-6 pt-7 pb-5 text-sm font-semibold tracking-[0.18em]">FAIBLEGRAINE</div>
     <div class="px-3 pb-4"><WorkspaceSwitcher @create="workspacePanel = true" /></div>
 
     <nav class="flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="Navigation principale">

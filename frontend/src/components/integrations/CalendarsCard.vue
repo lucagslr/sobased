@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * External calendars (SPEC §12): which ones to display read-only in the
- * calendar view, which single one receives my SOBASED objects, reload the
+ * calendar view, which single one receives my Faiblegraine objects, reload the
  * lists, sync now, and the conflicts the sync had to settle.
  */
 import { RefreshCw } from 'lucide-vue-next'
@@ -93,7 +93,7 @@ function when(iso: string | null): string {
 <template>
   <FormCard
     title="Calendriers"
-    description="Choisis les calendriers à afficher en lecture dans SOBASED, et celui qui reçoit tes tâches (☐) et tes RDV. Synchronisation toutes les 5 minutes, dans les deux sens."
+    description="Choisis les calendriers à afficher en lecture dans Faiblegraine, et celui qui reçoit tes tâches (☐) et tes RDV. Synchronisation toutes les 5 minutes, dans les deux sens."
   >
     <p v-if="calendars === null" class="text-sm text-muted">Chargement…</p>
     <template v-else>
@@ -158,9 +158,9 @@ function when(iso: string | null): string {
         </BaseButton>
       </div>
       <p class="mt-3 text-xs text-muted">
-        Une suppression dans le calendrier externe ne supprime jamais rien dans SOBASED : l'objet
-        cesse seulement d'être synchronisé. Les changements de titre remontent si tu es éditeur du
-        projet ; un assigné peut déplacer la date de sa tâche.
+        Une suppression dans le calendrier externe ne supprime jamais rien dans Faiblegraine :
+        l'objet cesse seulement d'être synchronisé. Les changements de titre remontent si tu es
+        éditeur du projet ; un assigné peut déplacer la date de sa tâche.
       </p>
     </template>
 
@@ -176,14 +176,14 @@ function when(iso: string | null): string {
               {{ conflict.object_type === 'task' ? 'Tâche' : 'RDV' }} ·
               {{
                 conflict.winner === 'local'
-                  ? 'SOBASED a gagné'
+                  ? 'Faiblegraine a gagné'
                   : `${conflict.calendar_name} a gagné`
               }}
             </span>
             <span class="text-xs text-muted"> · {{ when(conflict.created_at) }}</span>
           </p>
           <p class="text-xs text-muted">
-            SOBASED : {{ conflictTitles(conflict).local }} · externe :
+            Faiblegraine : {{ conflictTitles(conflict).local }} · externe :
             {{ conflictTitles(conflict).external }}
           </p>
         </li>

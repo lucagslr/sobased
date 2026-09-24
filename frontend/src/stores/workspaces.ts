@@ -7,7 +7,7 @@ import { computed, ref } from 'vue'
 
 import { type ProjectType, type Tag, type Workspace, workspacesApi } from '@/api/projects'
 
-const STORAGE_KEY = 'sobased-workspace'
+const STORAGE_KEY = 'faiblegraine-workspace'
 export type WorkspaceSelection = 'all' | number
 
 function storedSelection(): WorkspaceSelection {

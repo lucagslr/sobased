@@ -26,7 +26,7 @@ import { useWorkspacesStore } from '@/stores/workspaces'
 import { atLeast } from '@/utils/roles'
 
 type Mode = 'tree' | 'cards'
-const MODE_KEY = 'sobased-projects-mode'
+const MODE_KEY = 'faiblegraine-projects-mode'
 const MODES: { value: Mode; label: string; icon: typeof ListTree }[] = [
   { value: 'tree', label: 'Arbre', icon: ListTree },
   { value: 'cards', label: 'Cartes', icon: LayoutGrid },

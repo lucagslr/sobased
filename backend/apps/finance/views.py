@@ -556,7 +556,7 @@ class _ExportView(APIView):
         response = HttpResponse(payload, content_type=self.content_type)
         stamp = local_today(request.user).isoformat()
         response["Content-Disposition"] = (
-            f'attachment; filename="sobased-compta-{stamp}.{self.extension}"'
+            f'attachment; filename="faiblegraine-compta-{stamp}.{self.extension}"'
         )
         response["Cache-Control"] = "private, no-store"
         return response

@@ -189,7 +189,7 @@ router.afterEach((to, from) => {
   // page may have set itself, e.g. the name of the project.
   // (`from.matched` is empty on the very first navigation.)
   if (from.matched.length && to.path === from.path) return
-  document.title = `${to.meta.title} · SOBASED`
+  document.title = `${to.meta.title} · Faiblegraine`
 })
 
 // The session expired while the app was open: back to the login page.

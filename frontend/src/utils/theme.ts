@@ -1,7 +1,7 @@
 /** Theme handling. Keep the storage key and rule in sync with public/theme-init.js. */
 export type ThemeChoice = 'light' | 'dark' | 'system'
 
-export const THEME_STORAGE_KEY = 'sobased-theme'
+export const THEME_STORAGE_KEY = 'faiblegraine-theme'
 
 export function isThemeChoice(value: unknown): value is ThemeChoice {
   return value === 'light' || value === 'dark' || value === 'system'

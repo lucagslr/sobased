@@ -1,4 +1,4 @@
-# SOBASED : mémo pour Claude Code
+# Faiblegraine : mémo pour Claude Code
 
 **À chaque reprise : relire [PROGRESS.md](PROGRESS.md) d'abord.** Source de vérité : [SPEC.md](SPEC.md). Règles détaillées : [SPECIFICATIONS.md](SPECIFICATIONS.md). Plan : [docs/PLAN.md](docs/PLAN.md). Schéma : [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md). API : [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 

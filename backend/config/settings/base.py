@@ -13,6 +13,13 @@ ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost")
 # Public URL of the site (no trailing slash). Drives e-mail links, CSRF trusted
 # origins and whether cookies are flagged Secure.
 SITE_URL = env("SITE_URL", "http://localhost:8080").rstrip("/")
+# Shown on the privacy page (SPEC §16): where the data lives and whom to ask.
+# HOSTING_LOCATION: "ch" (Switzerland) or "eu" (a European Union country).
+HOSTING_LOCATION = env("HOSTING_LOCATION", "ch").lower()
+if HOSTING_LOCATION not in ("ch", "eu"):
+    HOSTING_LOCATION = "ch"
+HOSTING_PROVIDER = env("HOSTING_PROVIDER", "Infomaniak")
+PRIVACY_CONTACT_EMAIL = env("PRIVACY_CONTACT_EMAIL", "")
 SITE_IS_HTTPS = SITE_URL.startswith("https://")
 
 INSTALLED_APPS = [
@@ -74,8 +81,8 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB", "sobased"),
-        "USER": env("POSTGRES_USER", "sobased"),
+        "NAME": env("POSTGRES_DB", "faiblegraine"),
+        "USER": env("POSTGRES_USER", "faiblegraine"),
         "PASSWORD": env("POSTGRES_PASSWORD", ""),
         "HOST": env("POSTGRES_HOST", "postgres"),
         "PORT": env("POSTGRES_PORT", "5432"),
@@ -275,7 +282,7 @@ EMAIL_PORT = env_int("EMAIL_PORT", 587)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "SOBASED <no-reply@localhost>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Faiblegraine <no-reply@localhost>")
 # Without SMTP configured, e-mails are printed to the container logs.
 EMAIL_BACKEND = (
     "django.core.mail.backends.smtp.EmailBackend"
@@ -313,7 +320,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "SOBASED API",
+    "TITLE": "Faiblegraine API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],

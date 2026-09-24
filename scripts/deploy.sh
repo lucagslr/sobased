@@ -5,7 +5,7 @@ set -eu
 cd "$(dirname "$0")/.."
 # ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
 export ENV_FILE=${ENV_FILE:-.env}
-COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-faiblegraine} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 
 [ -f "$ENV_FILE" ] || { echo "$ENV_FILE manquant : copie .env.example et remplis-le." >&2; exit 1; }
 

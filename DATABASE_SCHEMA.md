@@ -1,4 +1,4 @@
-# SOBASED : schéma de la base de données
+# Faiblegraine : schéma de la base de données
 
 PostgreSQL 16. Ce document décrit le schéma **cible complet** (phases 1 à 14). Il est validé en phase 0, puis tenu à jour à chaque migration. En cas de divergence, les modèles Django font foi et ce fichier est corrigé dans le même commit.
 
@@ -559,7 +559,7 @@ erDiagram
         string color
         bool is_primary
         bool is_displayed "affiché en lecture dans le calendrier"
-        bool is_target "reçoit les objets SOBASED"
+        bool is_target "reçoit les objets Faiblegraine"
         text sync_cursor "syncToken Google ou deltaLink Graph"
         string watch_channel_id "push Google"
         string watch_resource_id

@@ -306,7 +306,7 @@ class ExternalCalendarViewSet(
     mixins.ListModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
 ):
     """My external calendars: which ones to display, which one receives my
-    SOBASED objects (one target per user)."""
+    Faiblegraine objects (one target per user)."""
 
     queryset = ExternalCalendar.objects.none()  # for the schema; see get_queryset
     serializer_class = ExternalCalendarSerializer

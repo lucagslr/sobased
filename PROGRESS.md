@@ -1,4 +1,4 @@
-# SOBASED : avancement
+# Faiblegraine : avancement
 
 Mémoire entre les sessions. À relire à chaque reprise, à mettre à jour à chaque fin de phase.
 
@@ -33,9 +33,12 @@ Chaque phase a son explication dans `docs/phases/phase-NN-*.md` (demande de Luca
 - `API_DOCUMENTATION.md` : tous les endpoints REST cibles avec le rôle minimal.
 - `SPECIFICATIONS.md` : règles de comportement (droits, coquilles, invitations, récurrences, partage, synchro, compta…).
 - `REQUIREMENTS_QUESTIONNAIRE.md`, `README.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `CLAUDE.md`.
-- Dépôt poussé sur `https://github.com/lucagslr/sobased` (branche `main`) avec l'accord de Luca. Pousser à chaque fin de phase.
+- Dépôt poussé sur `https://github.com/lucagslr/faiblegraine` (branche `main`) avec l'accord de Luca. Pousser à chaque fin de phase.
 
 ## Décisions prises
+
+- **24.09.2026 : l'application s'appelle Faiblegraine** (ex-SOBASED). Nom de marque partout (interface, e-mails, PWA, exports, docs), identifiant technique `faiblegraine` (projet Compose, images, clés de stockage local, valeurs par défaut de base de données). `SPEC.md` et le questionnaire gardent l'ancien nom avec une note ; le dossier local et le dépôt GitHub restent à renommer par Luca. Les volumes de dev ont été copiés (`sobased_*` → `faiblegraine_*`), la base de dev garde son nom interne `sobased` dans `.env`.
+- **24.09.2026 : lieu d'hébergement configurable.** `HOSTING_LOCATION` (`ch` / `eu`), `HOSTING_PROVIDER` et `PRIVACY_CONTACT_EMAIL` alimentent la page Confidentialité via `GET /api/site/` : un hébergement chez LWS (France) se déclare dans `.env` sans toucher au code.
 
 Proposées en phase 0 (détail dans `docs/PLAN.md` §5). **Validées en bloc par Luca le 21.09.2026** (« c'est bon tu peux y aller »), sans remarque.
 
@@ -205,7 +208,7 @@ Détail dans `docs/phases/phase-09-liens-partages.md`. App `sharing` (liens, sé
 - `apps/core/crypto.py` (`encrypt` / `decrypt`, clé validée au premier usage) est prêt pour les jetons OAuth des phases 10 et 11 ; `config/settings/test.py` fixe une clé de test.
 - Les vues publiques sont allow-listées dans `test_route_audit.py` avec leur justification (jeton secret, URL signées par session).
 - Comptage : `services.count_view()` / `count_play()` avec fenêtre de 30 min en session ; `blocking_state()` laisse finir la session qui a consommé le dernier quota. Le résumé quotidien (phase 12) peut lire `first_opened_at` / `notify_on_open` pour la notification « première ouverture ».
-- Le tag sonore par défaut est un bip généré (`sine 1200 Hz, 0.18 s, volume 0.25`) ; un vrai tag (voix « SOBASED ») se met dans `AUDIO_WATERMARK_TAG`, ce qui change `params_hash` et donc recalcule les dérivés à la prochaine ouverture.
+- Le tag sonore par défaut est un bip généré (`sine 1200 Hz, 0.18 s, volume 0.25`) ; un vrai tag (voix « Faiblegraine ») se met dans `AUDIO_WATERMARK_TAG`, ce qui change `params_hash` et donc recalcule les dérivés à la prochaine ouverture.
 
 ## Phase 10 : ce qui a été produit
 
@@ -228,7 +231,7 @@ Détail dans `docs/phases/phase-11-calendriers.md`. `ExternalCalendar`, `Externa
 À retenir pour la suite :
 
 - **Pull avant push** dans un cycle : ce qui a changé dehors est absorbé, puis le push renvoie les valeurs locales et corrige ce qui a été refusé (titre changé par un simple assigné). Après une remontée partielle, `pushed_hash` est vidé pour forcer ce push correctif.
-- Fins de journée entière : SOBASED est inclusif (minuit UTC du dernier jour), Google et Graph sont exclusifs (+1 jour) ; la conversion est dans `_body()` / `_normalise()` des fournisseurs, nulle part ailleurs.
+- Fins de journée entière : Faiblegraine est inclusif (minuit UTC du dernier jour), Google et Graph sont exclusifs (+1 jour) ; la conversion est dans `_body()` / `_normalise()` des fournisseurs, nulle part ailleurs.
 - Le `syncToken` Google et le `deltaLink` Graph vivent dans `ExternalCalendar.sync_cursor` ; 410 → `CursorInvalid` → miroir vidé et relecture complète.
 - `FakeGoogle` parle aussi Calendar (séquence `_seq` pour les lectures incrémentales, `invalid_tokens`, `watches`, `grant_calendar`) ; `FakeGraph` couvre Microsoft. Les deux vivent dans `apps/integrations/tests/conftest.py`.
 - Le canal push Google n'est créé qu'avec `SITE_IS_HTTPS` ; le webhook répond toujours 200 et compare le hash du jeton de canal.

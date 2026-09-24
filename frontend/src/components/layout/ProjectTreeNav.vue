@@ -15,7 +15,7 @@ defineProps<{ nodes: TreeNode[]; level?: number }>()
 
 const route = useRoute()
 // Shared by every level of the recursion (same storage key).
-const collapsed = useStorage<Record<number, boolean>>('sobased-tree-collapsed', {})
+const collapsed = useStorage<Record<number, boolean>>('faiblegraine-tree-collapsed', {})
 
 function toggle(id: number) {
   collapsed.value = { ...collapsed.value, [id]: !collapsed.value[id] }

@@ -4,12 +4,12 @@
 # (30) in BACKUP_DIR and, when BACKUP_REMOTE is set, mirrored with rclone to
 # an external storage with the same retention. Restore: scripts/restore.sh.
 #
-#   0 3 * * * /srv/sobased/scripts/backup.sh >> /var/log/sobased-backup.log 2>&1
+#   0 3 * * * /srv/faiblegraine/scripts/backup.sh >> /var/log/faiblegraine-backup.log 2>&1
 set -eu
 cd "$(dirname "$0")/.."
 # ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
 export ENV_FILE=${ENV_FILE:-.env}
-COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-faiblegraine} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 
 # .env is not sourced (values may contain shell characters): read the keys.
 env_value() { grep -E "^$1=" "$ENV_FILE" | head -n 1 | cut -d= -f2- ; }
@@ -34,13 +34,13 @@ $COMPOSE exec -T postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc > "$
 # 2. Uploaded files (local storage; with S3 the bucket has its own backups).
 $COMPOSE exec -T backend tar -C /data/media -cf - . > "$WORK/media.tar"
 # 3. One encrypted archive.
-ARCHIVE="$BACKUP_DIR/sobased-$STAMP.tar.gz.enc"
+ARCHIVE="$BACKUP_DIR/faiblegraine-$STAMP.tar.gz.enc"
 tar -C "$WORK" -cf - db.dump media.tar | gzip \
 	| openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_PASSPHRASE -out "$ARCHIVE"
 echo "Sauvegarde : $ARCHIVE ($(du -h "$ARCHIVE" | cut -f1))"
 
 # 4. Retention, local then remote.
-find "$BACKUP_DIR" -name 'sobased-*.tar.gz.enc' -mtime "+$BACKUP_KEEP_DAYS" -delete
+find "$BACKUP_DIR" -name 'faiblegraine-*.tar.gz.enc' -mtime "+$BACKUP_KEEP_DAYS" -delete
 if [ -n "$BACKUP_REMOTE" ]; then
 	rclone copy "$ARCHIVE" "$BACKUP_REMOTE"
 	rclone delete --min-age "${BACKUP_KEEP_DAYS}d" "$BACKUP_REMOTE"

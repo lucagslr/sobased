@@ -40,7 +40,7 @@ async function load() {
   try {
     share.value = await sharingApi.open(token.value)
     status.value = 'ok'
-    document.title = `${share.value.title} · SOBASED`
+    document.title = `${share.value.title} · Faiblegraine`
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) status.value = 'missing'
     else if (error instanceof ApiError && error.status === 410) status.value = 'gone'

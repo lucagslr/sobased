@@ -27,7 +27,7 @@ import { useUiStore } from '@/stores/ui'
 import { useWorkspacesStore } from '@/stores/workspaces'
 import { atLeast } from '@/utils/roles'
 
-const ONLY_MINE_KEY = 'sobased-calendar-only-mine'
+const ONLY_MINE_KEY = 'faiblegraine-calendar-only-mine'
 
 const projects = useProjectsStore()
 const workspaces = useWorkspacesStore()

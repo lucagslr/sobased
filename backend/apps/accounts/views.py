@@ -423,7 +423,7 @@ class MyExportDownloadView(APIView):
         return protected_file_response(
             export.archive,
             content_type="application/zip",
-            filename=f"sobased-export-{stamp}.zip",
+            filename=f"faiblegraine-export-{stamp}.zip",
             inline=False,
         )
 

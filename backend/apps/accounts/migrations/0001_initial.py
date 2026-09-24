@@ -162,7 +162,7 @@ class Migration(migrations.Migration):
                 ],
             },
             managers=[
-                ("objects", apps.accounts.models.SobasedUserManager()),
+                ("objects", apps.accounts.models.FaiblegraineUserManager()),
             ],
         ),
     ]

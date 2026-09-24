@@ -227,7 +227,7 @@ def test_watermark_image_pixels_differ():
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "flat.png"
         Image.new("RGB", (400, 300), "orange").save(source)
-        content = watermark.watermark_image(source, "SOBASED · confidentiel")
+        content = watermark.watermark_image(source, "Faiblegraine · confidentiel")
     with Image.open(io.BytesIO(content)) as image:
         colours = {
             image.getpixel((x, y)) for x in range(0, 400, 7) for y in range(0, 300, 7)

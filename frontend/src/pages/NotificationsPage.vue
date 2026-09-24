@@ -61,7 +61,7 @@ async function open(notification: Notification) {
         @click="open(item)"
       >
         <AppAvatar
-          :name="item.actor?.display_name ?? 'SOBASED'"
+          :name="item.actor?.display_name ?? 'Faiblegraine'"
           :src="item.actor?.avatar_url"
           :size="32"
         />

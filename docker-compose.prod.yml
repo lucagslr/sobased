@@ -7,13 +7,13 @@
 #
 # Local rehearsal (docs/deploy.md §9): ENV_FILE=.env.prod-local and a project
 # name of its own keep it apart from the dev stack and its volumes.
-name: sobased
+name: faiblegraine
 
 x-backend: &backend
   build:
     context: ./backend
     target: prod
-  image: sobased-backend
+  image: faiblegraine-backend
   env_file: ${ENV_FILE:-.env}
   environment:
     DJANGO_SETTINGS_MODULE: config.settings.prod
@@ -71,7 +71,7 @@ services:
     build:
       context: .
       dockerfile: docker/caddy.Dockerfile
-    image: sobased-caddy
+    image: faiblegraine-caddy
     env_file: ${ENV_FILE:-.env}
     ports:
       - "80:80"

@@ -12,12 +12,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: sobased
-          POSTGRES_USER: sobased
+          POSTGRES_DB: faiblegraine
+          POSTGRES_USER: faiblegraine
           POSTGRES_PASSWORD: ci-only
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U sobased" --health-interval 5s
+          --health-cmd "pg_isready -U faiblegraine" --health-interval 5s
           --health-timeout 3s --health-retries 10
     env:
       DJANGO_SECRET_KEY: ci-only-not-a-secret

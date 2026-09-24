@@ -29,7 +29,7 @@ from .models import DataExport
 
 EXPORT_LIFETIME = timedelta(days=7)
 
-README = """Export de tes données SOBASED
+README = """Export de tes données Faiblegraine
 
 profile.json        ton profil et tes préférences
 memberships.json    tes accès aux espaces et projets

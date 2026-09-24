@@ -224,7 +224,7 @@ def build_access_map(user) -> AccessMap:
     return access_map
 
 
-_CACHE_ATTR = "_sobased_access_map"
+_CACHE_ATTR = "_faiblegraine_access_map"
 
 
 def get_access_map(actor) -> AccessMap:

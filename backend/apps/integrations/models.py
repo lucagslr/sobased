@@ -146,7 +146,7 @@ ACCOUNT_STATUS_CHOICES = AccountStatus.choices
 # --- Calendars (SPEC §12, SPECIFICATIONS §8) --------------------------------------
 class ExternalCalendar(TimeStampedModel):
     """A calendar of a connected account. `is_displayed`: read in the
-    calendar view (owner only). `is_target`: receives the user's SOBASED
+    calendar view (owner only). `is_target`: receives the user's Faiblegraine
     objects (one target per user, across providers)."""
 
     account = models.ForeignKey(
@@ -185,7 +185,7 @@ class ExternalCalendar(TimeStampedModel):
 
 class ExternalEvent(TimeStampedModel):
     """An event of a displayed calendar, read-only, for the calendar view.
-    SOBASED's own pushed objects are not duplicated here."""
+    Faiblegraine's own pushed objects are not duplicated here."""
 
     calendar = models.ForeignKey(
         ExternalCalendar, on_delete=models.CASCADE, related_name="events"
@@ -260,7 +260,7 @@ class SyncConflict(models.Model):
     )
     winner = models.CharField(
         max_length=10,
-        choices=[("local", "SOBASED"), ("external", "Calendrier externe")],
+        choices=[("local", "Faiblegraine"), ("external", "Calendrier externe")],
     )
     details = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

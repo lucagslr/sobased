@@ -29,6 +29,7 @@ ALLOWED = {
     "UserAvatarView": "any signed-in user may see an avatar",
     "UserSearchView": "public user fields only",
     "HealthView": "no data",
+    "SiteView": "public constants, no data",
     "SpectacularAPIView": "schema, signed-in users",
     # Rights on a scope that is a workspace OR a project: they call
     # effective_access() / workspace_access() through views._require().

@@ -233,7 +233,7 @@ def test_without_rights_the_local_values_win(tree, fake_google):
     task.refresh_from_db()
     assert task.title == "Titre officiel"  # title kept
     assert task.due_at == datetime(2026, 12, 1, tzinfo=UTC)  # date moved
-    # The calendar is put back in line with SOBASED at that same sync.
+    # The calendar is put back in line with Faiblegraine at that same sync.
     external = fake_google.events["primary"][mapping.external_id]
     assert external["summary"] == "☐ Titre officiel"
 
@@ -362,7 +362,7 @@ def test_watch_only_with_public_https(settings, target, fake_google):
     settings.SITE_IS_HTTPS = False
     sync.renew_watch(target)
     assert fake_google.watches == []
-    settings.SITE_URL = "https://sobased.example.ch"
+    settings.SITE_URL = "https://faiblegraine.example.ch"
     settings.SITE_IS_HTTPS = True
     sync.renew_watch(target)
     target.refresh_from_db()

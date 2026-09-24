@@ -87,7 +87,7 @@ async function load() {
   project.value = null
   try {
     project.value = await projectsApi.get(projectId.value)
-    document.title = `${project.value.name} · SOBASED`
+    document.title = `${project.value.name} · Faiblegraine`
     if (!projects.loaded) await projects.load()
     if (!project.value.is_shell) await workspaces.loadTags(project.value.workspace)
   } catch (error) {

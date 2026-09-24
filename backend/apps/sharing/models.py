@@ -113,7 +113,7 @@ class ShareLink(TimeStampedModel):
 
     @property
     def watermark_text(self) -> str:
-        return self.recipient_label or "SOBASED · confidentiel"
+        return self.recipient_label or "Faiblegraine · confidentiel"
 
 
 class ShareLinkItem(models.Model):

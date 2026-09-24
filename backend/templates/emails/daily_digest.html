@@ -38,6 +38,6 @@
 {% for item in missing_receipts %}<li><a href="{{ site_url }}{{ item.url }}" style="color:#1c1917;">{{ item.title }}</a> · CHF {{ item.amount }} <span style="color:#78716c;">· {{ item.project }}</span></li>
 {% endfor %}</ul>
 {% endif %}
-{% include "emails/_button.html" with url=site_url label="Ouvrir SOBASED" %}
+{% include "emails/_button.html" with url=site_url label="Ouvrir Faiblegraine" %}
 <p style="font-size:12px;color:#78716c;">Ce résumé se règle (heure, arrêt) dans Paramètres › Notifications.</p>
 {% endblock %}

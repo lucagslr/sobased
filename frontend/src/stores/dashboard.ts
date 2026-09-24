@@ -15,7 +15,7 @@ import {
   type WidgetLayout,
 } from '@/api/dashboard'
 
-const LAST_VIEW_KEY = 'sobased-dashboard-view'
+const LAST_VIEW_KEY = 'faiblegraine-dashboard-view'
 
 function lastViewId(): number | null {
   try {

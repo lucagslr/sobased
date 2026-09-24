@@ -2,7 +2,7 @@
 # and run scripts/deploy.sh on that tag. Needs four repository secrets
 # (docs/deploy.md §3): DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key
 # of a deploy-only user whose public key is in ~/.ssh/authorized_keys on the
-# server) and DEPLOY_PATH (e.g. /srv/sobased). Without them the job is skipped,
+# server) and DEPLOY_PATH (e.g. /srv/faiblegraine). Without them the job is skipped,
 # so that forks and the first weeks without a server stay green.
 name: Deploy
 

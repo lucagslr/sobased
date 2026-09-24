@@ -2,6 +2,17 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
+## [1.1.0] - 2026-09-24
+
+### Modifié
+
+- L'application s'appelle **Faiblegraine** (anciennement SOBASED) : interface, e-mails, manifest et icônes PWA, noms de fichiers exportés, identifiants techniques (projet Compose, images, clés de stockage du navigateur : le thème et les préférences d'affichage sont à re-choisir une fois).
+
+### Ajouté
+
+- Page Confidentialité : lieu d'hébergement (Suisse ou Union européenne), hébergeur et adresse de contact viennent de la configuration (`HOSTING_LOCATION`, `HOSTING_PROVIDER`, `PRIVACY_CONTACT_EMAIL`, endpoint public `GET /api/site/`) ; mention des jetons Google / Microsoft chiffrés et du journal d'activité.
+- Répétition locale de la pile de production (`docs/deploy.md` §9).
+
 ## [1.0.2] - 2026-09-23
 
 ### Corrigé

@@ -26,7 +26,7 @@ username_validator = RegexValidator(
 )
 
 
-class SobasedUserManager(UserManager):
+class FaiblegraineUserManager(UserManager):
     def get_by_natural_key(self, username):
         # Case-insensitive login: "Luca" and "luca" are the same account.
         return self.get(username__iexact=username)
@@ -71,7 +71,7 @@ class User(AbstractUser):
     anonymized_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = SobasedUserManager()
+    objects = FaiblegraineUserManager()
 
     class Meta:
         constraints = [

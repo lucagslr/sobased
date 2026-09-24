@@ -1,7 +1,7 @@
 {% extends "emails/base.html" %}
 {% block content %}
 <p>Bonjour,</p>
-<p><strong>{{ actor }}</strong> t'invite à rejoindre <strong>{{ scope_name }}</strong> sur SOBASED, avec le rôle <strong>{{ role }}</strong>.</p>
+<p><strong>{{ actor }}</strong> t'invite à rejoindre <strong>{{ scope_name }}</strong> sur Faiblegraine, avec le rôle <strong>{{ role }}</strong>.</p>
 {% include "emails/_button.html" with url=url label="Voir l'invitation" %}
 <p>Cette invitation est valable 14 jours. Tu pourras créer ton compte ou te connecter depuis ce lien.</p>
 {% endblock %}

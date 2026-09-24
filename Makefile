@@ -50,6 +50,6 @@ prod-logs:
 backup:
 	scripts/backup.sh
 
-# make restore ARCHIVE=backups/sobased-20260923-030000.tar.gz.enc
+# make restore ARCHIVE=backups/faiblegraine-20260923-030000.tar.gz.enc
 restore:
 	scripts/restore.sh $(ARCHIVE)

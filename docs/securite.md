@@ -1,6 +1,6 @@
 # Relecture sécurité (OWASP Top 10 : 2021)
 
-Relecture faite à la fin de la phase 14 (23.09.2026) sur le code de la `v1.0.0`. Pour chaque catégorie : ce que SOBASED fait, comment c'est vérifié, ce qui reste à surveiller. Les points ouverts sont repris dans `PROGRESS.md` (« Limites connues »).
+Relecture faite à la fin de la phase 14 (23.09.2026) sur le code de la `v1.0.0`. Pour chaque catégorie : ce que Faiblegraine fait, comment c'est vérifié, ce qui reste à surveiller. Les points ouverts sont repris dans `PROGRESS.md` (« Limites connues »).
 
 ## A01 · Contrôle d'accès défaillant
 
@@ -68,7 +68,7 @@ Relecture faite à la fin de la phase 14 (23.09.2026) sur le code de la `v1.0.0`
 
 - Journal d'activité par projet (12 mois), journal d'accès des liens partagés (IP tronquée /24 ou /48, user agent, 12 mois), journaux Caddy, Django et Celery (`make prod-logs`).
 - Aucune donnée personnelle superflue dans les journaux : les e-mails ne sont pas journalisés, les IP complètes ne sont pas conservées.
-- À surveiller : pas d'alerte automatique (échec de sauvegarde, erreurs 5xx) ; à brancher sur la supervision de l'hébergeur ou un cron qui surveille `/var/log/sobased-backup.log`.
+- À surveiller : pas d'alerte automatique (échec de sauvegarde, erreurs 5xx) ; à brancher sur la supervision de l'hébergeur ou un cron qui surveille `/var/log/faiblegraine-backup.log`.
 
 ## A10 · Falsification de requête côté serveur (SSRF)
 
@@ -77,5 +77,5 @@ Relecture faite à la fin de la phase 14 (23.09.2026) sur le code de la `v1.0.0`
 
 ## Points hors OWASP mais nLPD / RGPD (SPEC §16)
 
-- Hébergement en Suisse (déploiement §1 de `docs/deploy.md`), page Confidentialité et acceptation à l'inscription, export de mes données et suppression du compte avec anonymisation (phase 13), IP tronquées, aucun traceur, e-mails seulement aux adresses vérifiées, résumé quotidien désactivable.
+- Hébergement en Suisse ou dans un pays de l'UE (`HOSTING_LOCATION`, affiché avec l'hébergeur et l'adresse de contact sur la page Confidentialité via `GET /api/site/`), page Confidentialité et acceptation à l'inscription, export de mes données et suppression du compte avec anonymisation (phase 13), IP tronquées, aucun traceur, e-mails seulement aux adresses vérifiées, résumé quotidien désactivable.
 - Adresse de contact de la page Confidentialité **à préciser par Luca**.

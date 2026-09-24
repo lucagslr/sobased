@@ -1,4 +1,4 @@
-"""`manage.py seed_demo`: a demo dataset to discover SOBASED (SPEC §19).
+"""`manage.py seed_demo`: a demo dataset to discover Faiblegraine (SPEC §19).
 
 Three users (demo: owner of two workspaces with every feature exercised;
 ana: commenter of the whole association workspace with a view on the money;

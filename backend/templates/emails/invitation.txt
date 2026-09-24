@@ -1,6 +1,6 @@
 Bonjour,
 
-{{ actor }} t'invite à rejoindre « {{ scope_name }} » sur SOBASED, avec le rôle {{ role }}.
+{{ actor }} t'invite à rejoindre « {{ scope_name }} » sur Faiblegraine, avec le rôle {{ role }}.
 
 {{ url }}
 

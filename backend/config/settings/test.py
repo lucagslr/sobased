@@ -11,7 +11,7 @@ CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 # Argon2 is deliberately slow; tests do not need that.
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
-MEDIA_ROOT = "/tmp/sobased-test-media"
+MEDIA_ROOT = "/tmp/faiblegraine-test-media"
 # Without Caddy in front, files are streamed by Django itself.
 PROTECTED_MEDIA_ACCEL = False
 # A fixed, valid Fernet key: share URLs must round-trip in tests.

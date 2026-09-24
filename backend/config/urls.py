@@ -4,11 +4,12 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
-from apps.core.views import HealthView
+from apps.core.views import HealthView, SiteView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health/", HealthView.as_view(), name="health"),
+    path("api/site/", SiteView.as_view(), name="site"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/", include("apps.accounts.urls")),
     path("api/", include("apps.workspaces.urls")),

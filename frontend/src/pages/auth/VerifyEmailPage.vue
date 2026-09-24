@@ -38,7 +38,9 @@ onMounted(async () => {
       {{ message }} Connecte-toi pour demander un nouveau lien.
     </p>
     <template #footer>
-      <RouterLink to="/" class="font-medium text-fg underline">Continuer vers SOBASED</RouterLink>
+      <RouterLink to="/" class="font-medium text-fg underline"
+        >Continuer vers Faiblegraine</RouterLink
+      >
     </template>
   </AuthCard>
 </template>

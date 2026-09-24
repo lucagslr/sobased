@@ -5,13 +5,13 @@ from .models import User
 
 
 @admin.register(User)
-class SobasedUserAdmin(UserAdmin):
+class FaiblegraineUserAdmin(UserAdmin):
     """Support tool only; everyday account management happens in the app."""
 
     list_display = ["username", "email", "email_verified_at", "is_active", "is_staff"]
     fieldsets = UserAdmin.fieldsets + (
         (
-            "SOBASED",
+            "Faiblegraine",
             {
                 "fields": [
                     "email_verified_at",

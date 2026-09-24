@@ -31,7 +31,7 @@ Remplace `scripts/dev_scenario.py` (supprimé). Trois utilisateurs aux rôles di
 
 `docs/securite.md` passe les dix catégories OWASP 2021 (et les points nLPD) avec, pour chacune, ce qui est en place, comment c'est vérifié et ce qui reste à surveiller. Actions prises pendant la relecture :
 
-- **Pillow 11.3 → 12.3.0** (`pip-audit` : vulnérabilités dans le décodage d'images, que SOBASED applique à des fichiers envoyés par les membres) ; tests des apps fichiers, comptes et partage rejoués, images reconstruites, `constraints.txt` régénéré (qui épingle désormais aussi `requests` et ses dépendances).
+- **Pillow 11.3 → 12.3.0** (`pip-audit` : vulnérabilités dans le décodage d'images, que Faiblegraine applique à des fichiers envoyés par les membres) ; tests des apps fichiers, comptes et partage rejoués, images reconstruites, `constraints.txt` régénéré (qui épingle désormais aussi `requests` et ses dépendances).
 - `npm audit --omit=dev` : 0 vulnérabilité. `pip-audit` : ne restent que `pip`, `pytest` et `black`, outils absents de l'image de production.
 - Grep : aucun SQL brut, aucun `mark_safe` / `|safe`, un seul `v-html` (markdown-it avec `html: false`), `subprocess` sans shell.
 - `manage.py check --deploy` : propre.
@@ -45,5 +45,5 @@ Remplace `scripts/dev_scenario.py` (supprimé). Trois utilisateurs aux rôles di
 
 - **Aucun déploiement réel** n'a été fait : le premier `make deploy` sur le VPS est à surveiller (certificat, SMTP, volumes), et `docs/deploy.md` §7 liste les vérifications.
 - `scripts/backup.sh` suppose `openssl`, `tar`, `gzip` et (si `BACKUP_REMOTE`) `rclone` sur l'hôte ; testé sous Git Bash avec `MSYS_NO_PATHCONV=1`, pas encore sur un Linux de production.
-- Pas d'alerte automatique en cas d'échec de sauvegarde : lire `/var/log/sobased-backup.log` ou brancher une supervision.
+- Pas d'alerte automatique en cas d'échec de sauvegarde : lire `/var/log/faiblegraine-backup.log` ou brancher une supervision.
 - L'admin Django reste accessible sur `/admin/` sans limitation de débit propre : ne créer un compte staff que si nécessaire.

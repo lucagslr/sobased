@@ -1,4 +1,4 @@
-# SOBASED : plan de réalisation (phase 0)
+# Faiblegraine : plan de réalisation (phase 0)
 
 Livrable de la phase 0 du [cahier des charges](../SPEC.md). Rien n'est codé tant que ce plan n'est pas validé.
 
@@ -15,7 +15,7 @@ Livrable de la phase 0 du [cahier des charges](../SPEC.md). Rien n'est codé tan
 ## 1. Arborescence du dépôt
 
 ```
-sobased/
+faiblegraine/
 ├─ SPEC.md                         cahier des charges (source de vérité)
 ├─ SPECIFICATIONS.md               règles de comportement détaillées
 ├─ DATABASE_SCHEMA.md · API_DOCUMENTATION.md · REQUIREMENTS_QUESTIONNAIRE.md
@@ -130,7 +130,7 @@ Ordre de dépendance des apps (aucun cycle) : `core → accounts → workspaces 
 | # | Risque | Parade |
 |---|---|---|
 | 1 | **Droits** : héritage + coquilles + options finance + fuites indirectes (compteurs, cumuls de budget, recherche de bloqueurs, mentions, exports) | Une seule fonction de résolution, 404 par défaut, matrice de tests, audit automatique des routes, revue des sérialiseurs à chaque phase pour qu'aucun montant ne sorte sans `can_view_finance` |
-| 2 | **Synchro calendrier bidirectionnelle** : boucles, conflits, copies multiples d'un même RDV chez plusieurs participants, suppressions externes | Empreinte + etag, plus récent gagne et conflit journalisé, suppression externe = détachement, droits SOBASED vérifiés sur tout changement entrant, occurrences poussées une par une |
+| 2 | **Synchro calendrier bidirectionnelle** : boucles, conflits, copies multiples d'un même RDV chez plusieurs participants, suppressions externes | Empreinte + etag, plus récent gagne et conflit journalisé, suppression externe = détachement, droits Faiblegraine vérifiés sur tout changement entrant, occurrences poussées une par une |
 | 3 | **Compte Microsoft de la HEG** : le tenant de l'école peut exiger le consentement d'un administrateur pour une application tierce. Dans ce cas ton calendrier Teams HEG ne pourra pas être connecté, quoi que je code | À tester dès que l'application Azure existe. Repli possible : abonnement ICS en lecture seule publié depuis Outlook (demanderait la dépendance `icalendar`, à décider à ce moment-là) |
 | 4 | **Google OAuth** : en mode « Testing », les jetons de rafraîchissement expirent après 7 jours ; les scopes Calendar sont « sensibles » (écran d'avertissement tant que l'application n'est pas vérifiée, 100 utilisateurs max) | Publier l'application en « production » non vérifiée, suffisant pour 100SATIONS ; procédure détaillée dans `docs/deploy.md` |
 | 5 | **`drive.file`** : un jeton n'accède qu'aux fichiers créés ou choisis par son propre utilisateur ; un membre ne peut pas écrire dans le dossier d'un autre avec son jeton | Toutes les opérations Drive d'un arbre passent par le compte qui possède le dossier racine (SPECIFICATIONS §7) ; dégradation propre si ce compte se déconnecte |
