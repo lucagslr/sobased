@@ -7,10 +7,12 @@
 #   0 3 * * * /srv/sobased/scripts/backup.sh >> /var/log/sobased-backup.log 2>&1
 set -eu
 cd "$(dirname "$0")/.."
-COMPOSE="docker compose -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+# ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
+export ENV_FILE=${ENV_FILE:-.env}
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 
 # .env is not sourced (values may contain shell characters): read the keys.
-env_value() { grep -E "^$1=" .env | head -n 1 | cut -d= -f2- ; }
+env_value() { grep -E "^$1=" "$ENV_FILE" | head -n 1 | cut -d= -f2- ; }
 POSTGRES_USER=$(env_value POSTGRES_USER)
 POSTGRES_DB=$(env_value POSTGRES_DB)
 BACKUP_PASSPHRASE=$(env_value BACKUP_PASSPHRASE)
@@ -19,7 +21,7 @@ BACKUP_REMOTE=$(env_value BACKUP_REMOTE)
 BACKUP_KEEP_DAYS=$(env_value BACKUP_KEEP_DAYS)
 BACKUP_DIR=${BACKUP_DIR:-./backups}
 BACKUP_KEEP_DAYS=${BACKUP_KEEP_DAYS:-30}
-[ -n "$BACKUP_PASSPHRASE" ] || { echo "BACKUP_PASSPHRASE manquant dans .env" >&2; exit 1; }
+[ -n "$BACKUP_PASSPHRASE" ] || { echo "BACKUP_PASSPHRASE manquant dans $ENV_FILE" >&2; exit 1; }
 export BACKUP_PASSPHRASE
 
 STAMP=$(date -u +%Y%m%d-%H%M%S)

@@ -4,6 +4,9 @@
 # the built Vue bundle, only ports 80/443 exposed.
 #
 #   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Local rehearsal (docs/deploy.md §9): ENV_FILE=.env.prod-local and a project
+# name of its own keep it apart from the dev stack and its volumes.
 name: sobased
 
 x-backend: &backend
@@ -11,7 +14,7 @@ x-backend: &backend
     context: ./backend
     target: prod
   image: sobased-backend
-  env_file: .env
+  env_file: ${ENV_FILE:-.env}
   environment:
     DJANGO_SETTINGS_MODULE: config.settings.prod
     STATIC_ROOT: /data/static
@@ -69,7 +72,7 @@ services:
       context: .
       dockerfile: docker/caddy.Dockerfile
     image: sobased-caddy
-    env_file: .env
+    env_file: ${ENV_FILE:-.env}
     ports:
       - "80:80"
       - "443:443"

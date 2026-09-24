@@ -146,3 +146,19 @@ Par défaut les fichiers sont sur le volume `media` du VPS, servis par Caddy apr
 | tout le reste | le bundle Vue construit dans l'image Caddy (`docker/caddy.Dockerfile`), `index.html` et `sw.js` jamais mis en cache, `assets/*` immuables |
 
 Les en-têtes de sécurité (HSTS, CSP identique au développement à l'exception des exceptions Vite, `frame-ancestors 'none'`, `Referrer-Policy`) sont dans `Caddyfile.prod`.
+
+## 9. Répéter le déploiement sur son propre PC
+
+Avant d'acheter le serveur, la pile de production peut tourner sur une machine de développement, à côté de la pile de dev, avec son propre fichier d'environnement et son propre nom de projet Docker (volumes séparés) :
+
+```bash
+cp .env.example .env.prod-local
+```
+
+Dans `.env.prod-local` : `DJANGO_DEBUG=false`, `DOMAIN=sobased.localhost`, `SITE_URL=https://sobased.localhost`, `DJANGO_ALLOWED_HOSTS=sobased.localhost`, des secrets générés (voir §2), `BACKUP_DIR=./backups-prod-local`. Puis :
+
+```bash
+SKIP_PULL=1 ENV_FILE=.env.prod-local COMPOSE_PROJECT=sobased-prod scripts/deploy.sh
+```
+
+(sous Git Bash, préfixer par `MSYS_NO_PATHCONV=1`). Le site répond sur `https://sobased.localhost` : Caddy signe lui-même le certificat pour les noms en `.localhost`, le navigateur affiche donc un avertissement à accepter (« Paramètres avancés › Continuer »), ce qui n'arrive pas avec un vrai domaine. Sans SMTP, les e-mails (vérification, invitations) se lisent dans `docker compose -p sobased-prod -f docker-compose.prod.yml logs worker`. Les mêmes variables `ENV_FILE` / `COMPOSE_PROJECT` valent pour `scripts/backup.sh` et `scripts/restore.sh`. Pour tout arrêter et effacer : `docker compose -p sobased-prod -f docker-compose.prod.yml down -v`.

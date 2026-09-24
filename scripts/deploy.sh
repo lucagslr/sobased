@@ -3,9 +3,11 @@
 # collect Django's static files, restart. Safe to run again at any time.
 set -eu
 cd "$(dirname "$0")/.."
-COMPOSE="docker compose -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+# ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
+export ENV_FILE=${ENV_FILE:-.env}
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 
-[ -f .env ] || { echo ".env manquant : copie .env.example et remplis-le." >&2; exit 1; }
+[ -f "$ENV_FILE" ] || { echo "$ENV_FILE manquant : copie .env.example et remplis-le." >&2; exit 1; }
 
 if [ "${SKIP_PULL:-}" != "1" ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 	git pull --ff-only

@@ -5,14 +5,16 @@
 #   scripts/restore.sh backups/sobased-20260923-030000.tar.gz.enc
 set -eu
 cd "$(dirname "$0")/.."
-COMPOSE="docker compose -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
+# ENV_FILE / COMPOSE_PROJECT: only for a local rehearsal (docs/deploy.md §9).
+export ENV_FILE=${ENV_FILE:-.env}
+COMPOSE="docker compose --env-file $ENV_FILE -p ${COMPOSE_PROJECT:-sobased} -f ${COMPOSE_FILE:-docker-compose.prod.yml}"
 ARCHIVE=${1:?usage: restore.sh <archive.tar.gz.enc>}
 
-env_value() { grep -E "^$1=" .env | head -n 1 | cut -d= -f2- ; }
+env_value() { grep -E "^$1=" "$ENV_FILE" | head -n 1 | cut -d= -f2- ; }
 POSTGRES_USER=$(env_value POSTGRES_USER)
 POSTGRES_DB=$(env_value POSTGRES_DB)
 BACKUP_PASSPHRASE=$(env_value BACKUP_PASSPHRASE)
-[ -n "$BACKUP_PASSPHRASE" ] || { echo "BACKUP_PASSPHRASE manquant dans .env" >&2; exit 1; }
+[ -n "$BACKUP_PASSPHRASE" ] || { echo "BACKUP_PASSPHRASE manquant dans $ENV_FILE" >&2; exit 1; }
 export BACKUP_PASSPHRASE
 
 WORK=$(mktemp -d)
