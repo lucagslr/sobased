@@ -6,7 +6,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { type ProjectNode, projectsApi, type TasksView } from '@/api/projects'
-import { buildTree, type TreeNode } from '@/utils/projects'
+import { buildTree, groupByWorkspace, type TreeNode, type WorkspaceGroup } from '@/utils/projects'
 
 import { useWorkspacesStore } from './workspaces'
 
@@ -28,6 +28,17 @@ export const useProjectsStore = defineStore('projects', () => {
     return buildTree(visible)
   })
 
+  /** The same, grouped by workspace: the selected one, or every workspace I
+   * am in (empty ones included), so the container is always visible. */
+  const groups = computed<WorkspaceGroup[]>(() => {
+    const workspaces = useWorkspacesStore()
+    const list =
+      workspaces.selection === 'all'
+        ? workspaces.items
+        : workspaces.items.filter((w) => w.id === workspaces.selection)
+    return groupByWorkspace(nodes.value, list)
+  })
+
   async function load() {
     nodes.value = await projectsApi.tree(showArchived.value)
     loaded.value = true
@@ -45,5 +56,16 @@ export const useProjectsStore = defineStore('projects', () => {
     tasksViews.clear()
   }
 
-  return { nodes, loaded, showArchived, tasksViews, byId, tree, load, childrenOf, reset }
+  return {
+    nodes,
+    loaded,
+    showArchived,
+    tasksViews,
+    byId,
+    tree,
+    groups,
+    load,
+    childrenOf,
+    reset,
+  }
 })

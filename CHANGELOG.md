@@ -2,6 +2,12 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versions : [SemVer](https://semver.org/lang/fr/).
 
+## [Non publié]
+
+### Ajouté
+
+- Espaces et projets mieux distingués (retour de Luca) : filtre par espace en tête de la page Projets (puces « Tous les espaces », un espace, « Nouvel espace »), arbre et cartes regroupés par espace avec un en-tête (rôle, nombre de projets, « Voir cet espace seul » / « Tous les espaces », « + Projet »), arbre de la barre latérale groupé par espace avec « Quitter l'espace », espace toujours affiché dans le formulaire de projet avec la règle « un projet vit dans un espace », premières étapes sur le dashboard et la page Projets quand aucun espace n'existe.
+
 ## [1.1.0] - 2026-09-24
 
 ### Modifié

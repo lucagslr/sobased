@@ -4,18 +4,19 @@
  * with Passé / En cours / À venir columns). The choice is a display
  * preference of this device.
  */
-import { FolderTree, LayoutGrid, ListTree, Plus } from 'lucide-vue-next'
+import { FolderTree, Layers, LayoutGrid, ListTree, Plus } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ProjectNode } from '@/api/projects'
-import WorkspaceSwitcher from '@/components/layout/WorkspaceSwitcher.vue'
+import type { ProjectNode, Workspace } from '@/api/projects'
 import ProjectCardsView from '@/components/projects/ProjectCardsView.vue'
 import ProjectFormPanel from '@/components/projects/ProjectFormPanel.vue'
 import ProjectTreeRow from '@/components/projects/ProjectTreeRow.vue'
 import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
+import WorkspaceGroupHeader from '@/components/projects/WorkspaceGroupHeader.vue'
 import TaskPanel from '@/components/tasks/TaskPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import ColorDot from '@/components/ui/ColorDot.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SegmentedControl from '@/components/ui/SegmentedControl.vue'
@@ -23,6 +24,7 @@ import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
 import { useTaskPanel } from '@/composables/useTaskPanel'
 import { useProjectsStore } from '@/stores/projects'
 import { useWorkspacesStore } from '@/stores/workspaces'
+import { countTree } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
 type Mode = 'tree' | 'cards'
@@ -41,6 +43,7 @@ const mode = ref<Mode>(storedMode())
 const projectPanel = ref(false)
 const workspacePanel = ref(false)
 const parentForNew = ref<ProjectNode | null>(null)
+const workspaceForNew = ref<number | null>(null)
 const cardsView = ref<InstanceType<typeof ProjectCardsView> | null>(null)
 
 function storedMode(): Mode {
@@ -71,7 +74,20 @@ const canCreateRoot = computed(() => {
 
 function openCreate(parent: ProjectNode | null) {
   parentForNew.value = parent
+  workspaceForNew.value = null
   projectPanel.value = true
+}
+
+/** A root project in a given workspace (from its group header). */
+function openCreateIn(workspace: Workspace) {
+  parentForNew.value = null
+  workspaceForNew.value = workspace.id
+  projectPanel.value = true
+}
+
+const chipClass = 'flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors'
+function chipTone(active: boolean): string {
+  return active ? 'border-fg bg-fg text-surface' : 'border-line text-muted hover:text-fg'
 }
 
 const taskPanelOpen = computed({
@@ -83,16 +99,45 @@ const taskPanelOpen = computed({
 <template>
   <PageHeader
     title="Projets"
-    :subtitle="workspaces.current ? workspaces.current.name : 'Tous les espaces'"
+    :subtitle="
+      workspaces.current
+        ? `Espace ${workspaces.current.name}`
+        : `Tous les espaces (${workspaces.items.length})`
+    "
   >
     <BaseButton v-if="canCreateRoot" @click="openCreate(null)">
       <Plus class="size-4" aria-hidden="true" /> Nouveau projet
     </BaseButton>
   </PageHeader>
 
-  <!-- Below 1024px there is no sidebar: the workspace filter lives here. -->
-  <div class="mb-4 lg:hidden">
-    <WorkspaceSwitcher @create="workspacePanel = true" />
+  <!-- The workspace filter, on the page itself (the sidebar switcher does the same). -->
+  <div
+    v-if="workspaces.items.length"
+    class="mb-4 flex flex-wrap items-center gap-2"
+    role="group"
+    aria-label="Filtrer par espace"
+  >
+    <button
+      type="button"
+      :class="[chipClass, chipTone(workspaces.selection === 'all')]"
+      :aria-pressed="workspaces.selection === 'all'"
+      @click="workspaces.select('all')"
+    >
+      <Layers class="size-3.5" aria-hidden="true" /> Tous les espaces
+    </button>
+    <button
+      v-for="workspace in workspaces.items"
+      :key="workspace.id"
+      type="button"
+      :class="[chipClass, chipTone(workspaces.selection === workspace.id)]"
+      :aria-pressed="workspaces.selection === workspace.id"
+      @click="workspaces.select(workspace.id)"
+    >
+      <ColorDot :color="workspace.color" /> {{ workspace.name }}
+    </button>
+    <BaseButton variant="ghost" size="sm" @click="workspacePanel = true">
+      <Plus class="size-4" aria-hidden="true" /> Nouvel espace
+    </BaseButton>
   </div>
 
   <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -110,35 +155,54 @@ const taskPanelOpen = computed({
   <EmptyState
     v-else-if="!workspaces.items.length"
     :icon="FolderTree"
-    title="Commence par créer un espace"
-    text="Un espace regroupe tes projets et les personnes avec qui tu les partages : 100SATIONS, École, Perso…"
+    title="Étape 1 : crée un espace"
+    text="Un espace est le cadre qui regroupe des projets et les personnes qui y travaillent : l'association, l'école, perso… Les projets (un artiste, un album, un cours) viennent ensuite, à l'intérieur d'un espace."
   >
     <BaseButton @click="workspacePanel = true">Créer mon premier espace</BaseButton>
   </EmptyState>
 
   <ProjectCardsView v-else-if="mode === 'cards'" ref="cardsView" @open-task="openTask" />
 
-  <EmptyState
-    v-else-if="!projects.tree.length"
-    :icon="FolderTree"
-    title="Aucun projet ici"
-    text="Crée un projet racine (un artiste, une école, l'admin de l'asso), puis des sous-projets sur 4 niveaux au maximum."
-  >
-    <BaseButton v-if="canCreateRoot" @click="openCreate(null)">Nouveau projet</BaseButton>
-  </EmptyState>
-
-  <ul v-else class="border-t border-line">
-    <ProjectTreeRow
-      v-for="node in projects.tree"
-      :key="node.id"
-      :node="node"
-      @add-child="openCreate"
-    />
-  </ul>
+  <div v-else class="space-y-8">
+    <section v-for="group in projects.groups" :key="group.workspace.id">
+      <WorkspaceGroupHeader
+        :workspace="group.workspace"
+        :count="countTree(group.roots)"
+        :filtered="workspaces.selection === group.workspace.id"
+        :can-create="atLeast(group.workspace.my_role, 'editor')"
+        @create="openCreateIn(group.workspace)"
+        @filter="workspaces.select(group.workspace.id)"
+        @clear="workspaces.select('all')"
+      />
+      <ul v-if="group.roots.length" class="border-t border-line">
+        <ProjectTreeRow
+          v-for="node in group.roots"
+          :key="node.id"
+          :node="node"
+          @add-child="openCreate"
+        />
+      </ul>
+      <p
+        v-else
+        class="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-muted"
+      >
+        Aucun projet dans cet espace pour l'instant.
+        <button
+          v-if="atLeast(group.workspace.my_role, 'editor')"
+          type="button"
+          class="font-medium text-fg underline"
+          @click="openCreateIn(group.workspace)"
+        >
+          Créer le premier projet
+        </button>
+      </p>
+    </section>
+  </div>
 
   <ProjectFormPanel
     v-model:open="projectPanel"
     :parent="parentForNew"
+    :workspace="workspaceForNew"
     @saved="router.push(`/projets/${$event.id}`)"
   />
   <WorkspaceFormPanel v-model:open="workspacePanel" />

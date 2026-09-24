@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ProjectNode } from '@/api/projects'
+import type { ProjectNode, Workspace } from '@/api/projects'
 
-import { buildTree, formatDate, formatDateRange, moveTargets } from './projects'
+import {
+  buildTree,
+  countTree,
+  formatDate,
+  formatDateRange,
+  groupByWorkspace,
+  moveTargets,
+} from './projects'
 
 function node(id: number, parent: number | null, name: string, position = 0): ProjectNode {
   return {
@@ -113,5 +120,25 @@ describe('dates', () => {
     expect(formatDateRange('2026-10-12', null)).toBe('dès le 12.10.2026')
     expect(formatDateRange(null, '2026-11-30')).toBe("jusqu'au 30.11.2026")
     expect(formatDateRange(null, null)).toBe('')
+  })
+})
+
+describe('groupByWorkspace', () => {
+  const workspace = (id: number, name: string) =>
+    ({ id, name, color: '#fff', my_role: 'owner', is_shell: false }) as Workspace
+  const inWorkspace = (id: number, ws: number, parent: number | null = null) =>
+    ({ ...node(id, parent, `P${id}`), workspace: ws }) as ProjectNode
+
+  it('keeps every workspace, sorted by name, with its own tree', () => {
+    const groups = groupByWorkspace(
+      [inWorkspace(1, 20), inWorkspace(2, 10), inWorkspace(3, 10, 2)],
+      [workspace(20, 'Zeta'), workspace(10, 'Alpha'), workspace(30, 'Vide')],
+    )
+    expect(groups.map((g) => g.workspace.name)).toEqual(['Alpha', 'Vide', 'Zeta'])
+    expect(groups[0].roots.map((r) => r.id)).toEqual([2])
+    expect(groups[0].roots[0].children.map((c) => c.id)).toEqual([3])
+    expect(groups[1].roots).toEqual([])
+    expect(countTree(groups[0].roots)).toBe(2)
+    expect(countTree(groups[2].roots)).toBe(1)
   })
 })

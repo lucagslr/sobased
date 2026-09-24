@@ -39,11 +39,13 @@ import { useTransactionPanel } from '@/composables/useTransactionPanel'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useUiStore } from '@/stores/ui'
+import { useWorkspacesStore } from '@/stores/workspaces'
 import { LOCKED_WIDGET, patchWidget, reorder, sizeClass, widgetsToShow } from '@/utils/dashboard'
 
 const auth = useAuthStore()
 const dashboard = useDashboardStore()
 const ui = useUiStore()
+const workspaces = useWorkspacesStore()
 const router = useRouter()
 const { taskId, openTask, closeTask } = useTaskPanel()
 const { eventId, openEvent, closeEvent } = useEventPanel()
@@ -147,6 +149,25 @@ function createTaskFrom(event: Event) {
       {{ editing ? 'Terminer' : 'Personnaliser' }}
     </BaseButton>
   </PageHeader>
+
+  <!-- First steps: no workspace yet means nothing can exist. -->
+  <section
+    v-if="workspaces.loaded && !workspaces.items.length"
+    class="mb-6 rounded-xl border border-line bg-surface p-5"
+  >
+    <h2 class="font-semibold">Bienvenue ! Deux étapes pour commencer</h2>
+    <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted">
+      <li>
+        <strong class="text-fg">Crée un espace</strong> : le cadre qui regroupe des projets et les
+        personnes qui y travaillent (l'association, l'école, perso).
+      </li>
+      <li>
+        <strong class="text-fg">Crée des projets dedans</strong> : un artiste, un album, un cours…
+        avec leurs tâches, RDV, fichiers et compta.
+      </li>
+    </ol>
+    <BaseButton class="mt-4" @click="router.push('/projets')">Commencer par un espace</BaseButton>
+  </section>
 
   <!-- Saved views -->
   <nav

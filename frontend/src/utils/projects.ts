@@ -1,5 +1,5 @@
 /** Labels, palette and tree helpers for projects. */
-import type { ProjectNode, ProjectStatus, Temporal } from '@/api/projects'
+import type { ProjectNode, ProjectStatus, Temporal, Workspace } from '@/api/projects'
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   idea: 'Idée',
@@ -128,4 +128,24 @@ export function formatDateRange(start?: string | null, end?: string | null): str
   if (start) return `dès le ${formatDate(start)}`
   if (end) return `jusqu'au ${formatDate(end)}`
   return ''
+}
+
+export interface WorkspaceGroup {
+  workspace: Workspace
+  roots: TreeNode[]
+}
+
+/** One group per workspace (empty ones included), sorted by name, each with its own tree. */
+export function groupByWorkspace(nodes: ProjectNode[], workspaces: Workspace[]): WorkspaceGroup[] {
+  return [...workspaces]
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+    .map((workspace) => ({
+      workspace,
+      roots: buildTree(nodes.filter((node) => node.workspace === workspace.id)),
+    }))
+}
+
+/** Number of projects in a tree, every level counted. */
+export function countTree(nodes: TreeNode[]): number {
+  return nodes.reduce((total, node) => total + 1 + countTree(node.children), 0)
 }

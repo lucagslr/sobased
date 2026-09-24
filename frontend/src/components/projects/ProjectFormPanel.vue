@@ -29,7 +29,12 @@ import { atLeast } from '@/utils/roles'
 
 import TagPicker from './TagPicker.vue'
 
-const props = defineProps<{ parent?: ProjectNode | null; project?: Project | null }>()
+const props = defineProps<{
+  parent?: ProjectNode | null
+  project?: Project | null
+  /** Workspace of a new root project when the caller already knows it. */
+  workspace?: number | null
+}>()
 const emit = defineEmits<{ saved: [project: Project] }>()
 const open = defineModel<boolean>('open', { required: true })
 
@@ -97,7 +102,12 @@ async function prepare() {
   } else {
     const selected = workspaces.selection === 'all' ? undefined : workspaces.selection
     Object.assign(form, {
-      workspace: props.parent?.workspace ?? selected ?? writableWorkspaces.value[0]?.id ?? 0,
+      workspace:
+        props.parent?.workspace ??
+        props.workspace ??
+        selected ??
+        writableWorkspaces.value[0]?.id ??
+        0,
       name: '',
       type: '',
       status: 'planned',
@@ -160,13 +170,22 @@ async function save() {
   <SidePanel v-model:open="open" :title="title">
     <form v-if="ready" id="project-form" class="space-y-5" @submit.prevent="save">
       <FormError :message="error || fieldErrors.parent?.[0] || fieldErrors.workspace?.[0]" />
-      <BaseSelect
-        v-if="!project && !parent && writableWorkspaces.length > 1"
-        :model-value="String(form.workspace)"
-        label="Espace"
-        :options="writableWorkspaces.map((w) => ({ value: String(w.id), label: w.name }))"
-        @update:model-value="form.workspace = Number($event)"
-      />
+      <div v-if="!project && !parent">
+        <BaseSelect
+          v-if="writableWorkspaces.length > 1"
+          :model-value="String(form.workspace)"
+          label="Espace"
+          :options="writableWorkspaces.map((w) => ({ value: String(w.id), label: w.name }))"
+          @update:model-value="form.workspace = Number($event)"
+        />
+        <p v-else class="text-sm">
+          Espace : <strong>{{ workspaces.byId.get(form.workspace)?.name }}</strong>
+        </p>
+        <p class="mt-1.5 text-xs text-muted">
+          Un projet vit toujours dans un espace (l'association, l'école, perso…). Pour un autre
+          espace : menu « Tous les espaces » › Nouvel espace.
+        </p>
+      </div>
       <BaseInput v-model="form.name" label="Nom" required :errors="fieldErrors.name" />
       <div class="grid gap-4 sm:grid-cols-2">
         <BaseSelect
