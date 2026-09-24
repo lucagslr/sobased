@@ -336,6 +336,7 @@ SPECTACULAR_SETTINGS = {
         "ProjectStatusEnum": "apps.projects.models.PROJECT_STATUS_CHOICES",
         "TaskStatusEnum": "apps.tasks.models.TASK_STATUS_CHOICES",
         "EventTypeEnum": "apps.events.models.EVENT_TYPE_CHOICES",
+        "ProjectCategoryEnum": "apps.workspaces.models.PROJECT_CATEGORY_CHOICES",
         "TransactionKindEnum": "apps.finance.models.KIND_CHOICES",
         "PaymentStatusEnum": "apps.finance.models.PAYMENT_STATUS_CHOICES",
         "FrequencyEnum": "apps.finance.models.FREQUENCY_CHOICES",

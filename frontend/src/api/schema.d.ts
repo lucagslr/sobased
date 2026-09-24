@@ -3204,16 +3204,29 @@ export interface components {
         };
         /**
          * @description * `meeting` - RDV
+         *     * `call` - Appel / visio
+         *     * `brief` - Brief
          *     * `live` - Date live
+         *     * `rehearsal` - Répétition
+         *     * `soundcheck` - Balance
+         *     * `residency` - Résidence
+         *     * `studio` - Session studio
          *     * `shooting` - Tournage
+         *     * `editing` - Montage
+         *     * `photoshoot` - Séance photo
          *     * `release` - Release
          *     * `release_party` - Release party
+         *     * `press` - Interview / presse
+         *     * `deadline` - Échéance
          *     * `class` - Cours
          *     * `exam` - Examen
+         *     * `submission` - Rendu
+         *     * `defense` - Soutenance
+         *     * `personal` - Personnel
          *     * `other` - Autre
          * @enum {string}
          */
-        EventTypeEnum: "meeting" | "live" | "shooting" | "release" | "release_party" | "class" | "exam" | "other";
+        EventTypeEnum: "meeting" | "call" | "brief" | "live" | "rehearsal" | "soundcheck" | "residency" | "studio" | "shooting" | "editing" | "photoshoot" | "release" | "release_party" | "press" | "deadline" | "class" | "exam" | "submission" | "defense" | "personal" | "other";
         ExternalCalendar: {
             readonly id: number;
             readonly provider: string;
@@ -3798,6 +3811,7 @@ export interface components {
         PatchedProjectTypeRequest: {
             workspace?: number;
             name?: string;
+            category?: components["schemas"]["ProjectCategoryEnum"];
             position?: number;
         };
         PatchedRecurringExpenseRequest: {
@@ -3999,6 +4013,21 @@ export interface components {
             current: components["schemas"]["CardEntry"][];
             upcoming: components["schemas"]["CardEntry"][];
         };
+        /**
+         * @description * `structure` - Artistes & structures
+         *     * `music` - Production musicale
+         *     * `video` - Audiovisuel
+         *     * `live` - Live & événements
+         *     * `release` - Sortie & promotion
+         *     * `communication` - Communication & contenu
+         *     * `admin` - Administratif & financement
+         *     * `studies` - Études
+         *     * `client` - Mandats & clients
+         *     * `personal` - Personnel
+         *     * `other` - Autre
+         * @enum {string}
+         */
+        ProjectCategoryEnum: "structure" | "music" | "video" | "live" | "release" | "communication" | "admin" | "studies" | "client" | "personal" | "other";
         ProjectContact: {
             readonly id: number;
             project: number;
@@ -4090,11 +4119,13 @@ export interface components {
             readonly id: number;
             workspace: number;
             name: string;
+            category: components["schemas"]["ProjectCategoryEnum"];
             position: number;
         };
         ProjectTypeRequest: {
             workspace: number;
             name: string;
+            category?: components["schemas"]["ProjectCategoryEnum"];
             position?: number;
         };
         ProviderState: {
@@ -6299,15 +6330,28 @@ export interface operations {
                 tag?: number;
                 /**
                  * @description * `meeting` - RDV
+                 *     * `call` - Appel / visio
+                 *     * `brief` - Brief
                  *     * `live` - Date live
+                 *     * `rehearsal` - Répétition
+                 *     * `soundcheck` - Balance
+                 *     * `residency` - Résidence
+                 *     * `studio` - Session studio
                  *     * `shooting` - Tournage
+                 *     * `editing` - Montage
+                 *     * `photoshoot` - Séance photo
                  *     * `release` - Release
                  *     * `release_party` - Release party
+                 *     * `press` - Interview / presse
+                 *     * `deadline` - Échéance
                  *     * `class` - Cours
                  *     * `exam` - Examen
+                 *     * `submission` - Rendu
+                 *     * `defense` - Soutenance
+                 *     * `personal` - Personnel
                  *     * `other` - Autre
                  */
-                type?: ("class" | "exam" | "live" | "meeting" | "other" | "release" | "release_party" | "shooting")[];
+                type?: ("brief" | "call" | "class" | "deadline" | "defense" | "editing" | "exam" | "live" | "meeting" | "other" | "personal" | "photoshoot" | "press" | "rehearsal" | "release" | "release_party" | "residency" | "shooting" | "soundcheck" | "studio" | "submission")[];
                 window_end?: string;
                 window_start?: string;
                 workspace?: number;

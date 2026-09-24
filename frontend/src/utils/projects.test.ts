@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ProjectNode, Workspace } from '@/api/projects'
+import type { ProjectNode, ProjectType, Workspace } from '@/api/projects'
 
 import {
   buildTree,
@@ -9,6 +9,7 @@ import {
   formatDateRange,
   groupByWorkspace,
   moveTargets,
+  typesByCategory,
 } from './projects'
 
 function node(id: number, parent: number | null, name: string, position = 0): ProjectNode {
@@ -140,5 +141,20 @@ describe('groupByWorkspace', () => {
     expect(groups[1].roots).toEqual([])
     expect(countTree(groups[0].roots)).toBe(2)
     expect(countTree(groups[2].roots)).toBe(1)
+  })
+})
+
+describe('typesByCategory', () => {
+  it('groups the types by family, in the fixed order, skipping empty families', () => {
+    const type = (id: number, name: string, category: ProjectType['category']) =>
+      ({ id, name, category, workspace: 1, position: id }) as ProjectType
+    const groups = typesByCategory([
+      type(1, 'Examen', 'studies'),
+      type(2, 'Album', 'music'),
+      type(3, 'Autre', 'other'),
+      type(4, 'Cours', 'studies'),
+    ])
+    expect(groups.map((g) => g.label)).toEqual(['Production musicale', 'Études', 'Autre'])
+    expect(groups[1].types.map((t) => t.name)).toEqual(['Examen', 'Cours'])
   })
 })

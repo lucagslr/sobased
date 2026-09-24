@@ -32,7 +32,7 @@ import SkeletonBlock from '@/components/ui/SkeletonBlock.vue'
 import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
-import { EVENT_TYPE_LABELS, EVENT_TYPE_ORDER, isPast } from '@/utils/events'
+import { EVENT_TYPE_GROUPS, EVENT_TYPE_LABELS, isPast } from '@/utils/events'
 import { atLeast } from '@/utils/roles'
 import {
   buildRrule,
@@ -97,7 +97,10 @@ const canEdit = computed(() => atLeast(project.value?.my_role, 'editor'))
 const originalRule = computed(() => event.value?.recurrence?.rrule ?? '')
 const over = computed(() => !!event.value && isPast(event.value))
 
-const typeOptions = EVENT_TYPE_ORDER.map((value) => ({ value, label: EVENT_TYPE_LABELS[value] }))
+const typeGroups = EVENT_TYPE_GROUPS.map((group) => ({
+  label: group.label,
+  options: group.types.map((value) => ({ value, label: EVENT_TYPE_LABELS[value] })),
+}))
 
 function fill(source: Event | null) {
   const allDay = source?.all_day ?? false
@@ -270,7 +273,13 @@ function onScopeChosen(scope: RecurrenceScope) {
         :errors="fieldErrors.title"
       />
       <div class="grid grid-cols-2 gap-4">
-        <BaseSelect v-model="form.type" label="Type" :options="typeOptions" :disabled="!canEdit" />
+        <BaseSelect
+          v-model="form.type"
+          label="Type"
+          :options="[]"
+          :groups="typeGroups"
+          :disabled="!canEdit"
+        />
         <BaseInput
           v-model="form.location"
           label="Lieu"

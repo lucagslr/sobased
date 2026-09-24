@@ -44,7 +44,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 class ProjectTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectType
-        fields = ["id", "workspace", "name", "position"]
+        fields = ["id", "workspace", "name", "category", "position"]
 
     def validate(self, attrs):
         workspace = attrs.get("workspace") or self.instance.workspace

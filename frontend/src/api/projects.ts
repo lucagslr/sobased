@@ -8,6 +8,7 @@ export type Workspace = Schemas['Workspace']
 export type ProjectNode = Schemas['ProjectNode']
 export type Project = Schemas['Project']
 export type ProjectType = Schemas['ProjectType']
+export type ProjectCategory = Schemas['ProjectCategoryEnum']
 export type Tag = Schemas['Tag']
 export type Role = Schemas['RoleEnum']
 export type GrantableRole = Schemas['GrantableRoleEnum']
@@ -80,8 +81,11 @@ export const workspacesApi = {
 
   projectTypes: (workspace: number) =>
     api<ProjectType[]>(`/api/project-types/?workspace=${workspace}`),
-  createProjectType: (workspace: number, name: string) =>
-    api<ProjectType>('/api/project-types/', { method: 'POST', body: { workspace, name } }),
+  createProjectType: (workspace: number, name: string, category: ProjectCategory) =>
+    api<ProjectType>('/api/project-types/', {
+      method: 'POST',
+      body: { workspace, name, category },
+    }),
   renameProjectType: (id: number, name: string) =>
     api<ProjectType>(`/api/project-types/${id}/`, { method: 'PATCH', body: { name } }),
   removeProjectType: (id: number) => api(`/api/project-types/${id}/`, { method: 'DELETE' }),

@@ -6,7 +6,13 @@ from rest_framework.test import APIClient
 from apps.accounts.tests.factories import UserFactory
 from apps.projects.models import Membership
 from apps.projects.tests.factories import Tree, grant
-from apps.workspaces.models import DEFAULT_PROJECT_TYPES, ProjectType, Tag, Workspace
+from apps.workspaces.models import (
+    DEFAULT_PROJECT_TYPE_NAMES,
+    DEFAULT_PROJECT_TYPES,
+    ProjectType,
+    Tag,
+    Workspace,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -41,8 +47,12 @@ def test_anyone_can_create_a_workspace_and_owns_it(member):
     workspace = Workspace.objects.get(name="100SATIONS")
     assert Membership.objects.get(workspace=workspace).role == "owner"
     assert list(workspace.project_types.values_list("name", flat=True)) == (
-        DEFAULT_PROJECT_TYPES
+        DEFAULT_PROJECT_TYPE_NAMES
     )
+    # Every default type sits in its family (the form asks for it first).
+    assert list(workspace.project_types.values_list("category", "name")) == [
+        (category.value, name) for category, name in DEFAULT_PROJECT_TYPES
+    ]
 
 
 def test_invalid_colour_is_refused(member):

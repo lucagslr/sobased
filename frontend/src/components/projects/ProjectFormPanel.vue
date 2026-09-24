@@ -24,7 +24,7 @@ import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspacesStore } from '@/stores/workspaces'
-import { PASTEL_PALETTE, STATUS_LABELS, STATUS_ORDER } from '@/utils/projects'
+import { PASTEL_PALETTE, STATUS_LABELS, STATUS_ORDER, typesByCategory } from '@/utils/projects'
 import { atLeast } from '@/utils/roles'
 
 import TagPicker from './TagPicker.vue'
@@ -70,12 +70,34 @@ onMounted(async () => {
 const writableWorkspaces = computed(() =>
   workspaces.joined.filter((w) => atLeast(w.my_role, 'editor')),
 )
+// Two levels: the family (fixed list) narrows the types (editable per workspace).
+const category = ref('')
+const typeGroups = computed(() =>
+  typesByCategory(workspaces.typesByWorkspace[form.workspace] ?? []),
+)
+const categoryOptions = computed(() => [
+  { value: '', label: 'Choisir une famille…' },
+  ...typeGroups.value.map((group) => ({ value: group.category, label: group.label })),
+])
 const typeOptions = computed(() =>
-  (workspaces.typesByWorkspace[form.workspace] ?? []).map((t) => ({
+  (typeGroups.value.find((group) => group.category === category.value)?.types ?? []).map((t) => ({
     value: String(t.id),
     label: t.name,
   })),
 )
+/** Editing: the family comes from the current type once the types are known. */
+function syncCategory() {
+  const current = (workspaces.typesByWorkspace[form.workspace] ?? []).find(
+    (t) => String(t.id) === form.type,
+  )
+  category.value = current?.category ?? ''
+}
+watch(category, (value, previous) => {
+  if (previous !== undefined && value !== previous) {
+    const stillThere = typeOptions.value.some((t) => t.value === form.type)
+    if (!stillThere) form.type = ''
+  }
+})
 const statusOptions = STATUS_ORDER.map((value) => ({ value, label: STATUS_LABELS[value] }))
 const title = computed(() => {
   if (props.project) return 'Modifier le projet'
@@ -120,6 +142,7 @@ async function prepare() {
     })
   }
   if (form.workspace) await workspaces.loadTypes(form.workspace)
+  syncCategory()
   createDriveFolder.value = true
   ready.value = true
 }
@@ -130,6 +153,7 @@ watch(
   async (id) => {
     if (!id || props.project) return
     await workspaces.loadTypes(id)
+    syncCategory()
     form.type = ''
     form.tags = []
   },
@@ -188,10 +212,15 @@ async function save() {
       </div>
       <BaseInput v-model="form.name" label="Nom" required :errors="fieldErrors.name" />
       <div class="grid gap-4 sm:grid-cols-2">
+        <BaseSelect v-model="category" label="Famille" :options="categoryOptions" />
         <BaseSelect
           v-model="form.type"
           label="Type"
-          :options="[{ value: '', label: project ? '—' : 'Autre (par défaut)' }, ...typeOptions]"
+          :disabled="!category"
+          :options="[
+            { value: '', label: category ? 'Choisir un type…' : 'Autre (par défaut)' },
+            ...typeOptions,
+          ]"
           :errors="fieldErrors.type"
         />
         <BaseSelect

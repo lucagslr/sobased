@@ -5,6 +5,8 @@ import { useId } from 'vue'
 defineProps<{
   label: string
   options: { value: string; label: string }[]
+  /** Optional <optgroup>s, rendered after `options`. */
+  groups?: { label: string; options: { value: string; label: string }[] }[]
   errors?: string[]
   disabled?: boolean
 }>()
@@ -25,6 +27,11 @@ const id = useId()
       <option v-for="option in options" :key="option.value" :value="option.value">
         {{ option.label }}
       </option>
+      <optgroup v-for="group in groups" :key="group.label" :label="group.label">
+        <option v-for="option in group.options" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </optgroup>
     </select>
     <p v-if="errors?.length" class="mt-1.5 text-sm text-danger">{{ errors[0] }}</p>
   </div>

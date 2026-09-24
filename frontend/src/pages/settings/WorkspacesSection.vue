@@ -9,11 +9,17 @@ import { computed, reactive, ref, watch } from 'vue'
 
 import { ApiError } from '@/api/client'
 import { type Category, financeApi } from '@/api/finance'
-import { type ProjectType, type Workspace, workspacesApi } from '@/api/projects'
+import {
+  type ProjectCategory,
+  type ProjectType,
+  type Workspace,
+  workspacesApi,
+} from '@/api/projects'
 import MembersPanel from '@/components/projects/MembersPanel.vue'
 import WorkspaceFormPanel from '@/components/projects/WorkspaceFormPanel.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import ColorDot from '@/components/ui/ColorDot.vue'
 import ColorPicker from '@/components/ui/ColorPicker.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
@@ -21,6 +27,7 @@ import FormCard from '@/components/ui/FormCard.vue'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
 import { useWorkspacesStore } from '@/stores/workspaces'
+import { PROJECT_CATEGORY_LABELS, PROJECT_CATEGORY_ORDER, typesByCategory } from '@/utils/projects'
 import { atLeast, ROLE_LABELS } from '@/utils/roles'
 
 const workspaces = useWorkspacesStore()
@@ -36,6 +43,12 @@ const isOwner = computed(() => opened.value?.my_role === 'owner')
 const general = reactive({ name: '', color: '#CBD5E1' })
 const types = ref<ProjectType[]>([])
 const newType = ref('')
+const newTypeCategory = ref<ProjectCategory>('other')
+const typeGroups = computed(() => typesByCategory(types.value))
+const categoryOptions = PROJECT_CATEGORY_ORDER.map((value) => ({
+  value,
+  label: PROJECT_CATEGORY_LABELS[value],
+}))
 const categories = ref<Category[]>([])
 const newCategory = ref('')
 const heir = ref('')
@@ -86,7 +99,11 @@ const saveGeneral = () =>
 const addType = () =>
   run(
     async () => {
-      await workspacesApi.createProjectType(opened.value!.id, newType.value.trim())
+      await workspacesApi.createProjectType(
+        opened.value!.id,
+        newType.value.trim(),
+        newTypeCategory.value,
+      )
       newType.value = ''
       types.value = await workspaces.loadTypes(opened.value!.id, true)
     },
@@ -213,25 +230,31 @@ async function remove() {
       :title="`${opened.name} : types de projet`"
       description="Supprimer un type utilisé bascule ses projets sur « Autre »."
     >
-      <ul class="mb-4 flex flex-wrap gap-2">
-        <li
-          v-for="type in types"
-          :key="type.id"
-          class="inline-flex h-8 items-center gap-1 rounded-full border border-line pr-1 pl-3 text-sm"
-        >
-          {{ type.name }}
-          <button
-            type="button"
-            class="rounded-full p-1 text-muted hover:text-danger"
-            :aria-label="`Supprimer le type ${type.name}`"
-            @click="removeType(type)"
+      <div v-for="group in typeGroups" :key="group.category" class="mb-4">
+        <h3 class="mb-1.5 text-xs font-semibold tracking-wide text-muted uppercase">
+          {{ group.label }}
+        </h3>
+        <ul class="flex flex-wrap gap-2">
+          <li
+            v-for="type in group.types"
+            :key="type.id"
+            class="inline-flex h-8 items-center gap-1 rounded-full border border-line pr-1 pl-3 text-sm"
           >
-            <Trash2 class="size-3.5" aria-hidden="true" />
-          </button>
-        </li>
-      </ul>
-      <form class="flex items-end gap-3" @submit.prevent="addType">
-        <div class="flex-1"><BaseInput v-model="newType" label="Nouveau type" required /></div>
+            {{ type.name }}
+            <button
+              type="button"
+              class="rounded-full p-1 text-muted hover:text-danger"
+              :aria-label="`Supprimer le type ${type.name}`"
+              @click="removeType(type)"
+            >
+              <Trash2 class="size-3.5" aria-hidden="true" />
+            </button>
+          </li>
+        </ul>
+      </div>
+      <form class="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]" @submit.prevent="addType">
+        <BaseSelect v-model="newTypeCategory" label="Famille" :options="categoryOptions" />
+        <BaseInput v-model="newType" label="Nouveau type" required />
         <BaseButton type="submit" variant="secondary" :loading="busy">Ajouter</BaseButton>
       </form>
     </FormCard>

@@ -16,30 +16,112 @@ hex_color_validator = RegexValidator(
     regex=r"^#[0-9A-Fa-f]{6}$", message="Couleur attendue au format #RRGGBB."
 )
 
-# SPEC §5. Created with every new workspace, then editable per workspace.
+
+class ProjectCategory(models.TextChoices):
+    """The broad family a project type belongs to. Fixed in code: the form
+    asks for the family first, then for the type (editable per workspace).
+    Written for independents: labels, producers, film makers, students,
+    freelancers."""
+
+    STRUCTURE = "structure", "Artistes & structures"
+    MUSIC = "music", "Production musicale"
+    VIDEO = "video", "Audiovisuel"
+    LIVE = "live", "Live & événements"
+    RELEASE = "release", "Sortie & promotion"
+    COMMUNICATION = "communication", "Communication & contenu"
+    ADMIN = "admin", "Administratif & financement"
+    STUDIES = "studies", "Études"
+    CLIENT = "client", "Mandats & clients"
+    PERSONAL = "personal", "Personnel"
+    OTHER = "other", "Autre"
+
+
+PROJECT_CATEGORY_CHOICES = ProjectCategory.choices
+
+# SPEC §5, widened on 24.09.2026: (category, name), created with every new
+# workspace in this order, then editable per workspace.
 DEFAULT_PROJECT_TYPES = [
-    "Artiste",
-    "Album",
-    "Single",
-    "Clip",
-    "Feat",
-    "Release",
-    "Date live",
-    "Release party",
-    "Tournage",
-    "Documentaire",
-    "Communication",
-    "Visuel",
-    "Administratif",
-    "Demande de fonds",
-    "Cours",
-    "TP",
-    "Rendu",
-    "Examen",
-    "Travail de bachelor",
-    "Mandat",
-    "Autre",
+    (ProjectCategory.STRUCTURE, "Artiste"),
+    (ProjectCategory.STRUCTURE, "Groupe"),
+    (ProjectCategory.STRUCTURE, "Label"),
+    (ProjectCategory.STRUCTURE, "Collectif"),
+    (ProjectCategory.STRUCTURE, "Compagnie"),
+    (ProjectCategory.MUSIC, "Album"),
+    (ProjectCategory.MUSIC, "EP"),
+    (ProjectCategory.MUSIC, "Single"),
+    (ProjectCategory.MUSIC, "Mixtape"),
+    (ProjectCategory.MUSIC, "Feat"),
+    (ProjectCategory.MUSIC, "Remix"),
+    (ProjectCategory.MUSIC, "Beat / instru"),
+    (ProjectCategory.MUSIC, "Bande originale"),
+    (ProjectCategory.MUSIC, "Session studio"),
+    (ProjectCategory.MUSIC, "Mixage"),
+    (ProjectCategory.MUSIC, "Mastering"),
+    (ProjectCategory.MUSIC, "Pressage"),
+    (ProjectCategory.VIDEO, "Clip"),
+    (ProjectCategory.VIDEO, "Court-métrage"),
+    (ProjectCategory.VIDEO, "Long-métrage"),
+    (ProjectCategory.VIDEO, "Documentaire"),
+    (ProjectCategory.VIDEO, "Série"),
+    (ProjectCategory.VIDEO, "Tournage"),
+    (ProjectCategory.VIDEO, "Montage"),
+    (ProjectCategory.VIDEO, "Teaser"),
+    (ProjectCategory.VIDEO, "Captation live"),
+    (ProjectCategory.VIDEO, "Aftermovie"),
+    (ProjectCategory.LIVE, "Date live"),
+    (ProjectCategory.LIVE, "Tournée"),
+    (ProjectCategory.LIVE, "Festival"),
+    (ProjectCategory.LIVE, "Release party"),
+    (ProjectCategory.LIVE, "Showcase"),
+    (ProjectCategory.LIVE, "Résidence"),
+    (ProjectCategory.LIVE, "Soirée"),
+    (ProjectCategory.LIVE, "Exposition"),
+    (ProjectCategory.RELEASE, "Release"),
+    (ProjectCategory.RELEASE, "Campagne de sortie"),
+    (ProjectCategory.RELEASE, "Distribution"),
+    (ProjectCategory.RELEASE, "Playlisting"),
+    (ProjectCategory.RELEASE, "Relations presse"),
+    (ProjectCategory.RELEASE, "Radio / TV"),
+    (ProjectCategory.COMMUNICATION, "Communication"),
+    (ProjectCategory.COMMUNICATION, "Réseaux sociaux"),
+    (ProjectCategory.COMMUNICATION, "Site web"),
+    (ProjectCategory.COMMUNICATION, "Newsletter"),
+    (ProjectCategory.COMMUNICATION, "Visuel"),
+    (ProjectCategory.COMMUNICATION, "Identité visuelle"),
+    (ProjectCategory.COMMUNICATION, "Photo"),
+    (ProjectCategory.COMMUNICATION, "Merch"),
+    (ProjectCategory.COMMUNICATION, "Affiche / flyer"),
+    (ProjectCategory.ADMIN, "Administratif"),
+    (ProjectCategory.ADMIN, "Demande de fonds"),
+    (ProjectCategory.ADMIN, "Subvention"),
+    (ProjectCategory.ADMIN, "Budget"),
+    (ProjectCategory.ADMIN, "Comptabilité"),
+    (ProjectCategory.ADMIN, "Contrat"),
+    (ProjectCategory.ADMIN, "Droits d'auteur"),
+    (ProjectCategory.ADMIN, "Assurance"),
+    (ProjectCategory.ADMIN, "Recrutement"),
+    (ProjectCategory.STUDIES, "Cours"),
+    (ProjectCategory.STUDIES, "TP"),
+    (ProjectCategory.STUDIES, "Révision"),
+    (ProjectCategory.STUDIES, "Examen"),
+    (ProjectCategory.STUDIES, "Rendu"),
+    (ProjectCategory.STUDIES, "Projet de semestre"),
+    (ProjectCategory.STUDIES, "Travail de bachelor"),
+    (ProjectCategory.STUDIES, "Travail de master"),
+    (ProjectCategory.STUDIES, "Mémoire"),
+    (ProjectCategory.STUDIES, "Stage"),
+    (ProjectCategory.CLIENT, "Mandat"),
+    (ProjectCategory.CLIENT, "Devis"),
+    (ProjectCategory.CLIENT, "Prestation"),
+    (ProjectCategory.CLIENT, "Livraison"),
+    (ProjectCategory.CLIENT, "Suivi client"),
+    (ProjectCategory.PERSONAL, "Projet perso"),
+    (ProjectCategory.PERSONAL, "Voyage"),
+    (ProjectCategory.PERSONAL, "Maison"),
+    (ProjectCategory.PERSONAL, "Santé"),
+    (ProjectCategory.OTHER, "Autre"),
 ]
+DEFAULT_PROJECT_TYPE_NAMES = [name for _, name in DEFAULT_PROJECT_TYPES]
 # The type a project falls back to when its own type is deleted.
 FALLBACK_PROJECT_TYPE = "Autre"
 
@@ -74,8 +156,8 @@ class Workspace(TimeStampedModel):
         from apps.finance.models import Category  # sits above this app
 
         ProjectType.objects.bulk_create(
-            ProjectType(workspace=self, name=name, position=index)
-            for index, name in enumerate(DEFAULT_PROJECT_TYPES)
+            ProjectType(workspace=self, name=name, category=category, position=index)
+            for index, (category, name) in enumerate(DEFAULT_PROJECT_TYPES)
         )
         Category.create_defaults(self)
 
@@ -85,6 +167,9 @@ class ProjectType(TimeStampedModel):
         Workspace, on_delete=models.CASCADE, related_name="project_types"
     )
     name = models.CharField(max_length=60)
+    category = models.CharField(
+        max_length=20, choices=ProjectCategory.choices, default=ProjectCategory.OTHER
+    )
     position = models.PositiveIntegerField(default=0)
 
     class Meta:

@@ -1984,22 +1984,48 @@ paths:
           items:
             type: string
             enum:
+            - brief
+            - call
             - class
+            - deadline
+            - defense
+            - editing
             - exam
             - live
             - meeting
             - other
+            - personal
+            - photoshoot
+            - press
+            - rehearsal
             - release
             - release_party
+            - residency
             - shooting
+            - soundcheck
+            - studio
+            - submission
         description: |-
           * `meeting` - RDV
+          * `call` - Appel / visio
+          * `brief` - Brief
           * `live` - Date live
+          * `rehearsal` - Répétition
+          * `soundcheck` - Balance
+          * `residency` - Résidence
+          * `studio` - Session studio
           * `shooting` - Tournage
+          * `editing` - Montage
+          * `photoshoot` - Séance photo
           * `release` - Release
           * `release_party` - Release party
+          * `press` - Interview / presse
+          * `deadline` - Échéance
           * `class` - Cours
           * `exam` - Examen
+          * `submission` - Rendu
+          * `defense` - Soutenance
+          * `personal` - Personnel
           * `other` - Autre
         explode: true
         style: form
@@ -7111,22 +7137,48 @@ components:
     EventTypeEnum:
       enum:
       - meeting
+      - call
+      - brief
       - live
+      - rehearsal
+      - soundcheck
+      - residency
+      - studio
       - shooting
+      - editing
+      - photoshoot
       - release
       - release_party
+      - press
+      - deadline
       - class
       - exam
+      - submission
+      - defense
+      - personal
       - other
       type: string
       description: |-
         * `meeting` - RDV
+        * `call` - Appel / visio
+        * `brief` - Brief
         * `live` - Date live
+        * `rehearsal` - Répétition
+        * `soundcheck` - Balance
+        * `residency` - Résidence
+        * `studio` - Session studio
         * `shooting` - Tournage
+        * `editing` - Montage
+        * `photoshoot` - Séance photo
         * `release` - Release
         * `release_party` - Release party
+        * `press` - Interview / presse
+        * `deadline` - Échéance
         * `class` - Cours
         * `exam` - Examen
+        * `submission` - Rendu
+        * `defense` - Soutenance
+        * `personal` - Personnel
         * `other` - Autre
     ExternalCalendar:
       type: object
@@ -8473,6 +8525,8 @@ components:
           type: string
           minLength: 1
           maxLength: 60
+        category:
+          $ref: '#/components/schemas/ProjectCategoryEnum'
         position:
           type: integer
           maximum: 2147483647
@@ -9028,6 +9082,32 @@ components:
       - type_name
       - upcoming
       - workspace
+    ProjectCategoryEnum:
+      enum:
+      - structure
+      - music
+      - video
+      - live
+      - release
+      - communication
+      - admin
+      - studies
+      - client
+      - personal
+      - other
+      type: string
+      description: |-
+        * `structure` - Artistes & structures
+        * `music` - Production musicale
+        * `video` - Audiovisuel
+        * `live` - Live & événements
+        * `release` - Sortie & promotion
+        * `communication` - Communication & contenu
+        * `admin` - Administratif & financement
+        * `studies` - Études
+        * `client` - Mandats & clients
+        * `personal` - Personnel
+        * `other` - Autre
     ProjectContact:
       type: object
       properties:
@@ -9270,11 +9350,14 @@ components:
         name:
           type: string
           maxLength: 60
+        category:
+          $ref: '#/components/schemas/ProjectCategoryEnum'
         position:
           type: integer
           maximum: 2147483647
           minimum: 0
       required:
+      - category
       - id
       - name
       - position
@@ -9288,6 +9371,8 @@ components:
           type: string
           minLength: 1
           maxLength: 60
+        category:
+          $ref: '#/components/schemas/ProjectCategoryEnum'
         position:
           type: integer
           maximum: 2147483647

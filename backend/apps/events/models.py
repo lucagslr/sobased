@@ -43,13 +43,32 @@ class EventSeries(TimeStampedModel):
 
 class Event(TimeStampedModel):
     class Type(models.TextChoices):
+        # Rendez-vous
         MEETING = "meeting", "RDV"
+        CALL = "call", "Appel / visio"
+        BRIEF = "brief", "Brief"
+        # Live
         LIVE = "live", "Date live"
+        REHEARSAL = "rehearsal", "Répétition"
+        SOUNDCHECK = "soundcheck", "Balance"
+        RESIDENCY = "residency", "Résidence"
+        # Studio & production
+        STUDIO = "studio", "Session studio"
         SHOOTING = "shooting", "Tournage"
+        EDITING = "editing", "Montage"
+        PHOTOSHOOT = "photoshoot", "Séance photo"
+        # Sortie & promotion
         RELEASE = "release", "Release"
         RELEASE_PARTY = "release_party", "Release party"
+        PRESS = "press", "Interview / presse"
+        DEADLINE = "deadline", "Échéance"
+        # Études
         CLASS = "class", "Cours"
         EXAM = "exam", "Examen"
+        SUBMISSION = "submission", "Rendu"
+        DEFENSE = "defense", "Soutenance"
+        # Autre
+        PERSONAL = "personal", "Personnel"
         OTHER = "other", "Autre"
 
     project = models.ForeignKey(

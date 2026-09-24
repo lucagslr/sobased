@@ -1,5 +1,12 @@
 /** Labels, palette and tree helpers for projects. */
-import type { ProjectNode, ProjectStatus, Temporal, Workspace } from '@/api/projects'
+import type {
+  ProjectCategory,
+  ProjectNode,
+  ProjectStatus,
+  ProjectType,
+  Temporal,
+  Workspace,
+} from '@/api/projects'
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   idea: 'Idée',
@@ -148,4 +155,35 @@ export function groupByWorkspace(nodes: ProjectNode[], workspaces: Workspace[]):
 /** Number of projects in a tree, every level counted. */
 export function countTree(nodes: TreeNode[]): number {
   return nodes.reduce((total, node) => total + 1 + countTree(node.children), 0)
+}
+
+/** The families of project types (same values as the backend), in display order. */
+export const PROJECT_CATEGORY_LABELS: Record<ProjectCategory, string> = {
+  structure: 'Artistes & structures',
+  music: 'Production musicale',
+  video: 'Audiovisuel',
+  live: 'Live & événements',
+  release: 'Sortie & promotion',
+  communication: 'Communication & contenu',
+  admin: 'Administratif & financement',
+  studies: 'Études',
+  client: 'Mandats & clients',
+  personal: 'Personnel',
+  other: 'Autre',
+}
+export const PROJECT_CATEGORY_ORDER = Object.keys(PROJECT_CATEGORY_LABELS) as ProjectCategory[]
+
+export interface TypeGroup {
+  category: ProjectCategory
+  label: string
+  types: ProjectType[]
+}
+
+/** The types of a workspace by family, families in order, empty ones left out. */
+export function typesByCategory(types: ProjectType[]): TypeGroup[] {
+  return PROJECT_CATEGORY_ORDER.map((category) => ({
+    category,
+    label: PROJECT_CATEGORY_LABELS[category],
+    types: types.filter((type) => type.category === category),
+  })).filter((group) => group.types.length > 0)
 }

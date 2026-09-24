@@ -9,15 +9,37 @@ import { dateKey, localDateKey } from './tasks'
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   meeting: 'RDV',
+  call: 'Appel / visio',
+  brief: 'Brief',
   live: 'Date live',
+  rehearsal: 'Répétition',
+  soundcheck: 'Balance',
+  residency: 'Résidence',
+  studio: 'Session studio',
   shooting: 'Tournage',
+  editing: 'Montage',
+  photoshoot: 'Séance photo',
   release: 'Release',
   release_party: 'Release party',
+  press: 'Interview / presse',
+  deadline: 'Échéance',
   class: 'Cours',
   exam: 'Examen',
+  submission: 'Rendu',
+  defense: 'Soutenance',
+  personal: 'Personnel',
   other: 'Autre',
 }
-export const EVENT_TYPE_ORDER = Object.keys(EVENT_TYPE_LABELS) as EventType[]
+/** The families shown as <optgroup>s in the form. */
+export const EVENT_TYPE_GROUPS: { label: string; types: EventType[] }[] = [
+  { label: 'Rendez-vous', types: ['meeting', 'call', 'brief'] },
+  { label: 'Live', types: ['live', 'rehearsal', 'soundcheck', 'residency'] },
+  { label: 'Studio & production', types: ['studio', 'shooting', 'editing', 'photoshoot'] },
+  { label: 'Sortie & promotion', types: ['release', 'release_party', 'press', 'deadline'] },
+  { label: 'Études', types: ['class', 'exam', 'submission', 'defense'] },
+  { label: 'Autre', types: ['personal', 'other'] },
+]
+export const EVENT_TYPE_ORDER = EVENT_TYPE_GROUPS.flatMap((group) => group.types)
 
 /** True once the event is over (its end has passed, on the user's clock). */
 export function isPast(event: Pick<Event, 'end' | 'all_day'>, now = new Date()): boolean {
